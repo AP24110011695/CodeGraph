@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from app.core.config import settings
+from app.api.upload import router as upload_router
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="CodeGraph API - The AI Software Architect for Every Codebase",
     version="0.0.1",
 )
+
+app.include_router(upload_router)
 
 
 @app.get("/")
