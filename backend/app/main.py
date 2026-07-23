@@ -4,6 +4,7 @@ from app.api.upload import router as upload_router
 from app.api.scanner import router as scanner_router
 from app.api.framework import router as framework_router
 from app.api.dependency_graph import router as dependency_graph_router
+from app.api.parser import router as parser_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -15,6 +16,7 @@ app.include_router(upload_router)
 app.include_router(scanner_router)
 app.include_router(framework_router)
 app.include_router(dependency_graph_router)
+app.include_router(parser_router)
 
 
 @app.get("/")
