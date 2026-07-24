@@ -7,6 +7,7 @@ from app.api.dependency_graph import router as dependency_graph_router
 from app.api.parser import router as parser_router
 from app.api.architecture import router as architecture_router
 from app.api.diagrams import router as diagrams_router
+from app.api.explain import router as explain_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -21,6 +22,7 @@ app.include_router(dependency_graph_router)
 app.include_router(parser_router)
 app.include_router(architecture_router)
 app.include_router(diagrams_router)
+app.include_router(explain_router)
 
 
 @app.get("/")
