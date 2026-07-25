@@ -1,0 +1,67 @@
+"""Thin HTTP API for repository search."""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
+
+from app.indexing.index_manager import IndexManager
+from app.rag.embedding_service import EmbeddingService
+from app.rag.retriever import Retriever
+from app.rag.vector_store import InMemoryVectorStore
+from app.schemas.search import SearchRequest, SearchResponse
+from app.search.search_service import (
+    EmptyQueryError,
+    EmptyRepositoryError,
+    RepositoryNotIndexedError,
+    SearchService,
+    SearchServiceError,
+)
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/search", tags=["search"])
+EXTRACTED_DIR = Path("storage/extracted")
+
+index_manager = IndexManager()
+vector_store = InMemoryVectorStore()
+embedding_service = EmbeddingService()
+retriever = Retriever(vector_store=vector_store, embedding_service=embedding_service)
+search_service = SearchService(index_manager=index_manager, retriever=retriever)
+
+
+def _project_path(upload_id: str) -> Path:
+    path = EXTRACTED_DIR / upload_id
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Extracted project not found for upload_id: {upload_id}")
+    if not path.is_dir():
+        raise HTTPException(status_code=400, detail=f"Path is not a directory for upload_id: {upload_id}")
+    return path
+
+
+@router.post("/{upload_id}", response_model=SearchResponse, status_code=200)
+async def search_repository(upload_id: str, request: SearchRequest) -> SearchResponse:
+    """Search an indexed repository using semantic, keyword, or hybrid mode."""
+    project_path = _project_path(upload_id)
+
+    try:
+        result = search_service.search(
+            upload_id=upload_id,
+            query=request.query,
+            mode=request.mode,
+            project_path=project_path,
+        )
+        return SearchResponse(**result)
+    except EmptyQueryError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RepositoryNotIndexedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except EmptyRepositoryError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except SearchServiceError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unexpected repository search failure for upload_id: %s", upload_id)
+        raise HTTPException(status_code=500, detail="Internal server error during repository search") from exc
