@@ -11,6 +11,10 @@ class IndexStatisticsResponse(BaseModel):
     files: int
     chunks: int
     embeddings: int
+    added: int
+    modified: int
+    deleted: int
+    unchanged: int
 
 
 class IndexResponse(BaseModel):
@@ -25,6 +29,14 @@ class IndexResponse(BaseModel):
         return cls(
             upload_id=index.upload_id,
             status=index.status,
-            statistics=IndexStatisticsResponse(files=stats.files, chunks=stats.chunks, embeddings=stats.embeddings),
+            statistics=IndexStatisticsResponse(
+                files=stats.files,
+                chunks=stats.chunks,
+                embeddings=stats.embeddings,
+                added=stats.added,
+                modified=stats.modified,
+                deleted=stats.deleted,
+                unchanged=stats.unchanged,
+            ),
             indexed_at=index.indexed_at,
         )

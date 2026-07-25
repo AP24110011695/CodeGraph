@@ -1,0 +1,12 @@
+{
+  "upload_id": "test_project",
+  "files": {
+    "main.py": {
+      "relative_path": "main.py",
+      "sha256_hash": "0fceb5b7014d5d8cfdeb0a3ae55118458cb89dd835fff0a3497738bcb4a5b410",
+      "size": 21,
+      "modified_time": 1784994114.3183012,
+      "language": "Python"
+    }
+  }
+}

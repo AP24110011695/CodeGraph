@@ -21,6 +21,10 @@ class IndexStatistics:
     files: int = 0
     chunks: int = 0
     embeddings: int = 0
+    added: int = 0
+    modified: int = 0
+    deleted: int = 0
+    unchanged: int = 0
 
 
 @dataclass
@@ -34,6 +38,10 @@ class RepositoryIndex:
     total_files: int = 0
     total_chunks: int = 0
     total_embeddings: int = 0
+    added: int = 0
+    modified: int = 0
+    deleted: int = 0
+    unchanged: int = 0
     indexed_at: datetime | None = None
     status: IndexStatus = IndexStatus.NOT_INDEXED
     error: str | None = None
@@ -45,4 +53,8 @@ class RepositoryIndex:
             files=self.total_files,
             chunks=self.total_chunks,
             embeddings=self.total_embeddings,
+            added=self.added,
+            modified=self.modified,
+            deleted=self.deleted,
+            unchanged=self.unchanged,
         )

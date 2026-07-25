@@ -24,10 +24,10 @@ def _project_path(upload_id: str) -> Path:
 
 
 @router.post("/{upload_id}", response_model=IndexResponse, status_code=status.HTTP_201_CREATED)
-async def create_index(upload_id: str, rebuild: bool = Query(False)) -> IndexResponse:
+async def create_index(upload_id: str, force: bool = Query(False)) -> IndexResponse:
     project_path = _project_path(upload_id)
     try:
-        return IndexResponse.from_index(index_manager.create_index(project_path, upload_id, rebuild=rebuild))
+        return IndexResponse.from_index(index_manager.create_index(project_path, upload_id, force=force))
     except IndexAlreadyExistsError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except IndexingPipelineError as exc:
