@@ -9,6 +9,7 @@ from app.api.architecture import router as architecture_router
 from app.api.diagrams import router as diagrams_router
 from app.api.explain import router as explain_router
 from app.api.chat import router as chat_router
+from app.api.indexing import router as indexing_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -25,6 +26,7 @@ app.include_router(architecture_router)
 app.include_router(diagrams_router)
 app.include_router(explain_router)
 app.include_router(chat_router)
+app.include_router(indexing_router)
 
 
 @app.get("/")
