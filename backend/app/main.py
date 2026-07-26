@@ -10,8 +10,14 @@ from app.api.diagrams import router as diagrams_router
 from app.api.explain import router as explain_router
 from app.api.chat import router as chat_router
 from app.api.indexing import router as indexing_router
+<<<<<<< HEAD
 from app.api.readme import router as readme_router
 from app.api.search import router as search_router
+=======
+from app.api.apidocs import router as apidocs_router
+from app.api.uml import router as uml_router
+from app.api.security import router as security_router
+>>>>>>> develop
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -29,8 +35,14 @@ app.include_router(diagrams_router)
 app.include_router(explain_router)
 app.include_router(chat_router)
 app.include_router(indexing_router)
+<<<<<<< HEAD
 app.include_router(readme_router)
 app.include_router(search_router)
+=======
+app.include_router(apidocs_router)
+app.include_router(uml_router)
+app.include_router(security_router)
+>>>>>>> develop
 
 
 @app.get("/")
