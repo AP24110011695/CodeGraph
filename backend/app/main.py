@@ -13,6 +13,7 @@ from app.api.indexing import router as indexing_router
 from app.api.apidocs import router as apidocs_router
 from app.api.uml import router as uml_router
 from app.api.security import router as security_router
+from app.api.refactoring import router as refactoring_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -33,6 +34,7 @@ app.include_router(indexing_router)
 app.include_router(apidocs_router)
 app.include_router(uml_router)
 app.include_router(security_router)
+app.include_router(refactoring_router)
 
 
 @app.get("/")
