@@ -17,6 +17,7 @@ from app.api.uml import router as uml_router
 from app.api.security import router as security_router
 from app.api.metrics import router as metrics_router
 from app.api.review import router as review_router
+from app.api.knowledge_graph import router as knowledge_graph_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -41,6 +42,7 @@ app.include_router(uml_router)
 app.include_router(security_router)
 app.include_router(metrics_router)
 app.include_router(review_router)
+app.include_router(knowledge_graph_router)
 
 
 @app.get("/")
