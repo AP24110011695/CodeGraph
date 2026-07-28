@@ -21,6 +21,7 @@ from app.api.knowledge_graph import router as knowledge_graph_router
 from app.api.risk import router as risk_router
 from app.api.dependency_health import router as dependency_health_router
 from app.api.license import router as license_router
+from app.api.architecture_drift import router as architecture_drift_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -49,6 +50,7 @@ app.include_router(knowledge_graph_router)
 app.include_router(risk_router)
 app.include_router(dependency_health_router)
 app.include_router(license_router)
+app.include_router(architecture_drift_router)
 
 
 @app.get("/")
