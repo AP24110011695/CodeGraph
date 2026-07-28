@@ -18,6 +18,7 @@ from app.api.security import router as security_router
 from app.api.metrics import router as metrics_router
 from app.api.review import router as review_router
 from app.api.knowledge_graph import router as knowledge_graph_router
+from app.api.risk import router as risk_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -43,6 +44,7 @@ app.include_router(security_router)
 app.include_router(metrics_router)
 app.include_router(review_router)
 app.include_router(knowledge_graph_router)
+app.include_router(risk_router)
 
 
 @app.get("/")
