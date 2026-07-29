@@ -26,6 +26,7 @@ from app.api.architecture_recommendation import router as architecture_recommend
 from app.api.bug_localization import router as bug_localization_router
 from app.api.pull_request_review import router as pull_request_review_router
 from app.api.code_generation import router as code_generation_router
+from app.api.design_patterns import router as design_patterns_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -59,6 +60,7 @@ app.include_router(architecture_recommendation_router)
 app.include_router(bug_localization_router)
 app.include_router(pull_request_review_router)
 app.include_router(code_generation_router)
+app.include_router(design_patterns_router)
 
 
 @app.get("/")
