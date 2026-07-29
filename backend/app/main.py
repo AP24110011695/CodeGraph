@@ -24,6 +24,7 @@ from app.api.license import router as license_router
 from app.api.architecture_drift import router as architecture_drift_router
 from app.api.architecture_recommendation import router as architecture_recommendation_router
 from app.api.bug_localization import router as bug_localization_router
+from app.api.pull_request_review import router as pull_request_review_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -55,6 +56,7 @@ app.include_router(license_router)
 app.include_router(architecture_drift_router)
 app.include_router(architecture_recommendation_router)
 app.include_router(bug_localization_router)
+app.include_router(pull_request_review_router)
 
 
 @app.get("/")
