@@ -23,6 +23,7 @@ from app.api.dependency_health import router as dependency_health_router
 from app.api.license import router as license_router
 from app.api.architecture_drift import router as architecture_drift_router
 from app.api.architecture_recommendation import router as architecture_recommendation_router
+from app.api.bug_localization import router as bug_localization_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -53,6 +54,7 @@ app.include_router(dependency_health_router)
 app.include_router(license_router)
 app.include_router(architecture_drift_router)
 app.include_router(architecture_recommendation_router)
+app.include_router(bug_localization_router)
 
 
 @app.get("/")
