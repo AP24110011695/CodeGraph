@@ -31,6 +31,7 @@ from app.api.solid import router as solid_router
 from app.api.microservices import router as microservices_router
 from app.api.database_schema import router as database_schema_router
 from app.api.api_flow import router as api_flow_router
+from app.api.architecture_report import router as architecture_report_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -69,6 +70,7 @@ app.include_router(solid_router)
 app.include_router(microservices_router)
 app.include_router(database_schema_router)
 app.include_router(api_flow_router)
+app.include_router(architecture_report_router)
 
 
 @app.get("/")
