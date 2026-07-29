@@ -25,6 +25,7 @@ from app.api.architecture_drift import router as architecture_drift_router
 from app.api.architecture_recommendation import router as architecture_recommendation_router
 from app.api.bug_localization import router as bug_localization_router
 from app.api.pull_request_review import router as pull_request_review_router
+from app.api.code_generation import router as code_generation_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -57,6 +58,7 @@ app.include_router(architecture_drift_router)
 app.include_router(architecture_recommendation_router)
 app.include_router(bug_localization_router)
 app.include_router(pull_request_review_router)
+app.include_router(code_generation_router)
 
 
 @app.get("/")
