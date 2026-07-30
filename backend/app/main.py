@@ -34,6 +34,7 @@ from app.api.api_flow import router as api_flow_router
 from app.api.architecture_report import router as architecture_report_router
 from app.api.workspace import router as workspace_router
 from app.api.github import router as github_router
+from app.api.cicd import router as cicd_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -75,6 +76,7 @@ app.include_router(api_flow_router)
 app.include_router(architecture_report_router)
 app.include_router(workspace_router)
 app.include_router(github_router)
+app.include_router(cicd_router)
 
 
 @app.get("/")
