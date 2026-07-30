@@ -1,8 +1,9 @@
 import threading
 import json
 import os
-from typing import Optional
+from typing import Optional, Dict
 from app.schemas.incremental_indexing import RepositorySnapshotModel
+from app.schemas.incremental_indexing import ChangeSet, FileMetadata
 from app.incremental_indexing.repository_snapshot import RepositorySnapshot
 
 class SnapshotManager:
@@ -39,6 +40,15 @@ class SnapshotManager:
     def create_empty_snapshot(self, repository_id: str) -> RepositorySnapshot:
         model = RepositorySnapshotModel(repository_id=repository_id)
         return RepositorySnapshot(model)
+
+    def merge_snapshot(
+        self,
+        snapshot: RepositorySnapshot,
+        changes: ChangeSet,
+        current_files: Dict[str, FileMetadata],
+    ) -> RepositorySnapshot:
+        """Storage-neutral snapshot evolution entry point."""
+        return snapshot.evolve(changes, current_files)
 
 # Global instance
 snapshot_manager = SnapshotManager()

@@ -30,7 +30,8 @@ class IncrementalIndexer:
         detector = ChangeDetector(self.root_dir)
         changes, current_files = detector.detect_changes(snapshot)
         
-        files_changed = len(changes.added) + len(changes.modified) + len(changes.deleted)
+        files_changed = (len(changes.added) + len(changes.modified) + len(changes.deleted)
+                         + len(changes.renamed) + len(changes.moved))
         
         stats = IncrementalStatistics(
             files_changed=files_changed,
@@ -39,12 +40,8 @@ class IncrementalIndexer:
         )
 
         if files_changed > 0:
-            # 3. Update snapshot metadata
-            for filepath in changes.deleted:
-                snapshot.remove_file(filepath)
-            for filepath, meta in current_files.items():
-                if filepath in changes.added or filepath in changes.modified:
-                    snapshot.add_or_update_file(meta)
+            # 3. Merge path evolution before invalidating content-derived data.
+            snapshot_manager.merge_snapshot(snapshot, changes, current_files)
 
             # 4. Invalidate and update components
             dep_inv = DependencyInvalidator(self.repository_id)
@@ -53,7 +50,7 @@ class IncrementalIndexer:
 
             stats.graph_nodes_updated = graph_up.update(changes)
             stats.embeddings_updated = emb_inv.invalidate(changes)
-            stats.symbols_updated = files_changed * 2
+            stats.symbols_updated = (len(changes.added) + len(changes.modified) + len(changes.deleted)) * 2
 
             # Publish event
             event_bus.publish(
@@ -61,6 +58,9 @@ class IncrementalIndexer:
                 repository_id=self.repository_id,
                 payload={"incremental": True, "changes": changes.model_dump()}
             )
+        else:
+            # Last-seen metadata evolves even when file content and paths do not.
+            snapshot_manager.merge_snapshot(snapshot, changes, current_files)
 
         # 5. Always persist snapshot (covers first-run / no-change scenarios)
         snapshot_manager.save_snapshot(snapshot)

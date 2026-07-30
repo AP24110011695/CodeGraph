@@ -6,6 +6,10 @@ from app.incremental_indexing.embedding_invalidator import EmbeddingInvalidator
 from app.incremental_indexing.graph_updater import GraphUpdater
 from app.incremental_indexing.incremental_indexer import IncrementalIndexer
 from app.incremental_indexing.incremental_statistics import IncrementalStatisticsCollector
+from app.incremental_indexing.rename_detector import RenameDetector
+from app.incremental_indexing.move_detector import MoveDetector
+from app.incremental_indexing.snapshot_diff import SnapshotDiff
+from app.incremental_indexing.snapshot_merger import SnapshotMerger
 
 __all__ = [
     "RepositorySnapshot",
@@ -15,5 +19,6 @@ __all__ = [
     "EmbeddingInvalidator",
     "GraphUpdater",
     "IncrementalIndexer",
-    "IncrementalStatisticsCollector"
+    "IncrementalStatisticsCollector", "RenameDetector", "MoveDetector",
+    "SnapshotDiff", "SnapshotMerger"
 ]

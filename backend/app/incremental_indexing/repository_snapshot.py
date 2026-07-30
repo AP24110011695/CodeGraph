@@ -16,6 +16,12 @@ class RepositorySnapshot:
         if path in self.model.files:
             del self.model.files[path]
 
+    def evolve(self, changes, current_files: Dict[str, FileMetadata]) -> "RepositorySnapshot":
+        """Apply a diff while retaining file UUIDs for location-only changes."""
+        # Local import avoids a model/merger import cycle.
+        from app.incremental_indexing.snapshot_merger import SnapshotMerger
+        return SnapshotMerger().merge(self, changes, current_files)
+
     def to_dict(self) -> Dict[str, Any]:
         return self.model.model_dump(mode='json')
         
