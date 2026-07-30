@@ -158,8 +158,8 @@ class WorkspaceManager:
         Returns:
             Current timestamp string.
         """
-        from datetime import datetime
-        return datetime.utcnow().isoformat()
+        from datetime import datetime, timezone
+        return datetime.now(timezone.utc).isoformat()
 
 
 workspace_manager = WorkspaceManager()
