@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import settings
 from app.api.upload import router as upload_router
@@ -43,11 +44,24 @@ from app.api.release_notes import router as release_notes_router
 from app.api.dashboard import router as dashboard_router
 from app.api.copilot import router as copilot_router
 from app.api.jobs import router as jobs_router
+from app.api.repository_state import router as repository_state_router
+from app.api.events import router as events_router
+from app.api.workflows import router as workflows_router
+from app.api.workers import router as workers_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Start worker pool on startup; gracefully stop on shutdown."""
+    from app.workers.worker_pool import worker_pool
+    worker_pool.start()
+    yield
+    worker_pool.stop()
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="CodeGraph API - The AI Software Architect for Every Codebase",
     version="0.0.1",
+    lifespan=lifespan,
 )
 
 app.include_router(upload_router)
@@ -93,6 +107,10 @@ app.include_router(release_notes_router)
 app.include_router(dashboard_router)
 app.include_router(copilot_router)
 app.include_router(jobs_router)
+app.include_router(repository_state_router)
+app.include_router(events_router)
+app.include_router(workflows_router)
+app.include_router(workers_router)
 
 
 @app.get("/")

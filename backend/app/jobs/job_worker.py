@@ -7,7 +7,13 @@ from typing import Any, Callable
 
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import Job, JobStatus
+from app.jobs.job_queue import JobQueue
+from app.jobs.job_status import Job, JobStatus
 from app.jobs.task_registry import task_registry
+from app.repository_state.state_machine import RepositoryStateMachine
+from app.schemas.repository_state import RepositoryStateEnum
+from app.events.event_bus import event_bus
+from app.events.event_types import EventType
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +122,24 @@ class JobWorker:
         
         # Mark job as running
         job.mark_running()
+        
+        try:
+            state_machine = RepositoryStateMachine(job.repository_id)
+            # Transition to initial active state
+            initial_state = RepositoryStateEnum.SCANNING if job.task_type == "indexing" else RepositoryStateEnum.ANALYZING
+            try:
+                state_machine.transition_to(initial_state, job_id=job.job_id)
+            except ValueError:
+                pass # Transition might be invalid if retrying, etc.
+        except Exception as e:
+            logger.error(f"Failed to set initial active state for {job.job_id}: {e}")
+            
+        event_bus.publish(
+            event_type=EventType.JOB_STARTED,
+            repository_id=job.repository_id,
+            payload={"job_id": job.job_id, "task_type": job.task_type}
+        )
+            
         self._notify_update(job)
         
         try:
@@ -127,6 +151,38 @@ class JobWorker:
             # Progress callback
             def progress_callback(step: str, progress_percent: int) -> None:
                 job.update_progress(step, progress_percent)
+                
+                try:
+                    sm = RepositoryStateMachine(job.repository_id)
+                    step_lower = step.lower()
+                    new_state = None
+                    if "scan" in step_lower:
+                        new_state = RepositoryStateEnum.SCANNING
+                    elif "pars" in step_lower:
+                        new_state = RepositoryStateEnum.PARSING
+                    elif "index" in step_lower:
+                        new_state = RepositoryStateEnum.INDEXING
+                    elif "embed" in step_lower:
+                        new_state = RepositoryStateEnum.EMBEDDING
+                    elif any(k in step_lower for k in ["analyz", "detect", "build", "generat"]):
+                        new_state = RepositoryStateEnum.ANALYZING
+                        
+                    if new_state and new_state != sm.current_state.state:
+                        try:
+                            sm.transition_to(new_state, progress=progress_percent, current_stage=step)
+                        except ValueError:
+                            sm.update_progress(progress=progress_percent, current_stage=step)
+                    else:
+                        sm.update_progress(progress=progress_percent, current_stage=step)
+                except Exception as e:
+                    logger.error(f"Failed to update state for {job.job_id} at {step}: {e}")
+                    
+                event_bus.publish(
+                    event_type=EventType.JOB_PROGRESS_UPDATED,
+                    repository_id=job.repository_id,
+                    payload={"job_id": job.job_id, "step": step, "progress": progress_percent}
+                )
+                    
                 self._notify_update(job)
             
             # Execute task
@@ -134,12 +190,51 @@ class JobWorker:
             
             # Mark job as completed
             job.mark_completed(result)
+            try:
+                sm = RepositoryStateMachine(job.repository_id)
+                sm.transition_to(RepositoryStateEnum.READY, progress=100, current_stage="Complete")
+            except Exception as e:
+                logger.error(f"Failed to transition to READY for {job.job_id}: {e}")
+            
+            event_bus.publish(
+                event_type=EventType.JOB_COMPLETED,
+                repository_id=job.repository_id,
+                payload={"job_id": job.job_id, "task_type": job.task_type}
+            )
+            
+            # Map task types to analysis completion events
+            task_to_event = {
+                "architecture": EventType.ARCHITECTURE_GENERATED,
+                "quality": EventType.QUALITY_COMPLETED,
+                "security": EventType.SECURITY_COMPLETED,
+                "metrics": EventType.METRICS_GENERATED,
+                "risk": EventType.RISK_COMPLETED,
+            }
+            if job.task_type in task_to_event:
+                event_bus.publish(
+                    event_type=task_to_event[job.task_type],
+                    repository_id=job.repository_id,
+                    payload={"job_id": job.job_id, "task_type": job.task_type}
+                )
+            
             logger.info(f"Job {job.job_id} completed successfully")
             
         except Exception as e:
             # Mark job as failed
             error_msg = str(e)
             job.mark_failed(error_msg)
+            try:
+                sm = RepositoryStateMachine(job.repository_id)
+                sm.transition_to(RepositoryStateEnum.FAILED, failure_reason=error_msg)
+            except Exception as e2:
+                logger.error(f"Failed to transition to FAILED for {job.job_id}: {e2}")
+                
+            event_bus.publish(
+                event_type=EventType.JOB_FAILED,
+                repository_id=job.repository_id,
+                payload={"job_id": job.job_id, "task_type": job.task_type, "error": error_msg}
+            )
+            
             logger.error(f"Job {job.job_id} failed: {error_msg}")
         
         finally:

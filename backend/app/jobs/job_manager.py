@@ -7,7 +7,12 @@ from pathlib import Path
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import Job, JobStatus
 from app.jobs.job_worker import WorkerPool
+from app.jobs.job_worker import WorkerPool
 from app.jobs.task_registry import task_registry
+from app.repository_state.state_machine import RepositoryStateMachine
+from app.schemas.repository_state import RepositoryStateEnum
+from app.events.event_bus import event_bus
+from app.events.event_types import EventType
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +78,27 @@ class JobManager:
         job_data = job.to_dict()
         if not self._queue.enqueue(job_data):
             job.mark_failed("Job queue is full")
+            event_bus.publish(
+                event_type=EventType.JOB_FAILED,
+                repository_id=repository_id,
+                payload={"job_id": job.job_id, "task_type": task_type, "error": "Job queue is full"}
+            )
             raise RuntimeError("Job queue is full")
+            
+        try:
+            state_machine = RepositoryStateMachine(repository_id)
+            state_machine.transition_to(
+                new_state=RepositoryStateEnum.QUEUED,
+                job_id=job.job_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to update repository state to QUEUED: {e}")
+        
+        event_bus.publish(
+            event_type=EventType.JOB_QUEUED,
+            repository_id=repository_id,
+            payload={"job_id": job.job_id, "task_type": task_type}
+        )
         
         logger.info(f"Created job {job.job_id} for repository {repository_id}")
         return job
@@ -110,6 +135,13 @@ class JobManager:
             # Try to remove from queue (this is tricky with queue.Queue)
             # For now, we'll mark it as cancelled and let worker skip it
             job.mark_cancelled()
+            
+            try:
+                state_machine = RepositoryStateMachine(job.repository_id)
+                state_machine.transition_to(RepositoryStateEnum.CANCELLED)
+            except Exception as e:
+                logger.error(f"Failed to transition state to CANCELLED: {e}")
+                
             logger.info(f"Cancelled queued job {job_id}")
             return True
         
@@ -117,6 +149,12 @@ class JobManager:
         # Mark as cancelled but worker will finish current task
         if job.status == JobStatus.RUNNING:
             job.mark_cancelled()
+            try:
+                state_machine = RepositoryStateMachine(job.repository_id)
+                state_machine.transition_to(RepositoryStateEnum.CANCELLED)
+            except Exception as e:
+                logger.error(f"Failed to transition state to CANCELLED: {e}")
+                
             logger.info(f"Marked running job {job_id} as cancelled")
             return True
         
