@@ -6,6 +6,7 @@ from app.api.scanner import router as scanner_router
 from app.api.framework import router as framework_router
 from app.api.dependency_graph import router as dependency_graph_router
 from app.api.parser import router as parser_router
+from app.api.architecture_reasoning import router as architecture_reasoning_router
 from app.api.architecture import router as architecture_router
 from app.api.diagrams import router as diagrams_router
 from app.api.explain import router as explain_router
@@ -16,6 +17,9 @@ from app.api.search import router as search_router
 from app.api.apidocs import router as apidocs_router
 from app.api.uml import router as uml_router
 from app.api.security import router as security_router
+from app.api.quality import router as quality_router
+from app.api.smells import router as smells_router
+from app.api.refactoring import router as refactoring_router
 from app.api.metrics import router as metrics_router
 from app.api.review import router as review_router
 from app.api.knowledge_graph import router as knowledge_graph_router
@@ -55,7 +59,6 @@ from app.api.telemetry import router as telemetry_router
 from app.api.semantic import router as semantic_router
 from app.api.repository_memory import router as repository_memory_router
 from app.api.rag import router as rag_router
-from app.api.architecture_reasoning import router as architecture_reasoning_router
 from app.api.planning import router as planning_router
 from app.api.agents import router as agents_router
 from app.api.timeline import router as timeline_router
@@ -66,7 +69,7 @@ import uuid
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Start worker pool on startup; gracefully stop on shutdown."""
+    """Start reliability + worker pool on startup; gracefully stop on shutdown."""
     from app.workers.worker_pool import worker_pool
     from app.reliability.reliability_manager import reliability_manager
     reliability_manager.initialize()
@@ -77,7 +80,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     description="CodeGraph API - The AI Software Architect for Every Codebase",
-    version="0.0.1",
+    version=settings.APP_VERSION,
     lifespan=lifespan,
 )
 
@@ -96,6 +99,8 @@ app.include_router(scanner_router)
 app.include_router(framework_router)
 app.include_router(dependency_graph_router)
 app.include_router(parser_router)
+# Specific /architecture/* routes before generic /architecture/{upload_id}
+app.include_router(architecture_reasoning_router)
 app.include_router(architecture_router)
 app.include_router(diagrams_router)
 app.include_router(explain_router)
@@ -106,6 +111,9 @@ app.include_router(search_router)
 app.include_router(apidocs_router)
 app.include_router(uml_router)
 app.include_router(security_router)
+app.include_router(quality_router)
+app.include_router(smells_router)
+app.include_router(refactoring_router)
 app.include_router(metrics_router)
 app.include_router(review_router)
 app.include_router(knowledge_graph_router)
@@ -145,7 +153,6 @@ app.include_router(telemetry_router)
 app.include_router(semantic_router)
 app.include_router(repository_memory_router)
 app.include_router(rag_router)
-app.include_router(architecture_reasoning_router)
 app.include_router(planning_router)
 app.include_router(agents_router)
 app.include_router(timeline_router)
@@ -155,9 +162,18 @@ app.include_router(engineering_reports_router)
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"name": "CodeGraph", "status": "running"}
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "release": "RC-1",
+    }
 
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "version": settings.APP_VERSION,
+        "environment": settings.APP_ENV,
+    }

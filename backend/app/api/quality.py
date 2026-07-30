@@ -1,10 +1,10 @@
 """API route for quality analysis on extracted repositories."""
 
 import logging
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
+from app.core.paths import resolve_repository_path
 from app.quality.quality_analyzer import quality_analyzer
 from app.schemas.quality import (
     QualityMetadata,
@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/quality", tags=["quality"])
 
-EXTRACTED_DIR = Path("storage/extracted")
-
 
 @router.post("/{upload_id}", response_model=QualityResponse, status_code=200)
 async def analyze_quality(upload_id: str) -> QualityResponse:
@@ -30,9 +28,9 @@ async def analyze_quality(upload_id: str) -> QualityResponse:
     Returns:
         A QualityResponse containing quality scores, recommendations, and metadata.
     """
-    project_path = EXTRACTED_DIR / upload_id
+    project_path = resolve_repository_path(upload_id)
 
-    if not project_path.exists():
+    if project_path is None:
         raise HTTPException(
             status_code=404,
             detail=f"Extracted project not found for upload_id: {upload_id}",
@@ -51,7 +49,7 @@ async def analyze_quality(upload_id: str) -> QualityResponse:
             status_code=403,
             detail=f"Permission denied when analyzing upload_id: {upload_id}",
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Error analyzing quality for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during quality analysis")
 

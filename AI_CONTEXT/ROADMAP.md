@@ -11,8 +11,9 @@
 - **CG-067** — Timeline Intelligence — **completed**.
 - **CG-068** — Impact Analysis — **completed**.
 - **CG-069** — Engineering Intelligence Report Generator — **completed**.
-- **CG-070** — Unified Intelligence Orchestrator (CodeGraph Copilot) — **completed** (current latest).
-- **CG-071+** — Not specified in-repo; do not invent ticket titles.
+- **CG-070** — Unified Intelligence Orchestrator (CodeGraph Copilot) — **completed**.
+- **RC-1** — Release Candidate 1 stabilization — **completed** (current latest).
+- **CG-071+ / GA** — Not specified in-repo; do not invent ticket titles.
 
 ---
 
@@ -20,9 +21,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Intelligence Platform — Unified Orchestration |
-| **Current module** | CG-070 complete; awaiting next assigned CG ticket |
-| **Latest milestone** | Unified Intelligence Orchestrator (CodeGraph Copilot) |
+| **Phase** | Release Candidate 1 |
+| **Current module** | RC-1 complete — ready for candidate tagging |
+| **Latest milestone** | Green regression suite + production-readiness documentation |
+| **Version** | `1.0.0-rc.1` |
 
 ---
 
@@ -52,11 +54,21 @@ Incremental Indexing / Snapshots, Distributed Cache, Telemetry, Semantic Engine,
 | CG-068 | Intelligent Code Impact Analysis | **Done** (dependency/architecture/API/propagation/risk/confidence; affected modules/services/APIs/symbols/memory; Git/PR-ready `related_files`) |
 | CG-069 | Engineering Intelligence Report Generator | **Done** (composed reports; pluggable exporters JSON/Markdown; HTML/PDF stubs) |
 
-### Wave F — Unified orchestration (latest)
+### Wave F — Unified orchestration
 
 | CG | Module | Status |
 |----|--------|--------|
-| CG-070 | Unified Intelligence Orchestrator (CodeGraph Copilot) | **Done** (Planning-driven tool orchestration; conversation memory; provider abstraction; structured engineering responses) |
+| CG-070 | Unified Intelligence Orchestrator (CodeGraph Copilot) | **Done** |
+
+### Wave G — Release Candidate (latest)
+
+| Milestone | Status |
+|-----------|--------|
+| RC-1 regression stabilization (0 failing tests) | **Done** |
+| Quality / Smells / Refactoring API registration | **Done** |
+| README + AI_CONTEXT sync | **Done** |
+| Shared repository path helper | **Done** |
+| Production limitation documentation | **Done** |
 
 ---
 
@@ -64,31 +76,32 @@ Incremental Indexing / Snapshots, Distributed Cache, Telemetry, Semantic Engine,
 
 | Area | Status |
 |------|--------|
-| Core analysis engines | Present and registered (except quality/smells/refactoring **API** wiring) |
+| Core analysis engines | Present and **registered** (incl. quality/smells/refactoring) |
 | Platform (cache, telemetry, workflows, workers) | Present |
 | Planning + Agents | Present (7 builtin agents) |
-| Timeline + Impact + Reports | Present |
-| Unified Copilot Orchestrator | Present (`/copilot/chat`, `/execute`, `/history`) |
-| Production VCS/LLM/Redis/Vector | Stubbed / in-memory / mock — see debt |
+| Timeline + Impact + Reports + Copilot | Present |
+| Regression suite | **Green** (1221 passed) |
+| Production VCS/LLM/Redis/Vector/Auth | Stubbed / in-memory / mock — see debt |
 | Frontend parity | Partial / separate tree |
 
-**Rough backend capability completion:** high for in-process enterprise demo architecture; **production hardening** still open.
+**Backend RC-1:** ready as an in-process enterprise intelligence demo with a green suite. **GA** still needs auth, durable stores, and live integrations.
 
 ---
 
 ## Upcoming modules
 
-> Assign concrete CG-071+ titles only when product tickets exist.
+> Assign concrete post-RC titles only when product tickets exist.
 
-Candidate themes **already hinted by stubs/extension points** (not committed tickets):
+Candidate themes (not committed tickets):
 
-1. Real History Providers (Git/GitHub/GitLab/Bitbucket) for Timeline  
-2. Diff/PR-driven Impact Analysis (consume `related_files`)  
-3. Redis `CacheInterface` backend  
-4. Production vector DB for Semantic/RAG  
-5. Register quality/smells/refactoring routers + fix 18 tests  
-6. Wire cloud LLM providers for Copilot (OpenAI/Claude/Gemini already abstracted)  
-7. Event streaming (Kafka-class) replacing pure in-process bus if scale requires  
+1. Authentication / API keys / multi-tenant isolation  
+2. Real History Providers (Git/GitHub/GitLab/Bitbucket) for Timeline  
+3. Diff/PR-driven Impact Analysis  
+4. Redis `CacheInterface` backend + durable conversation/report stores  
+5. Production vector DB for Semantic/RAG  
+6. Wire cloud LLM providers for Copilot synthesis  
+7. Migrate remaining routers to `resolve_repository_path`  
+8. Event streaming if multi-instance scale requires it  
 
 ---
 
@@ -100,9 +113,11 @@ Candidate themes **already hinted by stubs/extension points** (not committed tic
 - [x] Provider-style Timeline history abstraction  
 - [x] Impact analysis reusing traverser (no duplicate BFS)  
 - [x] Unified Copilot Orchestrator composing all intelligence  
+- [x] RC-1 green suite + registered quality/smells/refactoring APIs  
 - [ ] Production distributed cache  
 - [ ] Production embedding store  
 - [ ] Live VCS providers  
+- [ ] Authentication / authorization  
 
 ## Technical milestones
 

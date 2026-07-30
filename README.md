@@ -2,13 +2,15 @@
 
 **The AI Software Architect for Every Codebase**
 
+**Release:** `1.0.0-rc.1` (Release Candidate 1)
+
 ---
 
 ## Vision
 
-CodeGraph is an AI-powered developer platform that analyzes software repositories, understands architecture, generates documentation, visualizes dependency graphs, and enables natural-language conversations with an uploaded codebase.
+CodeGraph is an enterprise AI software architecture platform that analyzes repositories, builds knowledge graphs, maintains repository memory, plans multi-agent work, and answers engineering questions through a unified Copilot orchestrator.
 
-Our mission is to make every codebase intelligible and accessible through AI-driven analysis and visualization.
+It is **not** merely a code-search toy. See [`AI_CONTEXT/PROJECT_VISION.md`](./AI_CONTEXT/PROJECT_VISION.md).
 
 ---
 
@@ -16,27 +18,28 @@ Our mission is to make every codebase intelligible and accessible through AI-dri
 
 **Start here:** [`AI_CONTEXT/README_AI.md`](./AI_CONTEXT/README_AI.md)
 
-The `AI_CONTEXT/` folder is the permanent knowledge base for Cursor and any other AI assistant. It documents real architecture, rules, roadmap, status, debt, and module index — read it before implementing the next CG module.
+The `AI_CONTEXT/` folder is the permanent knowledge base for Cursor and other AI assistants (architecture, rules, roadmap, status, debt, module index).
 
 ---
 
 ## Current Status
 
-**⚠️ Under Development**
+**Release Candidate 1 (RC-1)** — backend intelligence platform is feature-complete for the CG-001…CG-070 stack with a green regression suite.
 
-This project is currently in early development. Core features are being implemented and the API is subject to change. For live backend status used by AI sessions, prefer [`AI_CONTEXT/CURRENT_STATUS.md`](./AI_CONTEXT/CURRENT_STATUS.md).
+Authoritative live status: [`AI_CONTEXT/CURRENT_STATUS.md`](./AI_CONTEXT/CURRENT_STATUS.md)
 
 ---
 
-## Planned Features
+## Capabilities (implemented)
 
-- **Repository Analysis**: Upload and analyze software repositories across multiple languages
-- **Architecture Understanding**: AI-powered detection of architectural patterns and design decisions
-- **Documentation Generation**: Automatic generation of comprehensive project documentation
-- **Dependency Graphs**: Interactive visualization of code dependencies and module relationships
-- **Natural Language Interface**: Chat with your codebase using natural language queries
-- **Multi-Language Support**: Support for Python, JavaScript, TypeScript, Java, Go, and more
-- **Real-time Analysis**: Incremental analysis as code changes
+- Repository upload, scan, parse, index (including incremental snapshots)
+- Dependency / knowledge graphs and architecture analysis
+- Quality, smells, refactoring, security, metrics, risk
+- Repository Memory, Semantic Engine, Advanced RAG, Architecture Reasoning
+- Planning Engine + Multi-Agent Framework
+- Timeline Intelligence, Impact Analysis, Engineering Reports
+- Unified Copilot Orchestrator (`/copilot/chat`, `/execute`, `/history`)
+- Cache, Telemetry, Workflows, Workers, Reliability
 
 ---
 
@@ -44,107 +47,76 @@ This project is currently in early development. Core features are being implemen
 
 ```
 CodeGraph/
-├── backend/              # Server-side application
-│   ├── api/             # API endpoints and routes
-│   ├── parsers/         # Code parsing modules
-│   ├── analyzers/       # Architecture analysis engines
-│   ├── graph/           # Dependency graph processing
-│   ├── ai/              # AI/ML integration
-│   ├── prompts/         # AI prompt templates
-│   ├── database/        # Database models and migrations
-│   ├── services/        # Business logic services
-│   ├── models/          # Data models
-│   ├── config/          # Configuration management
-│   ├── utils/           # Utility functions
-│   └── tests/           # Backend tests
-├── frontend/            # Client-side application
-├── docs/                # Project documentation
-│   ├── adr/            # Architecture Decision Records
-│   ├── api/            # API documentation
-│   ├── diagrams/       # Architecture diagrams
-│   └── screenshots/    # UI screenshots
-├── assets/              # Static resources
-├── scripts/             # Development and deployment scripts
-└── .github/             # GitHub configuration
-    ├── workflows/      # CI/CD workflows
-    └── ISSUE_TEMPLATE/ # Issue templates
+├── AI_CONTEXT/           # Authoritative AI / engineering knowledge base
+├── backend/
+│   ├── app/
+│   │   ├── api/          # Thin FastAPI routers
+│   │   ├── core/         # Settings, shared paths
+│   │   ├── schemas/      # Pydantic contracts
+│   │   ├── <domain>/     # Engines (memory, rag, planning, agents, …)
+│   │   └── main.py       # App entry + router registration
+│   ├── tests/            # pytest suite
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/             # Client UI (separate tree; parity not required for RC-1)
+└── README.md
 ```
 
 ---
 
-## Planned Tech Stack
+## Quick Start (Backend)
 
-### Backend
-- **Language**: Python 3.11+
-- **Framework**: FastAPI
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **AI/ML**: OpenAI API / LangChain
-- **Graph Processing**: NetworkX / Graphviz
-- **Task Queue**: Celery + Redis
-- **Testing**: pytest
+```bash
+cd backend
+python -m venv venv
+# Windows: venv\Scripts\activate
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-### Frontend
-- **Framework**: React 18+
-- **Build Tool**: Vite
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React Query / Zustand
-- **Graph Visualization**: D3.js / React Flow
-- **Testing**: Vitest / Playwright
+- Health: `GET http://127.0.0.1:8000/health`
+- OpenAPI: `http://127.0.0.1:8000/docs`
 
-### DevOps
-- **Containerization**: Docker
-- **CI/CD**: GitHub Actions
-- **Code Quality**: ESLint, Prettier, Black, Ruff
+```bash
+pytest tests/ -q
+```
 
 ---
 
-## Development Roadmap
+## Tech Stack
 
-### Phase 1: Foundation (Current)
-- Repository structure setup
-- Core infrastructure configuration
-- Development environment setup
+| Layer | Choice |
+|-------|--------|
+| API | FastAPI + Uvicorn |
+| Validation | Pydantic v2 |
+| Tests | pytest |
+| Cache | `CacheInterface` (in-memory; Redis-ready) |
+| LLM | Provider ABC (OpenAI/Claude/Gemini + local heuristic) |
 
-### Phase 2: Backend Core
-- Repository parsing engine
-- Basic analysis modules
-- Database schema design
-- API framework setup
+Production PostgreSQL/Celery/Redis/vector DB remain optional migrations — see [`AI_CONTEXT/TECH_DEBT.md`](./AI_CONTEXT/TECH_DEBT.md).
 
-### Phase 3: AI Integration
-- AI service integration
-- Prompt engineering
-- Architecture analysis algorithms
-- Documentation generation
+---
 
-### Phase 4: Frontend Development
-- UI framework setup
-- Repository upload interface
-- Analysis results visualization
-- Dependency graph viewer
+## Documentation
 
-### Phase 5: Advanced Features
-- Natural language chat interface
-- Real-time analysis
-- Multi-language support expansion
-- Performance optimization
+| Doc | Purpose |
+|-----|---------|
+| [`AI_CONTEXT/ARCHITECTURE.md`](./AI_CONTEXT/ARCHITECTURE.md) | Implemented architecture |
+| [`AI_CONTEXT/ROADMAP.md`](./AI_CONTEXT/ROADMAP.md) | Phases & milestones |
+| [`AI_CONTEXT/MODULE_INDEX.md`](./AI_CONTEXT/MODULE_INDEX.md) | Subsystem catalog |
+| [`AI_CONTEXT/TECH_DEBT.md`](./AI_CONTEXT/TECH_DEBT.md) | Known debt & stubs |
+| [`backend/README.md`](./backend/README.md) | Backend developer guide |
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome. Prefer small PRs that reuse existing engines and follow [`AI_CONTEXT/AI_RULES.md`](./AI_CONTEXT/AI_RULES.md).
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-
-For questions and feedback, please open an issue on GitHub.
+MIT — see [LICENSE](LICENSE) when present.

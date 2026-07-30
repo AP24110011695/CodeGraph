@@ -345,13 +345,9 @@ POST /impact/analyze/{repository_id}
 
 ## Registration gap (important)
 
-These API modules exist under `app/api/` but are **not** `include_router`'d in `main.py`:
+**Resolved in RC-1:** `quality`, `smells`, and `refactoring` routers are registered in `main.py`.
 
-- `quality.py` (`/quality`)
-- `smells.py` (`/smells`)
-- `refactoring.py` (`/refactoring`)
-
-Domain packages still exist and are reused by other engines. See [TECH_DEBT.md](./TECH_DEBT.md).
+Remaining consistency work: migrate upload-based analyzers to `app.core.paths.resolve_repository_path` so both `storage/extracted` and `uploads` resolve uniformly. See [TECH_DEBT.md](./TECH_DEBT.md).
 
 ---
 

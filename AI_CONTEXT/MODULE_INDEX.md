@@ -12,7 +12,8 @@ Legend: **API registered** = included in `app/main.py`.
 | Name | Location | Responsibility | Dependencies | Used By | Public APIs | Related Tests | Future dependents |
 |------|----------|----------------|--------------|---------|-------------|---------------|-------------------|
 | FastAPI App | `app/main.py` | Router registration, lifespan, telemetry middleware | All routers | Clients | `/`, `/health` | Many API tests | All new routers |
-| Settings | `app/core/config.py` | Env settings | pydantic-settings | App | — | — | Config expansion |
+| Settings | `app/core/config.py` | Env settings (`APP_VERSION`, LLM keys, `EXPOSE_ERROR_DETAILS`) | pydantic-settings | App | — | — | Config expansion |
+| Repository Paths | `app/core/paths.py` | Resolve `storage/extracted` / `uploads` roots | — | Quality, Smells, Refactoring (+ future routers) | — | `test_rc1_readiness.py` | Migrate remaining APIs |
 | Distributed Cache | `app/cache/` | CacheInterface, MemoryCache, CacheKeys | — | Semantic, Timeline, Impact, … | `/cache` | `test_cache.py` | Redis backend |
 | Telemetry | `app/telemetry/` | Metrics, tracing, logs, health | Cache (metrics snapshot) | Middleware, engines | `/telemetry` | `test_telemetry.py` | Dashboards |
 | Workflows | `app/workflows/` | DAG registry/executor; `repository_processing` | Steps/context | Pipeline orchestration | `/workflows` | `test_workflows.py` | New pipeline steps |
@@ -70,9 +71,9 @@ Legend: **API registered** = included in `app/main.py`.
 | Risk | `app/risk/` | Risk scoring | Yes | `/risk` | `test_risk_engine.py` |
 | Dependency Health | `app/dependency_health/` | Dependency health | Yes | `/dependency-health` | `test_dependency_health.py` |
 | License | `app/license/` | License compliance | Yes | `/license` | `test_license.py` |
-| Quality | `app/quality/` | Quality analysis | **No** (router exists) | `/quality` (unwired) | `test_quality_api.py` (failing), `test_quality_analyzer.py`, `test_scoring_engine.py` |
-| Smells | `app/smells/` | Smell detection | **No** | `/smells` (unwired) | `test_smells_api.py` (failing), `test_smell_detector.py` |
-| Refactoring | `app/refactoring/` | Refactor suggestions | **No** | `/refactoring` (unwired) | `test_refactoring_api.py` (failing), `test_recommendations.py` |
+| Quality | `app/quality/` | Quality analysis | **Yes** | `/quality` | `test_quality_api.py`, `test_quality_analyzer.py`, `test_scoring_engine.py` |
+| Smells | `app/smells/` | Smell detection | **Yes** | `/smells` | `test_smells_api.py`, `test_smell_detector.py` |
+| Refactoring | `app/refactoring/` | Refactor suggestions | **Yes** | `/refactoring` | `test_refactoring_api.py`, `test_recommendations.py` |
 | Architecture Drift | `app/architecture_drift/` | Snapshot drift | Yes | `/architecture-drift` | `test_architecture_drift.py` |
 | Architecture Recommendation | `app/architecture_recommendation/` | Recommendations | Yes | `/architecture-recommendation` | `test_architecture_recommendation.py` |
 | Design Patterns | `app/design_patterns/` | Pattern detection | Yes | `/design-patterns` | `test_design_patterns.py` |

@@ -5,6 +5,48 @@
 
 ---
 
+## RC-1 — Release Candidate 1 Stabilization
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-31 |
+| **Milestone** | RC-1 (`1.0.0-rc.1`) |
+
+### Files added
+
+- `backend/app/core/paths.py`  
+- `backend/tests/test_rc1_readiness.py`
+
+### Files modified
+
+- `backend/app/main.py` (register quality/smells/refactoring; version; health/root; reasoning router order)  
+- `backend/app/core/config.py`  
+- `backend/app/api/quality.py`, `smells.py`, `refactoring.py`, `architecture_reasoning.py`  
+- `backend/tests/test_chat_api.py`  
+- `backend/.env.example`  
+- `README.md`, `backend/README.md`  
+- AI_CONTEXT living docs
+
+### Files removed
+
+- `backend/debug_chunker.py`, `debug_chunker2.py`, `debug_chunker3.py`, `debug_chunker4.py`
+
+### Architecture changes
+
+- Closed API registration gap for quality/smells/refactoring.  
+- Shared repository path resolver for dual-root consistency.  
+- Safer default error exposure for architecture reasoning.
+
+### Breaking changes
+
+- None intended. Root/health JSON gained fields (`version`, `release`, `environment`) while retaining prior keys.
+
+### Validation
+
+- **1221 passed / 0 failed / 0 skipped**
+
+---
+
 ## CG-070 — Unified Intelligence Orchestrator (CodeGraph Copilot)
 
 | Field | Value |

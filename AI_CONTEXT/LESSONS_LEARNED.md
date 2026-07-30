@@ -5,6 +5,38 @@
 
 ---
 
+## RC-1 — Release Candidate Stabilization (2026-07-31)
+
+### Problem solved
+
+Eighteen API tests failed solely because quality/smells/refactoring routers existed but were never registered — a documentation/registration drift that blocked RC readiness.
+
+### Design decisions
+
+- Register the three routers without rewriting domain engines.  
+- Introduce `resolve_repository_path` to reconcile `storage/extracted` vs `uploads` without a big-bang API rewrite.  
+- Bump version to `1.0.0-rc.1`; enrich `/` and `/health`.  
+- Gate exception detail leakage behind `EXPOSE_ERROR_DETAILS`.  
+- Remove obsolete `debug_chunker*` scripts from the backend tree.  
+- Replace the skipped chat “not indexed” test with a real assertion.
+
+### Trade-offs
+
+- Not every router was migrated to the path helper in RC-1 (minimize risk); debt documents the remainder.  
+- Auth, Redis, vector DB, and live VCS remain out of scope for RC-1.
+
+### Lessons learned
+
+- Router files without `include_router` are invisible failures — treat registration as part of the CG checklist.  
+- Skipped tests should be fixed or deleted before a release candidate, not carried indefinitely.  
+- Dual filesystem roots accumulate silently; centralize path resolution early.
+
+### Why this solution
+
+Stabilizes the product for RC without inventing new product features or duplicating engines.
+
+---
+
 ## CG-070 — Unified Intelligence Orchestrator / CodeGraph Copilot (2026-07-31)
 
 ### Problem solved

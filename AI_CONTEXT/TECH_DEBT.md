@@ -7,28 +7,22 @@
 
 ## Known failing tests
 
-| Suite | Failures | Root cause |
-|-------|----------|------------|
-| `tests/test_quality_api.py` | 6 | `app/api/quality.py` not `include_router` in `main.py` → HTTP 404 |
-| `tests/test_smells_api.py` | 7 | `app/api/smells.py` not registered → 404 |
-| `tests/test_refactoring_api.py` | 5 | `app/api/refactoring.py` not registered → 404 |
+**None for RC-1.** Full suite last observed: **1221 passed / 0 failed / 0 skipped**.
 
-**Mitigation:** Register the three routers in `app/main.py` (and resolve any lifecycle/path assumptions in those tests). Domain packages `quality`, `smells`, `refactoring` already exist and are reused elsewhere.
-
-Last observed full-suite tally: **1198 passed / 18 failed / 1 skipped**.
+Previously failing quality/smells/refactoring API suites were fixed by registering routers in `app/main.py` (RC-1).
 
 ---
 
 ## Known bugs / gaps
 
-1. **API registration drift** — quality/smells/refactoring unreachable via HTTP despite tests and routers.  
-2. **Root README outdated** — describes planned folders (`backend/api`, `graph`, etc.) that do not match `backend/app/*`.  
-3. **Backend README structure** — simplified vs actual multi-package layout.  
-4. **Architecture reasoning vs architecture API** — both use `/architecture` prefix in routers; verify route collisions carefully when extending.
+1. **Dual repository roots** — some routers historically used `storage/extracted`, others `uploads`. RC-1 introduced `app/core/paths.resolve_repository_path` for quality/smells/refactoring; remaining upload-based routers should migrate gradually.  
+2. **Architecture reasoning vs architecture API** — both use `/architecture` prefix; RC-1 registers reasoning router **before** the generic architecture router.  
+3. ~~API registration drift (quality/smells/refactoring)~~ — **resolved in RC-1**.  
+4. ~~Root / backend README outdated~~ — **synced in RC-1**.
 
 ---
 
-## Mock / stub implementations (by design today)
+## Mock / stub implementations (by design for RC-1)
 
 | Area | File(s) | Notes |
 |------|---------|-------|
@@ -36,10 +30,11 @@ Last observed full-suite tally: **1198 passed / 18 failed / 1 skipped**.
 | Jira client | `app/jira/jira_client.py` | Documented mock |
 | CI/CD providers | `app/cicd/provider_client.py` | Documented mock |
 | Slack / Discord | `app/notifications/*_client.py` | Documented mocks |
-| Chat LLM answers | `app/chat/chat_service.py` | Mock answer generation comments |
-| Copilot cloud LLM providers | `app/copilot/provider_manager.py` | LocalHeuristic default; Ollama/Azure/Groq stubs; OpenAI/Claude/Gemini reuse `app/ai/llm_client` when keys present |
-| Timeline VCS providers | `app/timeline/history_provider.py` | `NotImplementedError` for git/github/gitlab/bitbucket |
-| Code gen templates | `app/code_generation/template_selector.py` | Multiple TODO placeholders in generated templates |
+| Chat LLM answers | `app/chat/chat_service.py` | Mock answer generation; prefer Copilot `/chat` |
+| Copilot cloud LLM providers | `app/copilot/provider_manager.py` | LocalHeuristic default; Ollama/Azure/Groq stubs |
+| Timeline VCS providers | `app/timeline/history_provider.py` | `NotImplementedError` for git/forge providers |
+| Code gen templates | `app/code_generation/template_selector.py` | TODO placeholders in templates |
+| Report exporters | `app/engineering_reports/exporters.py` | HTML/PDF reserved (`NotImplementedError`) |
 
 ---
 
@@ -48,44 +43,67 @@ Last observed full-suite tally: **1198 passed / 18 failed / 1 skipped**.
 ### Redis (distributed cache)
 
 - Today: `MemoryCache` behind `CacheInterface` / `CacheManager`.  
-- Target: Redis (or similar) implementing `CacheInterface` without changing call sites.
+- Target: Redis implementing `CacheInterface` without changing call sites.
 
 ### Vector database
 
-- Embeddings/search/RAG exist with in-process/test-oriented stores.  
+- Embeddings/search/RAG use in-process stores.  
 - Target: production vector DB; keep Semantic/RAG facades stable.
 
 ### Git integration
 
-- Timeline: implement real `GitHistoryProvider` / forge providers.  
+- Timeline: real `GitHistoryProvider` / forge providers.  
 - Impact: feed PR/diff file lists into `ImpactAnalyzeRequest.related_files`.  
-- GitHub engine: replace mock client with real API.
+- GitHub engine: replace mock client.
 
 ### Kafka / event streaming
 
 - Today: in-process `events` bus.  
-- Future: external broker if multi-instance scale requires it — preserve publish/subscribe semantics.
+- Future: external broker if multi-instance scale requires it.
+
+### Persistence
+
+- Conversation memory, report store, and many registries are process-local.  
+- Target: durable stores for multi-instance deployments.
 
 ---
 
 ## Scalability / performance
 
 - Worker pool + jobs exist; validate under multi-repo load.  
-- Timeline/Impact cache TTLs (300s) — tune per deployment.  
-- Full Knowledge Graph builds can be heavy — Impact correctly allows lightweight graphs; prefer injecting indexed KG when available.
+- Timeline/Impact/Report cache TTLs (often 300s) — tune per deployment.  
+- Prefer injecting indexed Knowledge Graphs into Impact over lightweight memory-seeded graphs when available.  
+- Copilot tool runs may compose several engines — intentional; cache mitigates repeats.
 
 ## Security improvements
 
-- Replace mock secret/token handling in integration clients with vault-backed credentials.  
-- Ensure upload/extraction paths remain sandboxed.  
-- Review any debug scripts under `backend/debug_*.py` for leakage in production images.
+| Item | RC-1 status |
+|------|-------------|
+| `EXPOSE_ERROR_DETAILS` (default false) | Added — reasoning API respects it |
+| Generic 500 messages on quality/smells/refactoring | Present |
+| AuthN/AuthZ | **Not implemented** — open API for RC-1 demo |
+| Upload path sandboxing | Relies on upload_id path segments; harden for multi-tenant |
+| Secrets | Env-based LLM keys; integration tokens still mock |
+| Debug scripts | `debug_chunker*.py` **removed** in RC-1 |
+
+---
+
+## Production readiness limitations (RC-1)
+
+- No authentication / authorization layer  
+- In-memory cache, vector store, conversation memory  
+- Mock external integrations  
+- Single-process assumption for some stores  
+- Frontend parity not required for backend RC-1  
+
+These are **documented limitations**, not silent defects.
 
 ---
 
 ## Documentation debt
 
-- Keep `AI_CONTEXT/` authoritative for AI assistants.  
-- Align human READMEs with actual `backend/app` layout when bandwidth allows.
+- AI_CONTEXT is authoritative for assistants.  
+- Human READMEs synced for RC-1; keep them aligned on future CG work.
 
 ---
 
@@ -93,5 +111,6 @@ Last observed full-suite tally: **1198 passed / 18 failed / 1 skipped**.
 
 | Date | Change |
 |------|--------|
-| 2026-07-31 | CG-070: noted Copilot provider stubs (Ollama/Azure/Groq) + local heuristic default; suite tally 1198/18/1 |
-| 2026-07-31 | Initial TECH_DEBT captured from repo inspection + CG-067/068 validation runs |
+| 2026-07-31 | **RC-1:** registered quality/smells/refactoring; suite 1221/0/0; paths helper; README sync; removed debug_chunker scripts; EXPOSE_ERROR_DETAILS |
+| 2026-07-31 | CG-070: Copilot provider stubs; suite tally 1198/18/1 |
+| 2026-07-31 | Initial TECH_DEBT from CG-067/068 validation |

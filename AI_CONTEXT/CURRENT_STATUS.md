@@ -9,12 +9,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Current Phase** | Intelligence Platform — Unified Orchestration |
-| **Current Module** | CG-070 Unified Intelligence Orchestrator / CodeGraph Copilot (**completed**) |
-| **Upcoming Module** | Next assigned CG ticket (CG-071+ TBD — do not invent) |
-| **Latest Milestone** | Planning-driven Copilot composing Memory/RAG/Reasoning/Timeline/Impact/Reports/Agents |
-| **Architecture Health** | Strong composition; registration gaps for quality/smells/refactoring APIs |
-| **Regression Status** | No new regressions from CG-070; 18 pre-existing API test failures remain |
+| **Current Phase** | Release Candidate 1 (RC-1) |
+| **Current Module** | RC-1 stabilization (**completed**) |
+| **Upcoming Module** | GA hardening / next assigned CG ticket |
+| **Latest Milestone** | Green suite; quality/smells/refactoring registered; docs synced |
+| **Architecture Health** | Strong composition; dual roots documented; mocks labeled |
+| **Regression Status** | **1221 passed / 0 failed / 0 skipped** |
+| **Version** | `1.0.0-rc.1` |
 
 ---
 
@@ -22,11 +23,12 @@
 
 | CG | Name | Package |
 |----|------|---------|
-| CG-001…CG-066 | Foundation stack (assumed complete) | See [MODULE_INDEX.md](./MODULE_INDEX.md) |
+| CG-001…CG-066 | Foundation stack | See [MODULE_INDEX.md](./MODULE_INDEX.md) |
 | CG-067 | Repository Timeline Intelligence | `app/timeline/` |
 | CG-068 | Intelligent Code Impact Analysis | `app/impact_analysis/` |
 | CG-069 | Engineering Intelligence Report Generator | `app/engineering_reports/` |
 | CG-070 | Unified Intelligence Orchestrator (Copilot) | `app/copilot/` |
+| **RC-1** | Stabilization & release readiness | routers, paths, config, docs |
 
 ---
 
@@ -34,27 +36,21 @@
 
 | Metric | Value |
 |--------|-------|
-| Passed | **1198** |
-| Failed | **18** (pre-existing) |
-| Skipped | **1** |
-| Copilot tests (`test_copilot.py`) | **50 passed** |
-| Report tests | **10 passed** |
-| Impact tests | **15 passed** |
-| Timeline tests | **23 passed** |
-
-Failures remain exclusively quality/smells/refactoring API registration gaps. See [TECH_DEBT.md](./TECH_DEBT.md).
+| Passed | **1221** |
+| Failed | **0** |
+| Skipped | **0** |
 
 ---
 
 ## Known issues
 
-Unchanged — see [TECH_DEBT.md](./TECH_DEBT.md).
+Documented production limitations only (auth, Redis, vector DB, live VCS, mock integrations). See [TECH_DEBT.md](./TECH_DEBT.md).
 
 ---
 
 ## Active engines (facades)
 
-Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Engineering Reports, **Unified Copilot Orchestrator**, Cache, Telemetry, Workflows, Workers — present.
+Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Engineering Reports, Copilot, Quality, Smells, Refactoring, Cache, Telemetry, Workflows, Workers — all HTTP-reachable.
 
 ---
 

@@ -59,11 +59,24 @@ class TestChatAPI:
         )
         assert response.status_code == 422  # Validation error
 
-    def test_chat_endpoint_repository_not_indexed(self, client, extracted_dir, sample_project):
-        """Test chat with repository not indexed."""
-        # This test requires the actual storage/extracted directory setup
-        # Skip for now as it requires more complex fixture setup
-        pytest.skip("Requires actual storage directory setup")
+    def test_chat_endpoint_repository_not_indexed(self, client) -> None:
+        """Test chat with repository present on disk but not indexed → 400."""
+        import shutil
+        from pathlib import Path
+
+        upload_id = "chat-not-indexed-rc1"
+        extracted = Path("storage/extracted") / upload_id
+        extracted.mkdir(parents=True, exist_ok=True)
+        (extracted / "main.py").write_text("print('hello')\n", encoding="utf-8")
+        try:
+            response = client.post(
+                f"/chat/{upload_id}",
+                json={"message": "How does this work?"},
+            )
+            assert response.status_code == 400
+            assert "not indexed" in response.json()["detail"].lower()
+        finally:
+            shutil.rmtree(extracted, ignore_errors=True)
 
     def test_chat_request_schema(self):
         """Test chat request schema validation."""
