@@ -51,6 +51,9 @@ from app.api.workers import router as workers_router
 from app.api.reliability import router as reliability_router
 from app.api.incremental_indexing import router as incremental_indexing_router
 from app.api.cache import router as cache_router
+from app.api.telemetry import router as telemetry_router
+from app.telemetry.telemetry_manager import telemetry_manager
+import uuid
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,6 +71,16 @@ app = FastAPI(
     version="0.0.1",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def telemetry_request_middleware(request, call_next):
+    """Publish request timing through the telemetry facade with a correlation ID."""
+    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+    with telemetry_manager.track("http.request", component="api", correlation_id=correlation_id):
+        response = await call_next(request)
+    response.headers["X-Correlation-ID"] = correlation_id
+    return response
 
 app.include_router(upload_router)
 app.include_router(scanner_router)
@@ -119,6 +132,7 @@ app.include_router(workers_router)
 app.include_router(reliability_router)
 app.include_router(incremental_indexing_router)
 app.include_router(cache_router)
+app.include_router(telemetry_router)
 
 
 @app.get("/")

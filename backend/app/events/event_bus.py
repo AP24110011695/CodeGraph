@@ -26,6 +26,8 @@ class EventBus:
             correlation_id=correlation_id
         )
         self._publisher.publish(event)
+        from app.telemetry.telemetry_manager import telemetry_manager
+        telemetry_manager.record_event(event_type.value, correlation_id)
         return event
 
     def publish_event(self, event: Event) -> None:

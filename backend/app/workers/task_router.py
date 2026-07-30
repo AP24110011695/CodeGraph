@@ -26,12 +26,18 @@ class TaskRouter:
             "context": context_data
         }
         self._queue.put(task_data)
+        from app.telemetry.telemetry_manager import telemetry_manager
+        telemetry_manager.gauge("queue.depth", self._queue.qsize())
+        telemetry_manager.increment("queue.tasks_routed")
         logger.info(f"Routed task {task_type} for {repository_id}")
         
     def get_next_task(self, timeout: float = 1.0) -> Optional[Dict[str, Any]]:
         """Get next available task from queue."""
         try:
-            return self._queue.get(timeout=timeout)
+            task = self._queue.get(timeout=timeout)
+            from app.telemetry.telemetry_manager import telemetry_manager
+            telemetry_manager.gauge("queue.depth", self._queue.qsize())
+            return task
         except queue.Empty:
             return None
 
