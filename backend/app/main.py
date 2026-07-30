@@ -40,6 +40,7 @@ from app.api.notifications import router as notifications_router
 from app.api.team_analytics import router as team_analytics_router
 from app.api.repository_comparison import router as repository_comparison_router
 from app.api.release_notes import router as release_notes_router
+from app.api.dashboard import router as dashboard_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -87,6 +88,7 @@ app.include_router(notifications_router)
 app.include_router(team_analytics_router)
 app.include_router(repository_comparison_router)
 app.include_router(release_notes_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/")
