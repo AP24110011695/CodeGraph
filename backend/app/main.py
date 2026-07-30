@@ -50,6 +50,7 @@ from app.api.workflows import router as workflows_router
 from app.api.workers import router as workers_router
 from app.api.reliability import router as reliability_router
 from app.api.incremental_indexing import router as incremental_indexing_router
+from app.api.cache import router as cache_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -117,6 +118,7 @@ app.include_router(workflows_router)
 app.include_router(workers_router)
 app.include_router(reliability_router)
 app.include_router(incremental_indexing_router)
+app.include_router(cache_router)
 
 
 @app.get("/")
