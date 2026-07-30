@@ -48,11 +48,14 @@ from app.api.repository_state import router as repository_state_router
 from app.api.events import router as events_router
 from app.api.workflows import router as workflows_router
 from app.api.workers import router as workers_router
+from app.api.reliability import router as reliability_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Start worker pool on startup; gracefully stop on shutdown."""
     from app.workers.worker_pool import worker_pool
+    from app.reliability.reliability_manager import reliability_manager
+    reliability_manager.initialize()
     worker_pool.start()
     yield
     worker_pool.stop()
@@ -111,6 +114,7 @@ app.include_router(repository_state_router)
 app.include_router(events_router)
 app.include_router(workflows_router)
 app.include_router(workers_router)
+app.include_router(reliability_router)
 
 
 @app.get("/")
