@@ -52,6 +52,7 @@ from app.api.reliability import router as reliability_router
 from app.api.incremental_indexing import router as incremental_indexing_router
 from app.api.cache import router as cache_router
 from app.api.telemetry import router as telemetry_router
+from app.api.semantic import router as semantic_router
 from app.telemetry.telemetry_manager import telemetry_manager
 import uuid
 
@@ -133,6 +134,7 @@ app.include_router(reliability_router)
 app.include_router(incremental_indexing_router)
 app.include_router(cache_router)
 app.include_router(telemetry_router)
+app.include_router(semantic_router)
 
 
 @app.get("/")
