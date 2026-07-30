@@ -1,54 +1,55 @@
-"""Response builder for AI Software Architect Copilot.
+"""Response builder for Unified Intelligence Orchestrator (CG-070).
 
-Builds responses from module outputs.
+Builds structured engineering responses and keeps legacy helpers for
+capability-routing compatibility.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ResponseBuilder:
-    """Builds copilot responses.
+    """Formats Copilot outputs into consistent API payloads."""
 
-    Formats responses from module outputs into consistent format.
-    """
-
-    def __init__(self):
-        """Initialize the response builder."""
-        pass
+    def build_engineering_response(self, processed: Dict[str, Any], query: str, conversation_id: str) -> Dict[str, Any]:
+        """Build the CG-070 structured engineering response."""
+        return {
+            "conversation_id": conversation_id,
+            "query": query,
+            "answer": processed.get("answer", ""),
+            "confidence": processed.get("confidence", 0.0),
+            "repository_context": processed.get("repository_context") or {},
+            "modules_used": processed.get("modules_used") or [],
+            "tools_used": processed.get("tools_used") or [],
+            "reasoning_summary": processed.get("reasoning_summary", ""),
+            "related_components": processed.get("related_components") or [],
+            "related_files": processed.get("related_files") or [],
+            "recommendations": processed.get("recommendations") or [],
+            "follow_up_questions": processed.get("follow_up_questions") or [],
+            "citations": processed.get("citations") or [],
+            "execution_time_ms": processed.get("execution_time_ms", 0),
+            "provider": processed.get("provider"),
+            "intent": processed.get("intent"),
+            "plan_confidence": processed.get("plan_confidence", 0.0),
+        }
 
     def build_response(
         self,
         context: dict[str, Any],
         module_output: dict[str, Any] | None,
     ) -> dict[str, Any]:
-        """Build copilot response.
-
-        Args:
-            context: Repository context.
-            module_output: Output from the module.
-
-        Returns:
-            Dictionary with response data.
-        """
+        """Legacy builder used by IntentRouter path / older tests."""
         if module_output is None:
             return self._build_fallback_response(context)
 
-        # Extract answer from module output
         answer = self._extract_answer(module_output, context)
-
-        # Identify sources
         sources = self._identify_sources(context)
-
-        # Calculate confidence
         confidence = context.get("confidence", 70)
-
-        # Gather evidence
         evidence = self._gather_evidence(context, module_output)
-
-        # Identify related modules
         related_modules = self._identify_related_modules(context)
 
         return {
@@ -59,24 +60,15 @@ class ResponseBuilder:
             "related_modules": related_modules,
         }
 
-    def _build_fallback_response(
-        self,
-        context: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Build fallback response when module output is unavailable.
-
-        Args:
-            context: Repository context.
-
-        Returns:
-            Dictionary with fallback response.
-        """
+    def _build_fallback_response(self, context: dict[str, Any]) -> dict[str, Any]:
         repository_name = context.get("repository_name", "Unknown")
         health_score = context.get("health_score", 0)
         architecture_score = context.get("architecture_score", 0)
 
-        answer = f"Repository '{repository_name}'s current health score is {health_score}/100 and architecture score is {architecture_score}/100."
-
+        answer = (
+            f"Repository '{repository_name}'s current health score is {health_score}/100 "
+            f"and architecture score is {architecture_score}/100."
+        )
         if health_score >= 80 and architecture_score >= 80:
             answer += " Overall engineering health is strong."
         elif health_score < 60 or architecture_score < 60:
@@ -93,22 +85,7 @@ class ResponseBuilder:
             "related_modules": ["Quality Analyzer", "Architecture Report"],
         }
 
-    def _extract_answer(
-        self,
-        module_output: dict[str, Any],
-        context: dict[str, Any],
-    ) -> str:
-        """Extract answer from module output.
-
-        Args:
-            module_output: Module output.
-            context: Repository context.
-
-        Returns:
-            Answer string.
-        """
-        # In a real implementation, this would parse module-specific output
-        # For now, we'll generate context-aware answers
+    def _extract_answer(self, module_output: dict[str, Any], context: dict[str, Any]) -> str:
         intent = context.get("intent", "unknown")
         repository_name = context.get("repository_name", "Unknown")
 
@@ -117,81 +94,89 @@ class ResponseBuilder:
             architecture_score = context.get("architecture_score", 0)
             languages = context.get("languages", [])
             frameworks = context.get("frameworks", [])
-            
-            answer = f"Repository '{repository_name}' has a health score of {health_score}/100 and architecture score of {architecture_score}/100."
+            answer = (
+                f"Repository '{repository_name}' has a health score of {health_score}/100 "
+                f"and architecture score of {architecture_score}/100."
+            )
             if languages:
                 answer += f" It uses {', '.join(languages)}."
             if frameworks:
                 answer += f" Frameworks include {', '.join(frameworks)}."
             return answer
-
-        elif intent == "architecture_health":
+        if intent == "architecture_health":
             architecture_score = context.get("architecture_score", 0)
             if architecture_score >= 80:
                 return f"Repository '{repository_name}'s architecture is healthy with a score of {architecture_score}/100."
-            elif architecture_score >= 60:
-                return f"Repository '{repository_name}'s architecture is satisfactory with a score of {architecture_score}/100, but has room for improvement."
-            else:
-                return f"Repository '{repository_name}'s architecture needs attention with a score of {architecture_score}/100. Consider refactoring to improve modularity and separation of concerns."
-
-        elif intent == "quality_analysis":
+            if architecture_score >= 60:
+                return (
+                    f"Repository '{repository_name}'s architecture is satisfactory with a score of "
+                    f"{architecture_score}/100, but has room for improvement."
+                )
+            return (
+                f"Repository '{repository_name}'s architecture needs attention with a score of "
+                f"{architecture_score}/100. Consider refactoring to improve modularity and separation of concerns."
+            )
+        if intent == "quality_analysis":
             quality_score = context.get("quality_score", 0)
             if quality_score >= 80:
                 return f"Repository '{repository_name}'s code quality is strong with a score of {quality_score}/100."
-            elif quality_score >= 60:
-                return f"Repository '{repository_name}'s code quality is moderate with a score of {quality_score}/100. Focus on improving test coverage and code maintainability."
-            else:
-                return f"Repository '{repository_name}'s code quality requires attention with a score of {quality_score}/100. Consider refactoring and adding automated tests."
-
-        elif intent == "security_analysis":
+            if quality_score >= 60:
+                return (
+                    f"Repository '{repository_name}'s code quality is moderate with a score of "
+                    f"{quality_score}/100. Focus on improving test coverage and code maintainability."
+                )
+            return (
+                f"Repository '{repository_name}'s code quality requires attention with a score of "
+                f"{quality_score}/100. Consider refactoring and adding automated tests."
+            )
+        if intent == "security_analysis":
             security_score = context.get("security_score", 0)
             if security_score >= 80:
                 return f"Repository '{repository_name}'s security posture is strong with a score of {security_score}/100."
-            elif security_score >= 60:
-                return f"Repository '{repository_name}'s security posture is moderate with a score of {security_score}/100. Review dependencies and implement security best practices."
-            else:
-                return f"Repository '{repository_name}'s security posture needs attention with a score of {security_score}/100. Address vulnerabilities and implement security measures."
-
-        elif intent == "risk_analysis":
+            if security_score >= 60:
+                return (
+                    f"Repository '{repository_name}'s security posture is moderate with a score of "
+                    f"{security_score}/100. Review dependencies and implement security best practices."
+                )
+            return (
+                f"Repository '{repository_name}'s security posture needs attention with a score of "
+                f"{security_score}/100. Address vulnerabilities and implement security measures."
+            )
+        if intent == "risk_analysis":
             risk_score = context.get("risk_score", 0)
             if risk_score < 30:
                 return f"Repository '{repository_name}'s risk profile is low with a score of {risk_score}/100."
-            elif risk_score < 60:
-                return f"Repository '{repository_name}'s risk profile is moderate with a score of {risk_score}/100. Monitor technical debt and high-risk areas."
-            else:
-                return f"Repository '{repository_name}'s risk profile is high with a score of {risk_score}/100. Prioritize technical debt reduction and bug fixes."
-
-        elif intent == "dependency_health":
+            if risk_score < 60:
+                return (
+                    f"Repository '{repository_name}'s risk profile is moderate with a score of "
+                    f"{risk_score}/100. Monitor technical debt and high-risk areas."
+                )
+            return (
+                f"Repository '{repository_name}'s risk profile is high with a score of "
+                f"{risk_score}/100. Prioritize technical debt reduction and bug fixes."
+            )
+        if intent == "dependency_health":
             frameworks = context.get("frameworks", [])
             if frameworks:
-                return f"Repository '{repository_name}'s uses {len(frameworks)} frameworks: {', '.join(frameworks)}. Monitor for vulnerabilities and keep dependencies updated."
-            else:
-                return f"Repository '{repository_name}'s dependency information is limited. Consider implementing dependency management best practices."
+                return (
+                    f"Repository '{repository_name}'s uses {len(frameworks)} frameworks: "
+                    f"{', '.join(frameworks)}. Monitor for vulnerabilities and keep dependencies updated."
+                )
+            return (
+                f"Repository '{repository_name}'s dependency information is limited. "
+                "Consider implementing dependency management best practices."
+            )
 
-        else:
-            # Generic response
-            health_score = context.get("health_score", 0)
-            architecture_score = context.get("architecture_score", 0)
-            return f"Repository '{repository_name}'s health score is {health_score}/100 and architecture score is {architecture_score}/100. This provides a baseline for engineering quality assessment."
+        health_score = context.get("health_score", 0)
+        architecture_score = context.get("architecture_score", 0)
+        return (
+            f"Repository '{repository_name}'s health score is {health_score}/100 and architecture score "
+            f"is {architecture_score}/100. This provides a baseline for engineering quality assessment."
+        )
 
-    def _identify_sources(
-        self,
-        context: dict[str, Any],
-    ) -> list[str]:
-        """Identify sources for the answer.
-
-        Args:
-            context: Repository context.
-
-        Returns:
-            List of source names.
-        """
+    def _identify_sources(self, context: dict[str, Any]) -> list[str]:
         intent = context.get("intent", "unknown")
-        module = context.get("module", "scanner")
-
         sources = ["Repository Registry"]
-
-        # Add module-specific sources
         if intent == "architecture_health":
             sources.extend(["Architecture Report Engine", "Architecture Builder"])
         elif intent == "quality_analysis":
@@ -202,7 +187,6 @@ class ResponseBuilder:
             sources.extend(["Risk Engine"])
         elif intent == "dependency_health":
             sources.extend(["Dependency Health Dashboard"])
-
         return list(set(sources))
 
     def _gather_evidence(
@@ -210,51 +194,24 @@ class ResponseBuilder:
         context: dict[str, Any],
         module_output: dict[str, Any] | None,
     ) -> list[str]:
-        """Gather evidence for the answer.
-
-        Args:
-            context: Repository context.
-            module_output: Module output.
-
-        Returns:
-            List of evidence items.
-        """
-        evidence = []
-
-        # Add repository metrics as evidence
-        evidence.append(f"Repository: {context.get('repository_name', 'Unknown')}")
-        evidence.append(f"Health Score: {context.get('health_score', 0)}/100")
-        evidence.append(f"Architecture Score: {context.get('architecture_score', 0)}/100")
-        evidence.append(f"Quality Score: {context.get('quality_score', 0)}/100")
-        evidence.append(f"Security Score: {context.get('security_score', 0)}/100")
-        evidence.append(f"Risk Score: {context.get('risk_score', 0)}/100")
-
-        # Add language/framework info
+        evidence = [
+            f"Repository: {context.get('repository_name', 'Unknown')}",
+            f"Health Score: {context.get('health_score', 0)}/100",
+            f"Architecture Score: {context.get('architecture_score', 0)}/100",
+            f"Quality Score: {context.get('quality_score', 0)}/100",
+            f"Security Score: {context.get('security_score', 0)}/100",
+            f"Risk Score: {context.get('risk_score', 0)}/100",
+        ]
         languages = context.get("languages", [])
         if languages:
             evidence.append(f"Languages: {', '.join(languages)}")
-
         frameworks = context.get("frameworks", [])
         if frameworks:
             evidence.append(f"Frameworks: {', '.join(frameworks)}")
-
         return evidence
 
-    def _identify_related_modules(
-        self,
-        context: dict[str, Any],
-    ) -> list[str]:
-        """Identify related modules.
-
-        Args:
-            context: Repository context.
-
-        Returns:
-            List of related module names.
-        """
+    def _identify_related_modules(self, context: dict[str, Any]) -> list[str]:
         intent = context.get("intent", "unknown")
-
-        # Map intents to related modules
         related_modules = {
             "repository_info": ["Quality Analyzer", "Architecture Report"],
             "architecture_health": ["Architecture Report", "Architecture Recommendation", "Architecture Drift"],
@@ -280,7 +237,6 @@ class ResponseBuilder:
             "github": ["GitHub Integration", "Repository Sync"],
             "jira": ["Jira Integration", "Notification Engine"],
         }
-
         return related_modules.get(intent, ["Quality Analyzer", "Architecture Report"])
 
 

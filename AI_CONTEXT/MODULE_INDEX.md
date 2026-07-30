@@ -56,6 +56,7 @@ Legend: **API registered** = included in `app/main.py`.
 | Timeline Intelligence | `app/timeline/` | Evolution, hotspots, ownership | Memory, Snapshots, Cache, Telemetry | Planning, Agents, Impact, RAG | `/timeline` | `test_timeline.py` | Git providers |
 | Impact Analysis | `app/impact_analysis/` | Change blast radius, propagation, risk, memory refresh hints | GraphQuery, Traverser, SymbolResolver, Memory, Timeline | Planning, Agents, Reports | `/impact` | `test_impact_analysis.py` | PR/diff/CI analysis |
 | Engineering Reports | `app/engineering_reports/` | Compose multi-source engineering reports + exporters | Memory, Reasoning, Timeline, Impact, Cache, Telemetry | Copilot, API clients | `/reports` | `test_engineering_reports.py` | PDF/HTML exporters |
+| Unified Copilot Orchestrator | `app/copilot/` | Planning-driven orchestration of all intelligence; conversation memory; provider abstraction | Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Reports, Cache, Telemetry | Clients / chat UX | `/copilot/chat`, `/execute`, `/history`, legacy `/{id}` | `test_copilot.py` | Cloud LLM providers; specialist agents as tools |
 
 ---
 
@@ -94,7 +95,7 @@ Legend: **API registered** = included in `app/main.py`.
 | Chat | `app/chat/` | NL chat | `/chat` | `test_chat_*.py` | LLM partially mocked |
 | README gen | `app/readme/` | README generation | `/readme` | — | |
 | API Docs | `app/apidocs/` | API doc generation | `/apidocs` | `test_apidocs_api.py` | |
-| Copilot | `app/copilot/` | Capability routing | `/copilot` | `test_copilot.py` | |
+| Copilot | `app/copilot/` | Unified Intelligence Orchestrator (CG-070) + legacy capability routing | `/copilot` | `test_copilot.py` | Prefer `/chat` + `/execute` |
 | Workspace | `app/workspace/` | Multi-repo workspace | `/workspace` | `test_workspace.py` | |
 | Dashboard | `app/dashboard/` | Executive dashboard | `/dashboard` | `test_dashboard.py` | |
 | Team Analytics | `app/team_analytics/` | Team metrics | `/team-analytics` | `test_team_analytics.py` | |

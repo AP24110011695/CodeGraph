@@ -5,6 +5,50 @@
 
 ---
 
+## CG-070 — Unified Intelligence Orchestrator (CodeGraph Copilot)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-31 |
+| **CG Module** | CG-070 |
+
+### Files added
+
+- `backend/app/copilot/conversation_manager.py`  
+- `backend/app/copilot/conversation_memory.py`  
+- `backend/app/copilot/context_builder.py`  
+- `backend/app/copilot/prompt_builder.py`  
+- `backend/app/copilot/tool_executor.py`  
+- `backend/app/copilot/provider_manager.py`  
+- `backend/app/copilot/post_processor.py`  
+- `backend/app/copilot/execution_statistics.py`
+
+### Files modified
+
+- `backend/app/copilot/__init__.py`  
+- `backend/app/copilot/copilot_engine.py`  
+- `backend/app/copilot/response_builder.py`  
+- `backend/app/api/copilot.py`  
+- `backend/app/schemas/copilot.py`  
+- `backend/tests/test_copilot.py`  
+- AI_CONTEXT living docs
+
+### Architecture changes
+
+- Copilot upgraded from keyword capability routing to Planning-driven orchestration composing Memory, RAG, Reasoning, Timeline, Impact, Reports, and Agents.  
+- Conversation memory separated from Repository Memory.  
+- Pluggable tool registry + LLM provider manager.
+
+### Breaking changes
+
+- None for legacy `POST /copilot/{upload_id}`. New preferred APIs: `/copilot/chat`, `/copilot/execute`, `/copilot/history`.
+
+### Design improvements
+
+- Structured engineering responses with confidence, citations, recommendations, follow-ups, execution stats.
+
+---
+
 ## CG-069 — Engineering Intelligence Report Generator
 
 | Field | Value |

@@ -15,7 +15,7 @@
 
 **Mitigation:** Register the three routers in `app/main.py` (and resolve any lifecycle/path assumptions in those tests). Domain packages `quality`, `smells`, `refactoring` already exist and are reused elsewhere.
 
-Last observed full-suite tally: **1187 passed / 18 failed / 1 skipped**.
+Last observed full-suite tally: **1198 passed / 18 failed / 1 skipped**.
 
 ---
 
@@ -37,6 +37,7 @@ Last observed full-suite tally: **1187 passed / 18 failed / 1 skipped**.
 | CI/CD providers | `app/cicd/provider_client.py` | Documented mock |
 | Slack / Discord | `app/notifications/*_client.py` | Documented mocks |
 | Chat LLM answers | `app/chat/chat_service.py` | Mock answer generation comments |
+| Copilot cloud LLM providers | `app/copilot/provider_manager.py` | LocalHeuristic default; Ollama/Azure/Groq stubs; OpenAI/Claude/Gemini reuse `app/ai/llm_client` when keys present |
 | Timeline VCS providers | `app/timeline/history_provider.py` | `NotImplementedError` for git/github/gitlab/bitbucket |
 | Code gen templates | `app/code_generation/template_selector.py` | Multiple TODO placeholders in generated templates |
 
@@ -92,4 +93,5 @@ Last observed full-suite tally: **1187 passed / 18 failed / 1 skipped**.
 
 | Date | Change |
 |------|--------|
+| 2026-07-31 | CG-070: noted Copilot provider stubs (Ollama/Azure/Groq) + local heuristic default; suite tally 1198/18/1 |
 | 2026-07-31 | Initial TECH_DEBT captured from repo inspection + CG-067/068 validation runs |

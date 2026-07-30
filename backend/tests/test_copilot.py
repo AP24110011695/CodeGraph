@@ -590,3 +590,203 @@ class TestRegression:
         )
         result = dashboard_engine.generate_dashboard(workspace_id)
         assert result["workspace_id"] == workspace_id
+
+
+# ---------------------------------------------------------------------------
+# CG-070 — Unified Intelligence Orchestrator
+# ---------------------------------------------------------------------------
+
+
+class TestCG070Orchestrator:
+    """Tests for planning-driven Copilot orchestration."""
+
+    def setup_method(self) -> None:
+        from app.copilot.conversation_memory import conversation_memory
+
+        conversation_memory.clear()
+
+    def test_chat_orchestrates_planning_and_tools(self) -> None:
+        from app.copilot.copilot_engine import CopilotEngine
+        from app.repository_memory.memory_engine import memory_engine
+
+        engine = CopilotEngine()
+        repo = "copilot-orch-1"
+        memory_engine.build_memory(repo)
+        result = engine.chat(repo, "Explain the architecture of this repository")
+        assert result["repository_id"] == repo
+        assert result["answer"]
+        assert result["conversation_id"]
+        assert result["intent"] in (
+            "architecture_explanation",
+            "concept_explanation",
+            "general_query",
+        )
+        assert result["confidence"] >= 0
+        assert result["execution_time_ms"] >= 0
+        assert isinstance(result["tools_used"], list)
+        assert result["reasoning_summary"]
+        assert result["follow_up_questions"]
+
+    def test_execute_with_timeline_tool(self) -> None:
+        from app.copilot.copilot_engine import CopilotEngine
+
+        engine = CopilotEngine()
+        result = engine.execute(
+            "copilot-timeline-1",
+            "What are the repository timeline hotspots?",
+            tools=["timeline"],
+            options={"use_agents": False},
+        )
+        assert result["mode"] == "execute"
+        assert "timeline" in result["tools_used"] or any(
+            "Timeline" in m for m in result.get("modules_used", [])
+        )
+        assert result["answer"]
+
+    def test_execute_impact_tool(self) -> None:
+        from app.copilot.copilot_engine import CopilotEngine
+
+        engine = CopilotEngine()
+        result = engine.execute(
+            "copilot-impact-1",
+            "What is the impact if I modify AuthService?",
+            tools=["impact_analysis"],
+            options={"use_agents": False, "impact_target": "AuthService"},
+        )
+        assert result["answer"]
+        assert result["intent"] == "impact_analysis" or "impact_analysis" in result["tools_used"]
+
+    def test_conversation_history_and_clear(self) -> None:
+        from app.copilot.copilot_engine import CopilotEngine
+
+        engine = CopilotEngine()
+        first = engine.chat("copilot-hist-1", "Explain the architecture")
+        cid = first["conversation_id"]
+        engine.chat("copilot-hist-1", "What changed recently?", conversation_id=cid)
+        hist = engine.get_history(conversation_id=cid)
+        assert hist["count"] >= 4  # 2 user + 2 assistant
+        cleared = engine.clear_history(conversation_id=cid)
+        assert cleared["cleared_sessions"] == 1
+        hist2 = engine.get_history(conversation_id=cid)
+        assert hist2["count"] == 0
+
+    def test_provider_manager_local(self) -> None:
+        from app.copilot.provider_manager import ProviderManager
+
+        pm = ProviderManager(preferred="local")
+        out = pm.generate("User Question:\nHow healthy is the repo?", system="sys")
+        assert out["text"]
+        assert out["provider"]
+
+    def test_tool_executor_pluggable(self) -> None:
+        from app.copilot.tool_executor import ToolExecutor
+
+        te = ToolExecutor()
+
+        def custom(repo, query, ctx):
+            return {"summary": f"custom:{repo}", "result": {"ok": True}, "citations": ["custom"]}
+
+        te.register("custom_tool", custom)
+        assert "custom_tool" in te.list_tools()
+        results = te.execute_plan(
+            "r1",
+            "hello",
+            {"intent": "general_query", "required_modules": [], "execution_order": []},
+            options={"tools": ["custom_tool"]},
+        )
+        assert any(r["tool"] == "custom_tool" and r["status"] == "ok" for r in results)
+
+    def test_post_processor_confidence(self) -> None:
+        from app.copilot.post_processor import PostProcessor
+
+        pp = PostProcessor()
+        processed = pp.process(
+            answer="ok",
+            plan={"intent": "general_query", "confidence_score": 0.6},
+            context={"repository_id": "r", "memory_summary": {"x": 1}, "rag_context": "ctx"},
+            tool_results=[{"tool": "rag", "status": "ok", "citations": ["RAG"], "module": "RAG Engine"}],
+            provider_name="LocalHeuristicProvider",
+            execution_time_ms=12,
+        )
+        assert 0.0 <= processed["confidence"] <= 1.0
+        assert "RAG" in processed["citations"] or "rag" in processed["tools_used"]
+
+
+class TestCG070API:
+    """API tests for /copilot/chat, /execute, /history."""
+
+    @pytest.fixture
+    def client(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+
+        return TestClient(app)
+
+    def setup_method(self) -> None:
+        from app.copilot.conversation_memory import conversation_memory
+
+        conversation_memory.clear()
+
+    def test_chat_api(self, client) -> None:
+        response = client.post(
+            "/copilot/chat",
+            json={
+                "repository_id": "api-copilot-1",
+                "query": "Explain the architecture",
+                "provider": "local",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["repository_id"] == "api-copilot-1"
+        assert data["answer"]
+        assert "tools_used" in data
+        assert "confidence" in data
+
+    def test_execute_api(self, client) -> None:
+        response = client.post(
+            "/copilot/execute",
+            json={
+                "repository_id": "api-copilot-2",
+                "query": "Generate an engineering report for repository health",
+                "provider": "local",
+                "tools": ["engineering_reports"],
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["mode"] == "execute"
+        assert data["answer"]
+
+    def test_history_api(self, client) -> None:
+        chat = client.post(
+            "/copilot/chat",
+            json={"repository_id": "api-copilot-3", "query": "What is the timeline?"},
+        )
+        assert chat.status_code == 200
+        cid = chat.json()["conversation_id"]
+        hist = client.get("/copilot/history", params={"conversation_id": cid})
+        assert hist.status_code == 200
+        assert hist.json()["count"] >= 2
+        cleared = client.delete("/copilot/history", params={"conversation_id": cid})
+        assert cleared.status_code == 200
+        assert cleared.json()["cleared_sessions"] == 1
+
+    def test_legacy_endpoint_still_works(self, client) -> None:
+        from app.copilot.copilot_engine import copilot_engine
+
+        copilot_engine.repository_registry.register_repository(
+            repository_name="example/repo",
+            upload_id="legacy_api_repo",
+            languages=["Python"],
+            frameworks=["FastAPI"],
+            architecture_score=85,
+            health_score=90,
+            status="READY",
+        )
+        response = client.post(
+            "/copilot/legacy_api_repo",
+            json={"query": "What is the architecture health?"},
+        )
+        assert response.status_code == 200
+        assert response.json()["intent"] == "architecture_health"

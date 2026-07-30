@@ -263,16 +263,21 @@ Specialized structural analyzers with dedicated APIs (`/design-patterns`, `/soli
 
 Multi-repo and reporting surfaces (`workspace`, `dashboard`, `team_analytics`, `repository_comparison`, `release_notes`).
 
-### Copilot
+### Copilot / Unified Intelligence Orchestrator (CG-070)
 
 | | |
 |--|--|
-| **Location** | `app/copilot/` (capability registry, intent router, engine) |
-| **Responsibility** | Route NL queries to capabilities (includes timeline + impact keywords) |
+| **Location** | `app/copilot/`, API `/copilot` |
+| **Responsibility** | Orchestrate existing intelligence to answer engineering questions like an AI Software Architect |
+| **Components** | CopilotEngine, ConversationManager/Memory, ContextBuilder, PromptBuilder, ToolExecutor, ProviderManager, ResponseBuilder, PostProcessor, ExecutionStatistics (+ legacy IntentRouter/CapabilityRegistry) |
+| **Dependencies** | Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Reports, Cache, Telemetry |
+| **APIs** | `POST /chat`, `POST /execute`, `GET|DELETE /history`, legacy `POST /{upload_id}` |
+| **Rule** | Never reimplement engines — register tools / providers instead |
+| **Extensibility** | `ToolExecutor.register`, `ProviderManager.register`; future specialist agents as tools |
 
 ### Chat / Explain / README / API Docs
 
-Conversational and documentation generators (`chat`, `ai/`, `readme`, `apidocs`). Chat LLM path includes mock answer generation today.
+Conversational and documentation generators (`chat`, `ai/`, `readme`, `apidocs`). Chat LLM path includes mock answer generation today. Prefer Copilot `/chat` for repository intelligence Q&A.
 
 ### Integrations: GitHub / Jira / CI/CD / Notifications
 
@@ -307,6 +312,16 @@ Engines + clients exist; **clients are documented as mock implementations** for 
 ---
 
 ## Request data flow (typical intelligence query)
+
+```text
+POST /copilot/chat
+  → CopilotEngine
+  → planning_engine.plan(query)
+  → ContextBuilder (Memory + RAG + conversation)
+  → ToolExecutor (engines / optional agents)
+  → ProviderManager.synthesize
+  → PostProcessor + structured CopilotChatResponse
+```
 
 ```text
 POST /agents/execute/{repository_id}

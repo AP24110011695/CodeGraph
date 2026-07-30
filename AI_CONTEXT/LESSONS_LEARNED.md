@@ -5,6 +5,50 @@
 
 ---
 
+## CG-070 — Unified Intelligence Orchestrator / CodeGraph Copilot (2026-07-31)
+
+### Problem solved
+
+Users need a single AI Software Architect interface that answers engineering questions by coordinating every intelligence subsystem — without a second copy of planning, retrieval, reasoning, or analysis.
+
+### Design decisions
+
+- Copilot is an **orchestration facade** only: Planning decides intent/modules; `ToolExecutor` invokes existing engines; Agents run when execute/use_agents requests them.  
+- Conversation Memory is **independent** of Repository Memory (follow-ups vs durable repo summaries).  
+- `ProviderManager` wraps `LLMProvider` ABC (+ local heuristic fallback); no vendor logic inside `CopilotEngine`.  
+- Structured engineering responses (answer, confidence, tools, citations, recommendations, follow-ups).  
+- Legacy `POST /copilot/{upload_id}` capability-routing path retained for compatibility.
+
+### Trade-offs
+
+- Default `chat` runs tools from the plan without always engaging multi-agent collaboration (faster); `execute` opts into agents.  
+- Local heuristic provider used when cloud keys are absent — deterministic demos, not production LLM quality.  
+- Knowledge Graph tool surfaces memory-backed structure rather than rebuilding graphs.
+
+### Architecture decisions
+
+- Package modules: conversation_manager/memory, context_builder, prompt_builder, tool_executor, provider_manager, response_builder, post_processor, execution_statistics, copilot_engine.  
+- APIs: `POST /chat`, `POST /execute`, `GET|DELETE /history` registered before legacy `/{upload_id}`.  
+- New tools register via `ToolExecutor.register` without modifying the engine.
+
+### Lessons learned
+
+- Static routes (`/chat`, `/history`) must precede path params.  
+- Parameter names that match imported singletons (`response_builder`) shadow imports — alias imports in the facade.  
+- Optional enrichment/tools must never fail the primary orchestration path.
+
+### Future considerations
+
+- Wire OpenAI/Claude/Gemini/Groq/Ollama/Azure for synthesis.  
+- Register Performance/Testing/Cloud/DevOps/Database/Code-Review agents as tools.  
+- Persist conversation memory beyond process lifetime.
+
+### Why this solution
+
+Matches AI_RULES: composition over duplication, Planning for orchestration, thin API, DI-friendly providers/tools.
+
+---
+
 ## CG-069 — Engineering Intelligence Report Generator (2026-07-31)
 
 ### Problem solved

@@ -10,8 +10,9 @@
 - **CG-001 … CG-066** — Treated as **implemented** foundation (ingest → intelligence stack through Multi-Agent Framework), per project operating assumption and presence of corresponding packages/routers.
 - **CG-067** — Timeline Intelligence — **completed**.
 - **CG-068** — Impact Analysis — **completed**.
-- **CG-069** — Engineering Intelligence Report Generator — **completed** (current latest).
-- **CG-070+** — Not specified in-repo; do not invent ticket titles.
+- **CG-069** — Engineering Intelligence Report Generator — **completed**.
+- **CG-070** — Unified Intelligence Orchestrator (CodeGraph Copilot) — **completed** (current latest).
+- **CG-071+** — Not specified in-repo; do not invent ticket titles.
 
 ---
 
@@ -19,9 +20,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Intelligence Platform — Composed Reporting |
-| **Current module** | CG-069 complete; awaiting next assigned CG ticket |
-| **Latest milestone** | Engineering Intelligence Report Generator |
+| **Phase** | Intelligence Platform — Unified Orchestration |
+| **Current module** | CG-070 complete; awaiting next assigned CG ticket |
+| **Latest milestone** | Unified Intelligence Orchestrator (CodeGraph Copilot) |
 
 ---
 
@@ -43,13 +44,19 @@ Workspace, GitHub, CI/CD, Jira, Notifications, Team Analytics, Repository Compar
 
 Incremental Indexing / Snapshots, Distributed Cache, Telemetry, Semantic Engine, Repository Memory, Advanced RAG, Architecture Reasoning, Planning Engine, Multi-Agent Framework.
 
-### Wave E — Temporal & predictive (latest)
+### Wave E — Temporal & predictive
 
 | CG | Module | Status |
 |----|--------|--------|
 | CG-067 | Repository Timeline Intelligence | **Done** |
 | CG-068 | Intelligent Code Impact Analysis | **Done** (dependency/architecture/API/propagation/risk/confidence; affected modules/services/APIs/symbols/memory; Git/PR-ready `related_files`) |
 | CG-069 | Engineering Intelligence Report Generator | **Done** (composed reports; pluggable exporters JSON/Markdown; HTML/PDF stubs) |
+
+### Wave F — Unified orchestration (latest)
+
+| CG | Module | Status |
+|----|--------|--------|
+| CG-070 | Unified Intelligence Orchestrator (CodeGraph Copilot) | **Done** (Planning-driven tool orchestration; conversation memory; provider abstraction; structured engineering responses) |
 
 ---
 
@@ -61,6 +68,7 @@ Incremental Indexing / Snapshots, Distributed Cache, Telemetry, Semantic Engine,
 | Platform (cache, telemetry, workflows, workers) | Present |
 | Planning + Agents | Present (7 builtin agents) |
 | Timeline + Impact + Reports | Present |
+| Unified Copilot Orchestrator | Present (`/copilot/chat`, `/execute`, `/history`) |
 | Production VCS/LLM/Redis/Vector | Stubbed / in-memory / mock — see debt |
 | Frontend parity | Partial / separate tree |
 
@@ -70,7 +78,7 @@ Incremental Indexing / Snapshots, Distributed Cache, Telemetry, Semantic Engine,
 
 ## Upcoming modules
 
-> Assign concrete CG-069+ titles only when product tickets exist.
+> Assign concrete CG-071+ titles only when product tickets exist.
 
 Candidate themes **already hinted by stubs/extension points** (not committed tickets):
 
@@ -79,7 +87,7 @@ Candidate themes **already hinted by stubs/extension points** (not committed tic
 3. Redis `CacheInterface` backend  
 4. Production vector DB for Semantic/RAG  
 5. Register quality/smells/refactoring routers + fix 18 tests  
-6. Real LLM client for Chat/Explain  
+6. Wire cloud LLM providers for Copilot (OpenAI/Claude/Gemini already abstracted)  
 7. Event streaming (Kafka-class) replacing pure in-process bus if scale requires  
 
 ---
@@ -91,6 +99,7 @@ Candidate themes **already hinted by stubs/extension points** (not committed tic
 - [x] Planning → Agents pipeline  
 - [x] Provider-style Timeline history abstraction  
 - [x] Impact analysis reusing traverser (no duplicate BFS)  
+- [x] Unified Copilot Orchestrator composing all intelligence  
 - [ ] Production distributed cache  
 - [ ] Production embedding store  
 - [ ] Live VCS providers  

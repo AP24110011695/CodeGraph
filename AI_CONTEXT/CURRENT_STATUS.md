@@ -9,12 +9,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Current Phase** | Intelligence Platform — Composed Reporting |
-| **Current Module** | CG-069 Engineering Intelligence Report Generator (**completed**) |
-| **Upcoming Module** | Next assigned CG ticket (CG-070+ TBD — do not invent) |
-| **Latest Milestone** | Composed engineering reports from Memory/Timeline/Impact/Reasoning |
+| **Current Phase** | Intelligence Platform — Unified Orchestration |
+| **Current Module** | CG-070 Unified Intelligence Orchestrator / CodeGraph Copilot (**completed**) |
+| **Upcoming Module** | Next assigned CG ticket (CG-071+ TBD — do not invent) |
+| **Latest Milestone** | Planning-driven Copilot composing Memory/RAG/Reasoning/Timeline/Impact/Reports/Agents |
 | **Architecture Health** | Strong composition; registration gaps for quality/smells/refactoring APIs |
-| **Regression Status** | No new regressions from CG-069; 18 pre-existing API test failures remain |
+| **Regression Status** | No new regressions from CG-070; 18 pre-existing API test failures remain |
 
 ---
 
@@ -26,6 +26,7 @@
 | CG-067 | Repository Timeline Intelligence | `app/timeline/` |
 | CG-068 | Intelligent Code Impact Analysis | `app/impact_analysis/` |
 | CG-069 | Engineering Intelligence Report Generator | `app/engineering_reports/` |
+| CG-070 | Unified Intelligence Orchestrator (Copilot) | `app/copilot/` |
 
 ---
 
@@ -33,10 +34,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Passed | **1187** |
+| Passed | **1198** |
 | Failed | **18** (pre-existing) |
 | Skipped | **1** |
-| Report tests (`test_engineering_reports.py`) | **10 passed** |
+| Copilot tests (`test_copilot.py`) | **50 passed** |
+| Report tests | **10 passed** |
 | Impact tests | **15 passed** |
 | Timeline tests | **23 passed** |
 
@@ -52,7 +54,7 @@ Unchanged — see [TECH_DEBT.md](./TECH_DEBT.md).
 
 ## Active engines (facades)
 
-Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, **Engineering Reports**, Cache, Telemetry, Workflows, Workers — present.
+Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Engineering Reports, **Unified Copilot Orchestrator**, Cache, Telemetry, Workflows, Workers — present.
 
 ---
 
