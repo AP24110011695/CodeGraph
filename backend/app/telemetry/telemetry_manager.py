@@ -68,6 +68,7 @@ class TelemetryManager:
         self.health_registry.register("repository_state_machine", lambda: {"status": "healthy"})
         self.health_registry.register("reliability_layer", lambda: {"status": "healthy"})
         self.health_registry.register("incremental_indexing", lambda: {"status": "healthy"})
+        self.health_registry.register("semantic_engine", self._semantic_details)
 
     @staticmethod
     def _cache_details() -> dict:
@@ -88,6 +89,19 @@ class TelemetryManager:
     def _workflow_details() -> dict:
         from app.workflows.workflow_engine import workflow_engine
         return {"status": "healthy", "active_workflows": len(workflow_engine.list_workflows())}
+
+    @staticmethod
+    def _semantic_details() -> dict:
+        """Report semantic engine health: all components are stateless helpers so always healthy."""
+        from app.semantic.semantic_engine import SemanticEngine
+        from app.semantic.hybrid_retriever import HybridRetriever
+        from app.semantic.symbol_resolver import SymbolResolver
+        from app.semantic.relationship_traverser import RelationshipTraverser
+        components = [SemanticEngine, HybridRetriever, SymbolResolver, RelationshipTraverser]
+        return {
+            "status": "healthy",
+            "components": [cls.__name__ for cls in components],
+        }
 
 
 telemetry_manager = TelemetryManager()
