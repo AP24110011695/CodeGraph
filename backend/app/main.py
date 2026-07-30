@@ -56,6 +56,7 @@ from app.api.semantic import router as semantic_router
 from app.api.repository_memory import router as repository_memory_router
 from app.api.rag import router as rag_router
 from app.api.architecture_reasoning import router as architecture_reasoning_router
+from app.api.planning import router as planning_router
 from app.telemetry.telemetry_manager import telemetry_manager
 import uuid
 
@@ -141,6 +142,7 @@ app.include_router(semantic_router)
 app.include_router(repository_memory_router)
 app.include_router(rag_router)
 app.include_router(architecture_reasoning_router)
+app.include_router(planning_router)
 
 
 @app.get("/")
