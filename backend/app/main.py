@@ -42,6 +42,7 @@ from app.api.repository_comparison import router as repository_comparison_router
 from app.api.release_notes import router as release_notes_router
 from app.api.dashboard import router as dashboard_router
 from app.api.copilot import router as copilot_router
+from app.api.jobs import router as jobs_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -91,6 +92,7 @@ app.include_router(repository_comparison_router)
 app.include_router(release_notes_router)
 app.include_router(dashboard_router)
 app.include_router(copilot_router)
+app.include_router(jobs_router)
 
 
 @app.get("/")
