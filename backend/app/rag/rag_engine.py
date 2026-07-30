@@ -29,6 +29,8 @@ class RAGEngine:
         raw_items.extend(self.context_selector.select_memory_context(repository_id))
         raw_items.extend(self.context_selector.select_semantic_context(repository_id, query))
         raw_items.extend(self.context_selector.select_graph_context(repository_id, analysis["entities"]))
+        if analysis["intent"] in ("timeline_analysis", "mechanism_explanation", "general_explanation"):
+            raw_items.extend(self.context_selector.select_timeline_context(repository_id, query))
         
         # 3. Context Optimization
         optimized_items = self.context_optimizer.optimize(raw_items, max_tokens)

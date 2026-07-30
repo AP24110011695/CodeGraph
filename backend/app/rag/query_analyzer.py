@@ -5,7 +5,19 @@ class QueryAnalyzer:
         query_lower = query.lower()
         intent = "general_explanation"
         
-        if "where" in query_lower or "find" in query_lower:
+        if any(
+            phrase in query_lower
+            for phrase in (
+                "timeline",
+                "what changed",
+                "hotspot",
+                "unstable",
+                "evolve",
+                "ownership",
+            )
+        ):
+            intent = "timeline_analysis"
+        elif "where" in query_lower or "find" in query_lower:
             intent = "location_search"
         elif "how" in query_lower or "explain" in query_lower:
             intent = "mechanism_explanation"

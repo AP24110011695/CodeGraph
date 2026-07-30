@@ -14,6 +14,8 @@ def test_agent_registration():
     assert "DocumentationAgent" in names
     assert "RefactoringAgent" in names
     assert "DependencyAgent" in names
+    assert "TimelineAgent" in names
+    assert "ImpactAgent" in names
 
 def test_get_agents_api():
     response = client.get("/agents")

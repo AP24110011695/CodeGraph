@@ -38,6 +38,44 @@ class CapabilityRegistry:
             ["drift", "change", "evolution"],
             "architecture_drift",
         )
+        self.register_capability(
+            "repository_timeline",
+            [
+                "timeline",
+                "what changed",
+                "hotspot",
+                "unstable",
+                "ownership",
+                "evolve together",
+                "tightly coupled",
+                "repository history",
+            ],
+            "timeline",
+        )
+        self.register_capability(
+            "impact_analysis",
+            [
+                "impact",
+                "what breaks",
+                "blast radius",
+                "propagation",
+                "depend on this",
+                "change risk",
+                "if I modify",
+            ],
+            "impact_analysis",
+        )
+        self.register_capability(
+            "engineering_reports",
+            [
+                "engineering report",
+                "executive report",
+                "health report",
+                "technical debt report",
+                "repository health",
+            ],
+            "engineering_reports",
+        )
 
         # Quality capabilities
         self.register_capability(

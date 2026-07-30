@@ -11,6 +11,13 @@ class CacheKeys:
     SEARCH_RESULTS = "search_results"
     DASHBOARD_AGGREGATES = "dashboard_aggregates"
     COPILOT_CONTEXT = "copilot_context"
+    TIMELINE = "timeline"
+    TIMELINE_EVOLUTION = "timeline_evolution"
+    TIMELINE_HOTSPOTS = "timeline_hotspots"
+    IMPACT_ANALYSIS = "impact_analysis"
+    IMPACT_SUMMARY = "impact_summary"
+    ENGINEERING_REPORT = "engineering_report"
+    ENGINEERING_REPORT_SUMMARY = "engineering_report_summary"
 
     @staticmethod
     def namespace(namespace: str) -> str:
@@ -55,3 +62,31 @@ class CacheKeys:
     @classmethod
     def copilot_context(cls, repository_id: str, context_id: str) -> str:
         return cls.build(cls.COPILOT_CONTEXT, repository_id, context_id)
+
+    @classmethod
+    def timeline(cls, repository_id: str) -> str:
+        return cls.build(cls.TIMELINE, repository_id)
+
+    @classmethod
+    def timeline_evolution(cls, repository_id: str) -> str:
+        return cls.build(cls.TIMELINE_EVOLUTION, repository_id)
+
+    @classmethod
+    def timeline_hotspots(cls, repository_id: str) -> str:
+        return cls.build(cls.TIMELINE_HOTSPOTS, repository_id)
+
+    @classmethod
+    def impact_analysis(cls, repository_id: str, digest: str) -> str:
+        return cls.build(cls.IMPACT_ANALYSIS, repository_id, digest)
+
+    @classmethod
+    def impact_summary(cls, repository_id: str) -> str:
+        return cls.build(cls.IMPACT_SUMMARY, repository_id)
+
+    @classmethod
+    def engineering_report(cls, repository_id: str, digest: str) -> str:
+        return cls.build(cls.ENGINEERING_REPORT, repository_id, digest)
+
+    @classmethod
+    def engineering_report_summary(cls, repository_id: str) -> str:
+        return cls.build(cls.ENGINEERING_REPORT_SUMMARY, repository_id)

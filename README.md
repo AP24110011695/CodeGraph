@@ -12,11 +12,19 @@ Our mission is to make every codebase intelligible and accessible through AI-dri
 
 ---
 
+## AI Assistants
+
+**Start here:** [`AI_CONTEXT/README_AI.md`](./AI_CONTEXT/README_AI.md)
+
+The `AI_CONTEXT/` folder is the permanent knowledge base for Cursor and any other AI assistant. It documents real architecture, rules, roadmap, status, debt, and module index — read it before implementing the next CG module.
+
+---
+
 ## Current Status
 
 **⚠️ Under Development**
 
-This project is currently in early development. Core features are being implemented and the API is subject to change.
+This project is currently in early development. Core features are being implemented and the API is subject to change. For live backend status used by AI sessions, prefer [`AI_CONTEXT/CURRENT_STATUS.md`](./AI_CONTEXT/CURRENT_STATUS.md).
 
 ---
 

@@ -12,10 +12,12 @@ class CollaborationEngine:
     def _map_intent_to_agents(self, intent: str) -> list[str]:
         if intent == "architecture_explanation":
             return ["ArchitectureAgent", "DocumentationAgent"]
+        elif intent == "timeline_analysis":
+            return ["TimelineAgent", "ArchitectureAgent", "DocumentationAgent"]
         elif intent == "code_modification":
             return ["RefactoringAgent"]
         elif intent == "impact_analysis":
-            return ["DependencyAgent", "ArchitectureAgent"]
+            return ["ImpactAgent", "DependencyAgent", "ArchitectureAgent"]
         elif intent == "concept_explanation":
             return ["DocumentationAgent"]
         elif intent == "code_location":

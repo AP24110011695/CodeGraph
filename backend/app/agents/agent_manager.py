@@ -30,9 +30,13 @@ from .builtin.security_agent import SecurityAgent
 from .builtin.documentation_agent import DocumentationAgent
 from .builtin.refactoring_agent import RefactoringAgent
 from .builtin.dependency_agent import DependencyAgent
+from .builtin.timeline_agent import TimelineAgent
+from .builtin.impact_agent import ImpactAgent
 
 agent_registry.register(ArchitectureAgent())
 agent_registry.register(SecurityAgent())
 agent_registry.register(DocumentationAgent())
 agent_registry.register(RefactoringAgent())
 agent_registry.register(DependencyAgent())
+agent_registry.register(TimelineAgent())
+agent_registry.register(ImpactAgent())

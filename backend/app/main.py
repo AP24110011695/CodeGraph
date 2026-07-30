@@ -58,6 +58,9 @@ from app.api.rag import router as rag_router
 from app.api.architecture_reasoning import router as architecture_reasoning_router
 from app.api.planning import router as planning_router
 from app.api.agents import router as agents_router
+from app.api.timeline import router as timeline_router
+from app.api.impact_analysis import router as impact_analysis_router
+from app.api.engineering_reports import router as engineering_reports_router
 from app.telemetry.telemetry_manager import telemetry_manager
 import uuid
 
@@ -145,6 +148,9 @@ app.include_router(rag_router)
 app.include_router(architecture_reasoning_router)
 app.include_router(planning_router)
 app.include_router(agents_router)
+app.include_router(timeline_router)
+app.include_router(impact_analysis_router)
+app.include_router(engineering_reports_router)
 
 
 @app.get("/")

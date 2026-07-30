@@ -52,6 +52,13 @@ def test_namespaced_cache_keys_cover_supported_domains():
     assert CacheKeys.search_results("repo", "hash") == "search_results:repo:hash"
     assert CacheKeys.dashboard_aggregates("workspace") == "dashboard_aggregates:workspace"
     assert CacheKeys.copilot_context("repo", "context") == "copilot_context:repo:context"
+    assert CacheKeys.timeline("repo") == "timeline:repo"
+    assert CacheKeys.timeline_evolution("repo") == "timeline_evolution:repo"
+    assert CacheKeys.timeline_hotspots("repo") == "timeline_hotspots:repo"
+    assert CacheKeys.impact_analysis("repo", "abc") == "impact_analysis:repo:abc"
+    assert CacheKeys.impact_summary("repo") == "impact_summary:repo"
+    assert CacheKeys.engineering_report("repo", "d") == "engineering_report:repo:d"
+    assert CacheKeys.engineering_report_summary("repo") == "engineering_report_summary:repo"
 
 
 def test_cache_api_stats_clear_and_delete():

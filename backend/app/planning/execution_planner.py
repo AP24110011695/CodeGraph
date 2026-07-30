@@ -5,10 +5,12 @@ class ExecutionPlanner:
     def plan_modules(self, intent: str) -> List[str]:
         if intent == "architecture_explanation":
             return ["RAG Engine", "Architecture Reasoning Engine"]
+        elif intent == "timeline_analysis":
+            return ["Timeline Intelligence Engine", "Repository Memory", "Knowledge Graph"]
         elif intent == "concept_explanation":
             return ["RAG Engine"]
         elif intent == "impact_analysis":
-            return ["Knowledge Graph", "Architecture Reasoning Engine"]
+            return ["Impact Analysis Engine", "Knowledge Graph", "Architecture Reasoning Engine"]
         elif intent == "code_modification":
             return ["Semantic Engine", "Refactoring Engine"]
         elif intent == "code_location":
@@ -19,8 +21,15 @@ class ExecutionPlanner:
         order = []
         # Logical layering: Data/Context fetchers go before Reasoners/Generators
         phases = [
-            ["Knowledge Graph", "Semantic Engine", "RAG Engine"], 
-            ["Architecture Reasoning Engine", "Refactoring Engine"]
+            [
+                "Knowledge Graph",
+                "Semantic Engine",
+                "RAG Engine",
+                "Repository Memory",
+                "Timeline Intelligence Engine",
+                "Impact Analysis Engine",
+            ],
+            ["Architecture Reasoning Engine", "Refactoring Engine"],
         ]
         for phase in phases:
             for mod in modules:
@@ -34,6 +43,10 @@ class ExecutionPlanner:
     def estimate_cost(self, modules: List[str]) -> str:
         if "Architecture Reasoning Engine" in modules or "Refactoring Engine" in modules:
             return "High"
-        if "RAG Engine" in modules:
+        if (
+            "RAG Engine" in modules
+            or "Timeline Intelligence Engine" in modules
+            or "Impact Analysis Engine" in modules
+        ):
             return "Medium"
         return "Low"
