@@ -36,6 +36,7 @@ from app.api.workspace import router as workspace_router
 from app.api.github import router as github_router
 from app.api.cicd import router as cicd_router
 from app.api.jira import router as jira_router
+from app.api.notifications import router as notifications_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -79,6 +80,7 @@ app.include_router(workspace_router)
 app.include_router(github_router)
 app.include_router(cicd_router)
 app.include_router(jira_router)
+app.include_router(notifications_router)
 
 
 @app.get("/")
