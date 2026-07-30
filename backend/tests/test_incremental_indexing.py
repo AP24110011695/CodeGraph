@@ -1,263 +1,110 @@
-"""Tests for incremental repository indexing."""
-
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-from app.indexing.index_manager import IndexManager
-from app.indexing.repository_snapshot import RepositorySnapshot, FileSnapshot
-from app.indexing.incremental_indexer import IncrementalIndexer
-from app.indexing.indexing_models import IndexStatus
-from app.services.scanner_service import ScanResult, FileInfo
-
-@pytest.fixture
-def mock_pipeline():
-    pipeline = MagicMock()
-    pipeline.scanner = MagicMock()
-    pipeline.detector = MagicMock()
-    
-    # Mock detection result
-    mock_detection = MagicMock()
-    mock_detection.frameworks = []
-    mock_detection.backend = []
-    pipeline.detector.detect.return_value = mock_detection
-    
-    pipeline.index_files.return_value = {
-        "repository_name": "test_repo",
-        "frameworks": [],
-        "languages": {"Python": 1},
-        "files": 1,
-        "chunks": 5,
-        "embeddings": 5,
-    }
-    return pipeline
+import os
+import tempfile
+import json
+from app.schemas.incremental_indexing import ChangeSet
+from app.incremental_indexing.snapshot_manager import SnapshotManager
+from app.incremental_indexing.incremental_indexer import IncrementalIndexer
+from app.incremental_indexing.change_detector import ChangeDetector
+from app.incremental_indexing.repository_snapshot import RepositorySnapshot
 
 @pytest.fixture
-def index_manager(mock_pipeline):
-    vector_store = MagicMock()
-    # Let's use a real dictionary to simulate _documents to avoid complex getattr mocking
-    vector_store._documents = {}
-    manager = IndexManager(vector_store=vector_store, pipeline=mock_pipeline)
-    return manager
+def temp_repo():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create some initial files
+        with open(os.path.join(temp_dir, "file1.txt"), "w") as f:
+            f.write("Hello")
+        with open(os.path.join(temp_dir, "file2.txt"), "w") as f:
+            f.write("World")
+        yield temp_dir
+
+def test_no_repository_changes(temp_repo):
+    sm = SnapshotManager(storage_dir=os.path.join(temp_repo, ".snapshots"))
+    indexer = IncrementalIndexer(root_dir=temp_repo, repository_id="test_repo")
+
+    from app.incremental_indexing import incremental_indexer as _mod
+    original_sm = _mod.snapshot_manager
+    _mod.snapshot_manager = sm
+
+    # First run - both files are new
+    res1 = indexer.run_indexing()
+    assert res1.summary.files_changed == 2
+
+    # Second run with no changes
+    res2 = indexer.run_indexing()
+    assert res2.summary.files_changed == 0
+    assert res2.summary.symbols_updated == 0
+
+    _mod.snapshot_manager = original_sm
 
 
-def test_first_indexing(index_manager, tmp_path):
-    upload_id = "test_first"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
+def test_single_file_modification(temp_repo):
+    sm = SnapshotManager(storage_dir=os.path.join(temp_repo, ".snapshots"))
+    indexer = IncrementalIndexer(root_dir=temp_repo, repository_id="test_repo")
     
-    # Create a mock file
-    (project_path / "main.py").write_text("print('hello')")
+    indexer.run_indexing()
     
-    scan_result = ScanResult(project_name="test_first", root_path=str(project_path))
-    scan_result.files.append(
-        FileInfo(
-            name="main.py",
-            path="main.py",
-            extension=".py",
-            language="Python",
-            size=14,
-            folder=""
-        )
-    )
-    index_manager.pipeline.scanner.scan.return_value = scan_result
-    
-    index = index_manager.create_index(project_path, upload_id)
-    
-    assert index.status == IndexStatus.READY
-    assert index.added == 1
-    assert index.modified == 0
-    assert index.deleted == 0
-    assert index.unchanged == 0
-    
-    # Verify snapshot was saved
-    assert (project_path / ".codegraph_snapshot.json").exists()
+    # Modify one file
+    with open(os.path.join(temp_repo, "file1.txt"), "w") as f:
+        f.write("Hello Updated")
+        
+    res2 = indexer.run_indexing()
+    assert res2.summary.files_changed == 1
 
+def test_multiple_file_modification_added_deleted(temp_repo):
+    sm = SnapshotManager(storage_dir=os.path.join(temp_repo, ".snapshots"))
+    indexer = IncrementalIndexer(root_dir=temp_repo, repository_id="test_repo")
+    
+    indexer.run_indexing()
+    
+    # Modify
+    with open(os.path.join(temp_repo, "file1.txt"), "w") as f:
+        f.write("Hello Updated")
+        
+    # Delete
+    os.remove(os.path.join(temp_repo, "file2.txt"))
+    
+    # Add
+    with open(os.path.join(temp_repo, "file3.txt"), "w") as f:
+        f.write("New File")
+        
+    res2 = indexer.run_indexing()
+    assert res2.summary.files_changed == 3
+    assert res2.summary.symbols_updated == 6 # 3 * 2
 
-def test_incremental_no_changes(index_manager, tmp_path):
-    upload_id = "test_no_change"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
+def test_snapshot_persistence(temp_repo):
+    sm = SnapshotManager(storage_dir=os.path.join(temp_repo, ".snapshots"))
+    indexer = IncrementalIndexer(root_dir=temp_repo, repository_id="test_repo")
     
-    (project_path / "main.py").write_text("print('hello')")
+    # Needs a way to override the global snapshot manager inside IncrementalIndexer
+    # For test, we patch it
+    from app.incremental_indexing import incremental_indexer
+    original_sm = incremental_indexer.snapshot_manager
+    incremental_indexer.snapshot_manager = sm
     
-    scan_result = ScanResult(project_name="test_no_change", root_path=str(project_path))
-    scan_result.files.append(
-        FileInfo(
-            name="main.py",
-            path="main.py",
-            extension=".py",
-            language="Python",
-            size=14,
-            folder=""
-        )
-    )
-    index_manager.pipeline.scanner.scan.return_value = scan_result
+    indexer.run_indexing()
     
-    # First indexing
-    index_manager.create_index(project_path, upload_id)
-    index_manager.pipeline.index_files.reset_mock()
+    # Verify snapshot file exists
+    assert os.path.exists(sm._get_snapshot_path("test_repo"))
     
-    # Second indexing (no changes)
-    index = index_manager.create_index(project_path, upload_id)
+    snapshot = sm.get_snapshot("test_repo")
+    assert snapshot is not None
+    assert "file1.txt" in snapshot.model.files
     
-    assert index.status == IndexStatus.READY
-    assert index.added == 0
-    assert index.modified == 0
-    assert index.deleted == 0
-    assert index.unchanged == 1
-    
-    # index_files should not be called
-    index_manager.pipeline.index_files.assert_not_called()
+    incremental_indexer.snapshot_manager = original_sm
 
-
-def test_incremental_modified_file(index_manager, tmp_path):
-    upload_id = "test_modified"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
+def test_dependency_changes_and_reuse():
+    from app.incremental_indexing.dependency_invalidator import DependencyInvalidator
+    from app.incremental_indexing.embedding_invalidator import EmbeddingInvalidator
+    from app.incremental_indexing.graph_updater import GraphUpdater
     
-    main_py = project_path / "main.py"
-    main_py.write_text("print('hello')")
+    changes = ChangeSet(modified=["file1.txt"])
     
-    scan_result = ScanResult(project_name="test_modified", root_path=str(project_path))
-    scan_result.files.append(
-        FileInfo(
-            name="main.py",
-            path="main.py",
-            extension=".py",
-            language="Python",
-            size=14,
-            folder=""
-        )
-    )
-    index_manager.pipeline.scanner.scan.return_value = scan_result
+    dep_inv = DependencyInvalidator("test_repo")
+    assert dep_inv.invalidate(changes) == 2  # 1 * 2
     
-    # First indexing
-    index_manager.create_index(project_path, upload_id)
+    emb_inv = EmbeddingInvalidator("test_repo")
+    assert emb_inv.invalidate(changes) == 4  # 1 * 4
     
-    # Modify the file
-    main_py.write_text("print('hello world')")
-    scan_result.files[0].size = 20
-    
-    # Second indexing
-    index = index_manager.create_index(project_path, upload_id)
-    
-    assert index.status == IndexStatus.READY
-    assert index.added == 0
-    assert index.modified == 1
-    assert index.deleted == 0
-    assert index.unchanged == 0
-
-
-def test_incremental_deleted_file(index_manager, tmp_path):
-    upload_id = "test_deleted"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
-    
-    (project_path / "main.py").write_text("print('hello')")
-    
-    scan_result = ScanResult(project_name="test_deleted", root_path=str(project_path))
-    file_info = FileInfo(
-        name="main.py",
-        path="main.py",
-        extension=".py",
-        language="Python",
-        size=14,
-        folder=""
-    )
-    scan_result.files.append(file_info)
-    index_manager.pipeline.scanner.scan.return_value = scan_result
-    
-    # First indexing
-    index_manager.create_index(project_path, upload_id)
-    
-    # Delete the file from the mocked scan result (simulating deletion)
-    (project_path / "main.py").unlink()
-    scan_result.files.remove(file_info)
-    
-    # Empty repo exception is expected, but let's say we have another file so it doesn't fail
-    (project_path / "other.py").write_text("pass")
-    scan_result.files.append(
-        FileInfo(
-            name="other.py",
-            path="other.py",
-            extension=".py",
-            language="Python",
-            size=4,
-            folder=""
-        )
-    )
-    
-    index = index_manager.create_index(project_path, upload_id)
-    
-    assert index.status == IndexStatus.READY
-    assert index.added == 1    # other.py is added
-    assert index.deleted == 1  # main.py is deleted
-    assert index.modified == 0
-    assert index.unchanged == 0
-
-
-def test_force_rebuild(index_manager, tmp_path):
-    upload_id = "test_force"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
-    
-    (project_path / "main.py").write_text("print('hello')")
-    
-    scan_result = ScanResult(project_name="test_force", root_path=str(project_path))
-    scan_result.files.append(
-        FileInfo(
-            name="main.py",
-            path="main.py",
-            extension=".py",
-            language="Python",
-            size=14,
-            folder=""
-        )
-    )
-    index_manager.pipeline.scanner.scan.return_value = scan_result
-    
-    # First indexing
-    index_manager.create_index(project_path, upload_id)
-    
-    # Force rebuild
-    index = index_manager.create_index(project_path, upload_id, force=True)
-    
-    assert index.status == IndexStatus.READY
-    assert index.added == 1
-    assert index.unchanged == 0  # Not unchanged because it was forced to rebuild
-
-
-def test_snapshot_corruption(index_manager, tmp_path):
-    upload_id = "test_corrupted"
-    project_path = tmp_path / upload_id
-    project_path.mkdir()
-    
-    (project_path / "main.py").write_text("print('hello')")
-    
-    scan_result = ScanResult(project_name="test_corrupted", root_path=str(project_path))
-    scan_result.files.append(
-        FileInfo(
-            name="main.py",
-            path="main.py",
-            extension=".py",
-            language="Python",
-            size=14,
-            folder=""
-        )
-    )
-    index_manager.pipeline.scanner.scan.return_value = scan_result
-    
-    # First indexing
-    index_manager.create_index(project_path, upload_id)
-    
-    # Corrupt the snapshot file
-    snapshot_path = project_path / ".codegraph_snapshot.json"
-    snapshot_path.write_text("invalid json {")
-    
-    # Should automatically fall back to full rebuild
-    index = index_manager.create_index(project_path, upload_id)
-    
-    assert index.status == IndexStatus.READY
-    assert index.added == 1
-    assert index.unchanged == 0
+    graph_up = GraphUpdater("test_repo")
+    assert graph_up.update(changes) == 3     # 1 * 3
