@@ -21,9 +21,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Release Candidate 1 |
-| **Current module** | RC-1 complete — ready for candidate tagging |
-| **Latest milestone** | Green regression suite + production-readiness documentation |
+| **Phase** | Portfolio-ready Release Candidate 1 |
+| **Current module** | Final polish complete |
+| **Latest milestone** | GitHub + PROJECT_ASSETS + docs packaging |
 | **Version** | `1.0.0-rc.1` |
 
 ---

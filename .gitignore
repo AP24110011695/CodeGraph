@@ -460,3 +460,14 @@ Thumbs.db
 *.bak
 *.backup
 *.old
+
+# ============================================
+# CodeGraph local runtime artifacts
+# ============================================
+backend/uploads/**
+!backend/uploads/.gitkeep
+backend/storage/**
+storage/**
+uploads/**
+backend/.pytest_cache/
+.pytest_cache/

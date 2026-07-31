@@ -5,6 +5,32 @@
 
 ---
 
+## RC-1 / Final Polish — Open-Source Portfolio Readiness (2026-07-31)
+
+### Problem solved
+
+RC-1 was technically green but incomplete as a public GitHub/portfolio artifact: empty LICENSE/CONTRIBUTING/CHANGELOG stubs, missing CI, sparse docs, no resume pack.
+
+### Design decisions
+
+- Fill legal/community files (MIT, CoC, SECURITY, CONTRIBUTING).  
+- Add GitHub Actions CI running `backend` pytest.  
+- Create `PROJECT_ASSETS/` for placement without polluting engine code.  
+- Remove obsolete empty `backend/{analyzers,graph,parsers,prompts}` and manual smoke scripts.  
+- Keep product engines unchanged unless required for stability.
+
+### Lessons learned
+
+- Empty placeholder files look “present” in listings but fail open-source checks—verify file length.  
+- Portfolio readiness is a deliverable distinct from feature CG tickets.  
+- Honest TECH_DEBT increases recruiter trust more than overclaiming GA.
+
+### Why this solution
+
+Separates marketing/interview assets from runtime code while synchronizing human + AI documentation.
+
+---
+
 ## RC-1 — Release Candidate Stabilization (2026-07-31)
 
 ### Problem solved

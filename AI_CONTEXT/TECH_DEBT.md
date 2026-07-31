@@ -111,6 +111,7 @@ These are **documented limitations**, not silent defects.
 
 | Date | Change |
 |------|--------|
+| 2026-07-31 | Final polish: LICENSE/CONTRIBUTING/CI/PROJECT_ASSETS/docs; removed empty backend stub dirs & manual smoke scripts |
 | 2026-07-31 | **RC-1:** registered quality/smells/refactoring; suite 1221/0/0; paths helper; README sync; removed debug_chunker scripts; EXPOSE_ERROR_DETAILS |
 | 2026-07-31 | CG-070: Copilot provider stubs; suite tally 1198/18/1 |
 | 2026-07-31 | Initial TECH_DEBT from CG-067/068 validation |

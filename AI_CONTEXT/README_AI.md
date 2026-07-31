@@ -2,7 +2,11 @@
 
 **CodeGraph** is an **Enterprise AI Software Architecture Platform** — *The AI Software Architect for Every Codebase.*
 
+**Release:** `1.0.0-rc.1` (Release Candidate 1 — green suite).
+
 It is **not** merely a code search tool. See [PROJECT_VISION.md](./PROJECT_VISION.md).
+
+Portfolio / resume assets: [`../PROJECT_ASSETS/`](../PROJECT_ASSETS/).
 
 ---
 
@@ -12,7 +16,7 @@ It is **not** merely a code search tool. See [PROJECT_VISION.md](./PROJECT_VISIO
 2. Follow [PROMPT_GUIDELINES.md](./PROMPT_GUIDELINES.md).  
 3. Load the authoritative docs below.  
 4. Inspect `backend/app/` — especially `main.py` and the target domain package.  
-5. Implement **only** the requested CG module.
+5. Implement **only** the requested CG module (or polish task). Prefer composition.
 
 ---
 
@@ -43,13 +47,15 @@ It is **not** merely a code search tool. See [PROJECT_VISION.md](./PROJECT_VISIO
 | `backend/app/api/` | Thin HTTP layer |
 | `backend/app/schemas/` | Pydantic contracts |
 | `backend/tests/` | pytest suite |
-| `frontend/` | UI (separate from backend intelligence docs) |
+| `docs/` | Human architecture/API overviews |
+| `PROJECT_ASSETS/` | Portfolio & interview pack |
+| `frontend/` | UI scaffold (backend is RC-1 focus) |
 
 ---
 
 ## Standard workflow (short)
 
-Read AI_CONTEXT → Inspect code → Reuse engines → Implement one CG → Test → Validate APIs → Update living docs → Return summary.
+Read AI_CONTEXT → Inspect code → Reuse engines → Implement one change → Test → Validate APIs → Update living docs → Return summary.
 
 ---
 
@@ -64,10 +70,10 @@ Read AI_CONTEXT → Inspect code → Reuse engines → Implement one CG → Test
 
 ## Validation checklist
 
-- [ ] `pytest tests/ -v`  
-- [ ] Uvicorn + new endpoints + `/health`  
+- [ ] `pytest tests/ -q` from `backend/`  
+- [ ] Uvicorn + affected endpoints + `/health`  
 - [ ] No new regressions  
-- [ ] Pre-existing failures unchanged & documented  
+- [ ] Debt updated if limitations remain  
 
 ## Documentation update checklist
 
@@ -76,4 +82,5 @@ Read AI_CONTEXT → Inspect code → Reuse engines → Implement one CG → Test
 - [ ] LESSONS_LEARNED.md  
 - [ ] CHANGELOG_AI.md  
 - [ ] MODULE_INDEX.md  
-- [ ] TECH_DEBT.md (if needed)
+- [ ] TECH_DEBT.md (if needed)  
+- [ ] Root CHANGELOG.md for user-facing releases  

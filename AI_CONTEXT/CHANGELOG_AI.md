@@ -5,6 +5,32 @@
 
 ---
 
+## Final Polish — Portfolio & Open-Source Packaging
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-31 |
+| **Milestone** | Public GitHub / portfolio readiness on RC-1 |
+
+### Files added
+
+- `PROJECT_ASSETS/**`  
+- `docs/architecture/OVERVIEW.md`, `docs/api/OVERVIEW.md`, `docs/README.md`  
+- `.github/workflows/ci.yml`, issue templates  
+- `SECURITY.md`, `RELEASE_NOTES.md`  
+- Populated `LICENSE`, `CONTRIBUTING.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`
+
+### Files removed
+
+- Empty duplicate `backend/{analyzers,graph,parsers,prompts}`  
+- `backend/openapi.json` (empty), `backend/test_api.py`, `backend/test_jobs_api.py`
+
+### Validation
+
+- Re-run full pytest after polish (target: still green)
+
+---
+
 ## RC-1 — Release Candidate 1 Stabilization
 
 | Field | Value |

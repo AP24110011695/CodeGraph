@@ -9,11 +9,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Current Phase** | Release Candidate 1 (RC-1) |
-| **Current Module** | RC-1 stabilization (**completed**) |
-| **Upcoming Module** | GA hardening / next assigned CG ticket |
-| **Latest Milestone** | Green suite; quality/smells/refactoring registered; docs synced |
-| **Architecture Health** | Strong composition; dual roots documented; mocks labeled |
+| **Current Phase** | Portfolio / Open-Source Release Candidate |
+| **Current Module** | Final polishing (**completed**) — docs, GitHub, PROJECT_ASSETS |
+| **Upcoming Module** | GA hardening (auth, Redis, live VCS) / next CG ticket |
+| **Latest Milestone** | Professional GitHub + portfolio pack on top of green RC-1 |
+| **Architecture Health** | Strong; empty duplicate dirs removed; public docs complete |
 | **Regression Status** | **1221 passed / 0 failed / 0 skipped** |
 | **Version** | `1.0.0-rc.1` |
 
@@ -24,11 +24,9 @@
 | CG | Name | Package |
 |----|------|---------|
 | CG-001…CG-066 | Foundation stack | See [MODULE_INDEX.md](./MODULE_INDEX.md) |
-| CG-067 | Repository Timeline Intelligence | `app/timeline/` |
-| CG-068 | Intelligent Code Impact Analysis | `app/impact_analysis/` |
-| CG-069 | Engineering Intelligence Report Generator | `app/engineering_reports/` |
-| CG-070 | Unified Intelligence Orchestrator (Copilot) | `app/copilot/` |
-| **RC-1** | Stabilization & release readiness | routers, paths, config, docs |
+| CG-067…CG-070 | Timeline, Impact, Reports, Copilot | `timeline/`, `impact_analysis/`, `engineering_reports/`, `copilot/` |
+| **RC-1** | Stabilization | routers, paths, config |
+| **Final polish** | Open-source / portfolio readiness | LICENSE, CI, PROJECT_ASSETS, docs |
 
 ---
 
@@ -44,16 +42,19 @@
 
 ## Known issues
 
-Documented production limitations only (auth, Redis, vector DB, live VCS, mock integrations). See [TECH_DEBT.md](./TECH_DEBT.md).
+Production limitations only — see [TECH_DEBT.md](./TECH_DEBT.md).
 
 ---
 
 ## Active engines (facades)
 
-Planning, Agents, Memory, RAG, Reasoning, Timeline, Impact, Engineering Reports, Copilot, Quality, Smells, Refactoring, Cache, Telemetry, Workflows, Workers — all HTTP-reachable.
+All major engines HTTP-reachable (including quality/smells/refactoring). Copilot is the preferred NL entrypoint.
 
 ---
 
-## Update instructions
+## Public assets
 
-After completing a CG module, revise **every table above**, bump **Last Updated**, and sync Roadmap / Changelog / Lessons / Module Index / Tech Debt.
+- Root README with badges  
+- `PROJECT_ASSETS/` for resume/interview  
+- `docs/architecture`, `docs/api`  
+- CI: `.github/workflows/ci.yml`
