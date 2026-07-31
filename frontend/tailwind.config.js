@@ -1,11 +1,108 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        bg: {
+          base: 'var(--cg-bg-base)',
+          elevated: 'var(--cg-bg-elevated)',
+          overlay: 'var(--cg-bg-overlay)',
+          subtle: 'var(--cg-bg-subtle)',
+        },
+        border: {
+          base: 'var(--cg-border-base)',
+          subtle: 'var(--cg-border-subtle)',
+          strong: 'var(--cg-border-strong)',
+        },
+        text: {
+          primary: 'var(--cg-text-primary)',
+          secondary: 'var(--cg-text-secondary)',
+          tertiary: 'var(--cg-text-tertiary)',
+          inverse: 'var(--cg-text-inverse)',
+        },
+        accent: {
+          DEFAULT: 'var(--cg-accent-default)',
+          default: 'var(--cg-accent-default)',
+          hover: 'var(--cg-accent-hover)',
+          subtle: 'var(--cg-accent-subtle)',
+          muted: 'var(--cg-accent-muted)',
+        },
+        success: 'var(--cg-success)',
+        warning: 'var(--cg-warning)',
+        danger: 'var(--cg-danger)',
+        info: 'var(--cg-info)',
+        syntax: {
+          keyword: 'var(--cg-syntax-keyword)',
+          string: 'var(--cg-syntax-string)',
+          comment: 'var(--cg-syntax-comment)',
+          number: 'var(--cg-syntax-number)',
+          function: 'var(--cg-syntax-function)',
+          type: 'var(--cg-syntax-type)',
+        },
+      },
+      fontFamily: {
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      fontSize: {
+        xs: ['11px', { lineHeight: '16px' }],
+        sm: ['12px', { lineHeight: '18px' }],
+        base: ['14px', { lineHeight: '22px' }],
+        lg: ['16px', { lineHeight: '24px' }],
+        xl: ['20px', { lineHeight: '28px' }],
+        '2xl': ['24px', { lineHeight: '32px' }],
+        '3xl': ['30px', { lineHeight: '36px' }],
+      },
+      spacing: {
+        0.5: '2px',
+        1: '4px',
+        1.5: '6px',
+        2: '8px',
+        2.5: '10px',
+        3: '12px',
+        4: '16px',
+        5: '20px',
+        6: '24px',
+        8: '32px',
+        10: '40px',
+        12: '48px',
+        16: '64px',
+        20: '80px',
+        24: '96px',
+      },
+      borderRadius: {
+        sm: '4px',
+        DEFAULT: '6px',
+        md: '8px',
+        lg: '12px',
+      },
+      transitionDuration: {
+        fast: '100ms',
+        normal: '200ms',
+        slow: '350ms',
+        crawl: '500ms',
+      },
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'in-expo': 'cubic-bezier(0.7, 0, 0.84, 0)',
+      },
+      width: {
+        sidebar: '240px',
+        'sidebar-collapsed': '48px',
+        'copilot-panel': '400px',
+      },
+      keyframes: {
+        'skeleton-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.4' },
+        },
+      },
+      animation: {
+        'skeleton-pulse': 'skeleton-pulse 1.5s ease-in-out infinite',
+      },
+    },
   },
   plugins: [],
-}
+};

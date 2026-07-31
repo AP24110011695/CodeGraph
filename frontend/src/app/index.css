@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+
+  --cg-bg-base: #0a0a0a;
+  --cg-bg-elevated: #111111;
+  --cg-bg-overlay: #1a1a1a;
+  --cg-bg-subtle: #141414;
+
+  --cg-border-base: #1f1f1f;
+  --cg-border-subtle: #171717;
+  --cg-border-strong: #2a2a2a;
+
+  --cg-text-primary: #fafafa;
+  --cg-text-secondary: #a1a1aa;
+  --cg-text-tertiary: #52525b;
+  --cg-text-inverse: #0a0a0a;
+
+  --cg-accent-default: #7c3aed;
+  --cg-accent-hover: #6d28d9;
+  --cg-accent-subtle: #1e1033;
+  --cg-accent-muted: #4c1d95;
+
+  --cg-success: #22c55e;
+  --cg-warning: #f59e0b;
+  --cg-danger: #ef4444;
+  --cg-info: #3b82f6;
+
+  --cg-syntax-keyword: #c084fc;
+  --cg-syntax-string: #86efac;
+  --cg-syntax-comment: #52525b;
+  --cg-syntax-number: #fca5a5;
+  --cg-syntax-function: #93c5fd;
+  --cg-syntax-type: #f0abfc;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cg-bg-base);
+  color: var(--cg-text-primary);
+  font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  border-color: var(--cg-border-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
