@@ -294,8 +294,7 @@ class CopilotEngine:
         context: dict[str, Any],
         routing: dict[str, Any],
     ) -> dict[str, Any] | None:
-        # Intentionally None — legacy path relies on ResponseBuilder fallback /
-        # orchestration enrichment rather than duplicating analysis.
+        # Legacy path: ResponseBuilder fills gaps when no module payload is attached.
         return None
 
 

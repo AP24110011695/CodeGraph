@@ -5,6 +5,12 @@
 
 ---
 
+## Docs cleanup — quieter public surface (2026-07-31)
+
+Trimmed marketing tone from README, collapsed PROJECT_ASSETS to four short notes, dropped duplicate RELEASE_NOTES, removed empty placeholder folders. AI_CONTEXT kept as internal contributor notes; README is the public entry point.
+
+---
+
 ## Final Polish — Portfolio & Open-Source Packaging
 
 | Field | Value |

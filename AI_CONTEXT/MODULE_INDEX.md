@@ -127,7 +127,6 @@ Legend: **API registered** = included in `app/main.py`.
 
 | Name | Location | Responsibility |
 |------|----------|----------------|
-| AI_CONTEXT | `/AI_CONTEXT` | Permanent AI knowledge base for all assistants |
-| PROJECT_ASSETS | `/PROJECT_ASSETS` | Resume, LinkedIn, interview, and demo assets |
-| Human docs | `/docs` | Architecture & API overviews |
-| GitHub meta | `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.github/` | Open-source packaging |
+| AI_CONTEXT | `/AI_CONTEXT` | Internal architecture / debt notes |
+| PROJECT_ASSETS | `/PROJECT_ASSETS` | Optional resume / interview notes |
+| docs | `/docs` | Short architecture & API notes |

@@ -1,37 +1,15 @@
-# Security Policy
+# Security
 
-## Supported versions
+## Reporting
 
-| Version | Supported |
-|---------|-----------|
-| 1.0.0-rc.1 | Yes (best-effort) |
-| < 1.0.0-rc.1 | No |
+Prefer a private GitHub security advisory, or contact the repo owner directly. Please don’t open a public issue for exploitable bugs.
 
-## Reporting a vulnerability
+## RC-1 notes
 
-Please **do not** open a public issue for security-sensitive reports.
+- No authentication on the API
+- Treat as single-tenant / local use
+- Keep secrets in `.env` (not committed)
+- GitHub/Jira/CI/Slack clients are mocks
+- `EXPOSE_ERROR_DETAILS` should stay false outside local debugging
 
-Preferred path:
-
-1. Open a private GitHub security advisory if available, **or**
-2. Contact the repository owner via GitHub with a clear reproduction and impact assessment.
-
-We aim to acknowledge reports within 7 days.
-
-## Current security posture (RC-1)
-
-CodeGraph RC-1 is an open intelligence demo platform:
-
-- **No authentication / authorization** on the HTTP API by default
-- Upload paths are keyed by `upload_id` / repository id — treat as single-tenant
-- LLM keys (if set) come from environment variables — never commit `.env`
-- Integration clients (GitHub/Jira/CI/Slack) are **mock** implementations
-- `EXPOSE_ERROR_DETAILS` must remain `false` outside local debugging
-
-## Hardening recommendations before production
-
-- Add API keys / OAuth / reverse-proxy auth
-- Sandbox and validate upload extraction paths
-- Replace mock integration credentials with a secrets manager
-- Run behind TLS termination
-- Restrict CORS and rate-limit upload/analysis endpoints
+Before any shared deploy: put auth in front, harden uploads, and replace mock credentials.

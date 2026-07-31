@@ -471,3 +471,13 @@ storage/**
 uploads/**
 backend/.pytest_cache/
 .pytest_cache/
+
+# Local tooling / empty placeholders
+.agents/
+.devin/
+.vscode/
+assets/
+examples/
+scripts/
+
+.ci-venv/

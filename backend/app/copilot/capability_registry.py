@@ -307,8 +307,7 @@ class CapabilityRegistry:
         Returns:
             Handler function or None.
         """
-        # In a real implementation, this would return actual module handlers
-        # For now, return None as we'll handle routing in the engine
+        # Handlers are resolved by ToolExecutor / engine wiring, not here.
         return None
 
 

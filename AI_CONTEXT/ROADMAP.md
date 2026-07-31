@@ -21,9 +21,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Portfolio-ready Release Candidate 1 |
-| **Current module** | Final polish complete |
-| **Latest milestone** | GitHub + PROJECT_ASSETS + docs packaging |
+| **Phase** | RC-1 (docs cleanup) |
+| **Current module** | Public-release polish |
+| **Latest milestone** | Quieter README; slimmer portfolio notes |
 | **Version** | `1.0.0-rc.1` |
 
 ---

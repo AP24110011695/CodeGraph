@@ -1,56 +1,27 @@
-# Contributing to CodeGraph
+# Contributing
 
-Thanks for your interest in contributing. CodeGraph is an **Enterprise AI Software Architecture Platform**. Contributions should strengthen architectural intelligence — not reinvent existing engines.
-
-## Before you start
-
-1. Read [`AI_CONTEXT/README_AI.md`](./AI_CONTEXT/README_AI.md)
-2. Follow [`AI_CONTEXT/AI_RULES.md`](./AI_CONTEXT/AI_RULES.md)
-3. Inspect `backend/app/main.py` and the target domain package
-4. Prefer **composition** of existing engines over new parallel logic
-
-## Development setup
+## Setup
 
 ```bash
 cd backend
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-source .venv/bin/activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Run tests from `backend/`:
-
-```bash
+uvicorn app.main:app --reload --port 8000
 python -m pytest tests/ -q
 ```
 
-## Pull request checklist
+## Guidelines
 
-- [ ] Reuses existing engines (no duplicate indexing / traversal / retrieval / business logic)
-- [ ] Thin API router + Pydantic schemas when exposing HTTP
-- [ ] Router registered in `app/main.py`
-- [ ] Focused tests under `backend/tests/`
-- [ ] Full suite still green
-- [ ] AI_CONTEXT living docs updated when behavior/architecture changes
-- [ ] No secrets committed (`.env`, API keys)
+- Put domain logic in `backend/app/<domain>/`, not in routers.
+- Reuse existing engines (indexing, graph traversal, memory, scoring) instead of copying them.
+- If you add an API module, register it in `app/main.py`.
+- Add or update tests under `backend/tests/`.
+- Don’t commit secrets (`.env`, API keys).
 
-## Code style
+Internal architecture notes live in `AI_CONTEXT/` (for contributors and coding agents). Start with `AI_CONTEXT/README_AI.md` if you are changing engines.
 
-- Package-per-capability under `backend/app/<name>/`
-- Facade `*_engine.py` + module singleton
-- Optional DI constructors defaulting to shared singletons
-- Logging via `logging.getLogger(__name__)`
-- Telemetry via `telemetry_manager` for significant work
+## Pull requests
 
-## What we will not merge
-
-- Second implementations of risk scoring, graph BFS, indexing, or memory stores
-- Silent skips of failing tests without documented debt
-- Provider-specific logic baked into Copilot/orchestration cores
-
-## Questions
-
-Open a GitHub issue with context, reproduction steps, and links to relevant `AI_CONTEXT` docs.
+Keep changes focused. Note any new debt in `AI_CONTEXT/TECH_DEBT.md` when you intentionally leave something stubbed.

@@ -1,7 +1,6 @@
-"""Tool executor — pluggable adapters over existing intelligence engines.
+"""Tool executor — calls existing engines as named tools.
 
-Future tools register without modifying CopilotEngine.
-Never reimplements analysis; only invokes facades.
+New tools register here; Copilot does not grow analyzer logic.
 """
 
 from __future__ import annotations
