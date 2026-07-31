@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { MetricsPanel } from './components/MetricsPanel';
+export { useMetricsQuery } from './api/metrics.queries';

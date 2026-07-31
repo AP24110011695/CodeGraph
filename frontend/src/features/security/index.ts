@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { SecurityPanel } from './components/SecurityPanel';
+export { useSecurityQuery } from './api/security.queries';

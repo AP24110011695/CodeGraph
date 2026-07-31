@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -43,7 +44,16 @@ const secondaryNav = [
 
 export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const toggleSidebarCollapsed = useUiStore((s) => s.toggleSidebarCollapsed);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1023px)');
+    const sync = () => setSidebarCollapsed(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, [setSidebarCollapsed]);
 
   return (
     <aside
@@ -51,6 +61,7 @@ export function Sidebar() {
         'flex h-full shrink-0 flex-col border-r border-border-base bg-bg-elevated transition-[width] duration-normal ease-out-expo',
         collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
       )}
+      aria-label="Dashboard navigation"
     >
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
         {primaryNav.map((item) => (

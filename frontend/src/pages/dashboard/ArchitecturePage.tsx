@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { ArchitecturePanel } from '@/features/architecture';
 
 export default function ArchitecturePage() {
-  return (
-    <PagePlaceholder
-      title="Architecture"
-      description="Architecture visualization will be implemented in a later phase."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <ArchitecturePanel repoId={repoId} />;
 }

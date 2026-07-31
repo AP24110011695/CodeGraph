@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { TimelinePanel } from '@/features/timeline';
 
 export default function TimelinePage() {
-  return (
-    <PagePlaceholder
-      title="Timeline"
-      description="Repository timeline will be implemented in Phase 7."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <TimelinePanel repoId={repoId} />;
 }

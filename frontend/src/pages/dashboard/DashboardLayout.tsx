@@ -2,6 +2,8 @@ import { Link, Outlet, useParams } from 'react-router-dom';
 import { Bot } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/core/store/ui.store';
+import { PageTransition } from '@/core/components/PageTransition';
+import { ErrorBoundary } from '@/design-system/components/ErrorBoundary';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Button } from '@/design-system/primitives/Button';
 import { TopBar } from './TopBar';
@@ -19,11 +21,21 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen flex-col bg-bg-base text-text-primary">
+      <a
+        href="#dashboard-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent-default focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+      >
+        Skip to content
+      </a>
       <TopBar />
       <div className="relative flex min-h-0 flex-1">
         <Sidebar />
-        <main className="min-w-0 flex-1 overflow-auto">
-          <Outlet />
+        <main id="dashboard-main" className="min-w-0 flex-1 overflow-auto" tabIndex={-1}>
+          <ErrorBoundary fallbackTitle="This page failed to render">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </ErrorBoundary>
         </main>
         <aside
           className={cn(

@@ -1,10 +1,12 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { ImpactPanel } from '@/features/impact-analysis';
 
 export default function ImpactPage() {
-  return (
-    <PagePlaceholder
-      title="Impact Analysis"
-      description="Impact analysis will be implemented in Phase 8."
-    />
-  );
+  const { repoId } = useParams();
+
+  if (!repoId) {
+    return null;
+  }
+
+  return <ImpactPanel repoId={repoId} />;
 }

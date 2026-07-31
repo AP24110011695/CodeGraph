@@ -30,6 +30,7 @@ export function SearchBar() {
             placeholder="Find authentication handlers, entry points, risky modules…"
             className="h-10 pl-9"
             aria-label="Semantic search"
+            data-search-input
           />
         </div>
         <Button type="submit" variant="primary">

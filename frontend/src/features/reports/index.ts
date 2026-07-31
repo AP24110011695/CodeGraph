@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { ReportsPanel } from './components/ReportsPanel';
+export { useReportsListQuery, useGenerateReportMutation } from './api/reports.queries';

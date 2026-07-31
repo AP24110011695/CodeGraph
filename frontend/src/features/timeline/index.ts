@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { TimelinePanel } from './components/TimelinePanel';
+export { useTimelineQuery, useEvolutionQuery } from './api/timeline.queries';

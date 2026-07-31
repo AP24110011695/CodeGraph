@@ -1,10 +1,12 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { MetricsPanel } from '@/features/metrics';
 
 export default function MetricsPage() {
-  return (
-    <PagePlaceholder
-      title="Metrics"
-      description="Engineering metrics will be implemented in Phase 8."
-    />
-  );
+  const { repoId } = useParams();
+
+  if (!repoId) {
+    return null;
+  }
+
+  return <MetricsPanel repoId={repoId} />;
 }

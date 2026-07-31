@@ -1,10 +1,12 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { SecurityPanel } from '@/features/security';
 
 export default function SecurityPage() {
-  return (
-    <PagePlaceholder
-      title="Security"
-      description="Security analysis will be implemented in Phase 8."
-    />
-  );
+  const { repoId } = useParams();
+
+  if (!repoId) {
+    return null;
+  }
+
+  return <SecurityPanel repoId={repoId} />;
 }

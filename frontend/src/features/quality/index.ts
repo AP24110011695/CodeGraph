@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { QualityPanel } from './components/QualityPanel';
+export { useQualityQuery, useSmellsQuery } from './api/quality.queries';

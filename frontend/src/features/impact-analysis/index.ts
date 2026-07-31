@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
-export {};
+export { ImpactPanel } from './components/ImpactPanel';
+export { useImpactSummaryQuery, useImpactAnalyzeMutation } from './api/impact.queries';

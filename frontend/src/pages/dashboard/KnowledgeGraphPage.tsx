@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { KnowledgeGraphPanel } from '@/features/knowledge-graph';
 
 export default function KnowledgeGraphPage() {
-  return (
-    <PagePlaceholder
-      title="Knowledge Graph"
-      description="Semantic knowledge graph will be implemented in a later phase."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <KnowledgeGraphPanel repoId={repoId} />;
 }

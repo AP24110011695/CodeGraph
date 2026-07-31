@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { ReportsPanel } from '@/features/reports';
 
 export default function ReportsPage() {
-  return (
-    <PagePlaceholder
-      title="Reports"
-      description="Engineering reports list will be implemented in Phase 7."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <ReportsPanel repoId={repoId} />;
 }

@@ -1,10 +1,12 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { QualityPanel } from '@/features/quality';
 
 export default function QualityPage() {
-  return (
-    <PagePlaceholder
-      title="Quality"
-      description="Quality analysis will be implemented in Phase 8."
-    />
-  );
+  const { repoId } = useParams();
+
+  if (!repoId) {
+    return null;
+  }
+
+  return <QualityPanel repoId={repoId} />;
 }
