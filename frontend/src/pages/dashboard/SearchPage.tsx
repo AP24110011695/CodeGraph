@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { SearchPanel } from '@/features/search';
 
 export default function SearchPage() {
-  return (
-    <PagePlaceholder
-      title="Search"
-      description="Semantic search will be implemented in Phase 6."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <SearchPanel repoId={repoId} />;
 }

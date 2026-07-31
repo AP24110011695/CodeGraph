@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
 import { Bot } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/core/store/ui.store';
@@ -9,10 +9,11 @@ import { Sidebar } from './Sidebar';
 
 /**
  * Persistent dashboard shell: TopBar + Sidebar + Outlet.
- * Copilot panel chrome is present but empty until Phase 5.
+ * Floating copilot entry opens the full Phase 5 page.
  */
 export default function DashboardLayout() {
   useKeyboardShortcuts();
+  const { repoId } = useParams();
   const copilotPanelOpen = useUiStore((s) => s.copilotPanelOpen);
   const toggleCopilotPanel = useUiStore((s) => s.toggleCopilotPanel);
 
@@ -38,22 +39,29 @@ export default function DashboardLayout() {
                 Close
               </Button>
             </div>
-            <p className="text-sm text-text-secondary">
-              Copilot chat will be implemented in a later phase.
+            <p className="mb-4 text-sm text-text-secondary">
+              Open the full copilot workspace for chat, context, and conversation history.
             </p>
+            {repoId && (
+              <Link to={`/dashboard/${repoId}/copilot`} onClick={() => toggleCopilotPanel()}>
+                <Button variant="primary" size="sm">
+                  Open Copilot
+                </Button>
+              </Link>
+            )}
           </div>
         </aside>
-        {!copilotPanelOpen && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="absolute bottom-4 right-4 shadow-none"
-            onClick={toggleCopilotPanel}
-            aria-label="Open copilot panel"
+        {!copilotPanelOpen && repoId && (
+          <Link
+            to={`/dashboard/${repoId}/copilot`}
+            className="absolute bottom-4 right-4"
+            aria-label="Open copilot page"
           >
-            <Bot className="h-4 w-4" />
-            Copilot
-          </Button>
+            <Button variant="secondary" size="sm" className="shadow-none">
+              <Bot className="h-4 w-4" />
+              Copilot
+            </Button>
+          </Link>
         )}
       </div>
     </div>

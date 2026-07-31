@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { DependencyGraphPanel } from '@/features/dependency-graph';
 
 export default function DependencyGraphPage() {
-  return (
-    <PagePlaceholder
-      title="Dependency Graph"
-      description="Interactive dependency graph will be implemented in Phase 4."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <DependencyGraphPanel repoId={repoId} />;
 }

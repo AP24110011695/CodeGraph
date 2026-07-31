@@ -1,10 +1,8 @@
-import { PagePlaceholder } from '../_PagePlaceholder';
+import { useParams } from 'react-router-dom';
+import { CopilotPanel } from '@/features/copilot';
 
 export default function CopilotPage() {
-  return (
-    <PagePlaceholder
-      title="Copilot"
-      description="Full-page copilot experience will be implemented in Phase 5."
-    />
-  );
+  const { repoId } = useParams();
+  if (!repoId) return null;
+  return <CopilotPanel repoId={repoId} />;
 }
