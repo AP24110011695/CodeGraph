@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -25,15 +25,22 @@ const accentBar: Record<NotificationTone, string> = {
 export function ToastContainer() {
   const queue = useNotificationStore((s) => s.queue);
   const removeNotification = useNotificationStore((s) => s.removeNotification);
+  const started = useRef(new Set<string>());
 
   useEffect(() => {
-    if (queue.length === 0) return;
-    const timers = queue.map((item) =>
-      window.setTimeout(() => removeNotification(item.id), 4000)
-    );
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
+    for (const item of queue) {
+      if (started.current.has(item.id)) continue;
+      started.current.add(item.id);
+      window.setTimeout(() => {
+        removeNotification(item.id);
+        started.current.delete(item.id);
+      }, 4000);
+    }
+
+    const activeIds = new Set(queue.map((item) => item.id));
+    for (const id of [...started.current]) {
+      if (!activeIds.has(id)) started.current.delete(id);
+    }
   }, [queue, removeNotification]);
 
   return (

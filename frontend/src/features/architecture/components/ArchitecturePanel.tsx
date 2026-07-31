@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Skeleton } from '@/design-system/primitives/Skeleton';
 import {
   AnalysisEmptyState,
@@ -16,7 +16,12 @@ interface ArchitecturePanelProps {
 
 export function ArchitecturePanel({ repoId }: ArchitecturePanelProps) {
   const selectedModuleName = useArchitectureStore((s) => s.selectedModuleName);
+  const resetArchitecture = useArchitectureStore((s) => s.reset);
   const architectureQuery = useArchitectureQuery(repoId);
+
+  useEffect(() => {
+    resetArchitecture();
+  }, [repoId, resetArchitecture]);
 
   const layerCounts = useMemo(() => {
     const counts: Record<string, number> = {};

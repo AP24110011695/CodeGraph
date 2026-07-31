@@ -27,16 +27,23 @@ export function TopBar() {
         </div>
       </div>
 
-      <Button
-        variant="secondary"
-        size="sm"
-        className="hidden min-w-[240px] justify-start text-text-tertiary md:inline-flex"
-        aria-label="Open search"
-      >
-        <Search className="h-3.5 w-3.5" />
-        <span>Search</span>
-        <span className="ml-auto text-xs text-text-tertiary">⌘K</span>
-      </Button>
+      {repoId ? (
+        <Link
+          to={`/dashboard/${repoId}/search`}
+          className="hidden md:inline-flex"
+          aria-label="Open search"
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-w-[240px] justify-start text-text-tertiary"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Search</span>
+            <span className="ml-auto text-xs text-text-tertiary">⌘K</span>
+          </Button>
+        </Link>
+      ) : null}
 
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" aria-label="Notifications">

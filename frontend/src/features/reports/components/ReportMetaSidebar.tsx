@@ -7,29 +7,44 @@ interface ReportMetaSidebarProps {
 }
 
 export function ReportMetaSidebar({ report }: ReportMetaSidebarProps) {
+  const health = report.repository_health_score;
+  const sources = report.sources_used ?? [];
+  const recommendations = report.improvement_recommendations ?? [];
+  const confidence = typeof report.confidence_score === 'number' ? report.confidence_score : null;
+
   return (
-    <aside className="w-72 shrink-0 space-y-4 border-l border-border-base bg-bg-elevated p-4">
+    <aside className="w-full shrink-0 space-y-4 border-t border-border-base bg-bg-elevated p-4 lg:w-72 lg:border-l lg:border-t-0">
       <div>
         <h2 className="text-sm font-medium text-text-primary">Metadata</h2>
         <p className="mt-1 text-xs text-text-tertiary">Report details and sources</p>
       </div>
       <dl className="space-y-2 text-xs text-text-secondary">
-        <MetaRow label="Type" value={report.report_type} />
-        <MetaRow label="Generated" value={formatDate(report.generated_at)} />
-        <MetaRow label="Confidence" value={`${Math.round(report.confidence_score * 100)}%`} />
+        <MetaRow label="Type" value={report.report_type || '—'} />
+        <MetaRow
+          label="Generated"
+          value={report.generated_at ? formatDate(report.generated_at) : '—'}
+        />
+        <MetaRow
+          label="Confidence"
+          value={confidence !== null ? `${Math.round(confidence * 100)}%` : '—'}
+        />
         <MetaRow
           label="Health"
-          value={`${report.repository_health_score.overall.toFixed(0)} (${report.repository_health_score.grade})`}
+          value={
+            health
+              ? `${Number(health.overall ?? 0).toFixed(0)} (${health.grade ?? '—'})`
+              : '—'
+          }
         />
-        <MetaRow label="Format" value={report.export_format} />
+        <MetaRow label="Format" value={report.export_format || '—'} />
       </dl>
-      {report.sources_used.length > 0 && (
+      {sources.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
             Sources
           </p>
           <div className="flex flex-wrap gap-1">
-            {report.sources_used.map((source) => (
+            {sources.map((source) => (
               <Badge key={source} variant="default">
                 {source}
               </Badge>
@@ -37,13 +52,13 @@ export function ReportMetaSidebar({ report }: ReportMetaSidebarProps) {
           </div>
         </div>
       )}
-      {report.improvement_recommendations.length > 0 && (
+      {recommendations.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
             Top recommendations
           </p>
           <ul className="space-y-1 text-xs text-text-secondary">
-            {report.improvement_recommendations.slice(0, 5).map((item) => (
+            {recommendations.slice(0, 5).map((item) => (
               <li key={item} className="rounded-md bg-bg-base px-2 py-1.5">
                 {item}
               </li>

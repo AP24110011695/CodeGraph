@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/design-system/primitives/Button';
 import {
@@ -10,7 +10,7 @@ import {
 import { useNotificationStore } from '@/core/store/notification.store';
 import { isAPIError } from '@/core/api/errors';
 import { useGenerateReportMutation, useReportsListQuery, useReportSummaryQuery } from '../api/reports.queries';
-import type { ReportType } from '../api/reports.types';
+import type { EngineeringReportDto, ReportType } from '../api/reports.types';
 import { ReportCard } from './ReportCard';
 import { ReportViewer } from './ReportViewer';
 
@@ -30,15 +30,24 @@ const REPORT_TYPES: ReportType[] = [
 export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
   const navigate = useNavigate();
   const [reportType, setReportType] = useState<ReportType>('executive');
+  const [cachedReport, setCachedReport] = useState<EngineeringReportDto | null>(null);
   const listQuery = useReportsListQuery(repoId);
   const summaryQuery = useReportSummaryQuery(repoId);
   const generateMutation = useGenerateReportMutation(repoId);
   const addNotification = useNotificationStore((s) => s.addNotification);
 
-  const selected = useMemo(
-    () => listQuery.data?.reports.find((report) => report.report_id === reportId) ?? null,
-    [listQuery.data?.reports, reportId]
-  );
+  useEffect(() => {
+    setCachedReport(null);
+  }, [repoId]);
+
+  const selected = useMemo(() => {
+    const fromList =
+      listQuery.data?.reports?.find((report) => report.report_id === reportId) ?? null;
+    if (fromList) return fromList;
+    if (cachedReport && cachedReport.report_id === reportId) return cachedReport;
+    if (generateMutation.data?.report_id === reportId) return generateMutation.data;
+    return null;
+  }, [cachedReport, generateMutation.data, listQuery.data?.reports, reportId]);
 
   const onGenerate = async () => {
     try {
@@ -46,6 +55,7 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
         report_type: reportType,
         export_format: 'markdown',
       });
+      setCachedReport(report);
       addNotification({
         title: 'Report generated',
         description: report.title,
@@ -62,14 +72,14 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
   };
 
   if (reportId) {
-    if (listQuery.isLoading) {
+    if (listQuery.isLoading || (listQuery.isFetching && !selected)) {
       return (
         <AnalysisPageShell title="Report">
           <AnalysisLoadingState />
         </AnalysisPageShell>
       );
     }
-    if (listQuery.isError) {
+    if (listQuery.isError && !selected) {
       return (
         <AnalysisPageShell title="Report">
           <AnalysisErrorState error={listQuery.error} onRetry={() => void listQuery.refetch()} />
@@ -89,13 +99,18 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
           <AnalysisEmptyState
             title="Report not found"
             description="Generate a new report or return to the reports list."
+            action={
+              <Button variant="secondary" size="sm" onClick={() => navigate(`/dashboard/${repoId}/reports`)}>
+                Back to list
+              </Button>
+            }
           />
         </AnalysisPageShell>
       );
     }
     return (
       <AnalysisPageShell
-        title={selected.title}
+        title={selected.title || 'Report'}
         description={`Type: ${selected.report_type}`}
         actions={
           <Button variant="secondary" size="sm" onClick={() => navigate(`/dashboard/${repoId}/reports`)}>
@@ -140,12 +155,17 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
         </div>
       }
     >
+      {summaryQuery.isError && (
+        <p className="mb-4 text-xs text-text-tertiary">
+          Report summary unavailable. List data below may still be usable.
+        </p>
+      )}
       {summaryQuery.data && (
         <div className="mb-4 flex flex-wrap gap-2">
-          <BadgeStat label="Reports" value={String(summaryQuery.data.report_count)} />
+          <BadgeStat label="Reports" value={String(summaryQuery.data.report_count ?? 0)} />
           <BadgeStat
             label="Health"
-            value={`${summaryQuery.data.health_score.toFixed(0)} (${summaryQuery.data.health_grade})`}
+            value={`${Number(summaryQuery.data.health_score ?? 0).toFixed(0)} (${summaryQuery.data.health_grade ?? '—'})`}
           />
         </div>
       )}
@@ -154,14 +174,14 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
       {listQuery.isError && (
         <AnalysisErrorState error={listQuery.error} onRetry={() => void listQuery.refetch()} />
       )}
-      {listQuery.isSuccess && (listQuery.data.reports.length === 0 ? (
+      {listQuery.isSuccess && ((listQuery.data.reports ?? []).length === 0 ? (
         <AnalysisEmptyState
           title="No reports yet"
           description="Generate an executive or architecture report to get started."
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {listQuery.data.reports.map((report) => (
+          {(listQuery.data.reports ?? []).map((report) => (
             <ReportCard key={report.report_id} report={report} repoId={repoId} />
           ))}
         </div>

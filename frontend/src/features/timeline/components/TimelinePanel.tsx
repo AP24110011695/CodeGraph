@@ -32,6 +32,11 @@ export function TimelinePanel({ repoId }: TimelinePanelProps) {
   const setComparisonMode = useTimelineStore((s) => s.setComparisonMode);
   const clearComparison = useTimelineStore((s) => s.clearComparison);
   const setSelectedSha = useTimelineStore((s) => s.setSelectedSha);
+  const resetTimeline = useTimelineStore((s) => s.reset);
+
+  useEffect(() => {
+    resetTimeline();
+  }, [repoId, resetTimeline]);
 
   const snapshots = useMemo(
     () => (timelineQuery.data ? adaptTimelineSnapshots(timelineQuery.data) : []),
@@ -40,10 +45,9 @@ export function TimelinePanel({ repoId }: TimelinePanelProps) {
 
   const selected = useMemo(() => {
     if (!timelineQuery.data) return null;
+    const commits = timelineQuery.data.commits ?? [];
     const commit =
-      timelineQuery.data.commits.find((c) => c.sha === selectedSha) ??
-      timelineQuery.data.commits[0] ??
-      null;
+      commits.find((c) => c.sha === selectedSha) ?? commits[0] ?? null;
     return commit ? adaptCommitToSnapshot(commit) : null;
   }, [selectedSha, timelineQuery.data]);
 
@@ -146,17 +150,17 @@ export function TimelinePanel({ repoId }: TimelinePanelProps) {
             <p className="mt-2 text-sm text-text-secondary">
               {summary.architecture_evolution || evolutionQuery.data?.summary || summary.narrative}
             </p>
-            {summary.what_changed_most.length > 0 && (
+            {(summary.what_changed_most ?? []).length > 0 && (
               <ul className="mt-3 space-y-1 text-xs text-text-secondary">
-                {summary.what_changed_most.slice(0, 8).map((item) => (
+                {(summary.what_changed_most ?? []).slice(0, 8).map((item) => (
                   <li key={item}>• {item}</li>
                 ))}
               </ul>
             )}
           </div>
           <TimelineEvents
-            driftEvents={timelineQuery.data.architecture_drift_events}
-            hotspots={timelineQuery.data.hotspots}
+            driftEvents={timelineQuery.data.architecture_drift_events ?? []}
+            hotspots={timelineQuery.data.hotspots ?? []}
           />
         </div>
       )}

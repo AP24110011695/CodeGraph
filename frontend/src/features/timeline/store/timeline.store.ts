@@ -10,6 +10,7 @@ interface TimelineUiState {
   setCompareRightSha: (sha: string | null) => void;
   setComparisonMode: (value: boolean) => void;
   clearComparison: () => void;
+  reset: () => void;
 }
 
 export const useTimelineStore = create<TimelineUiState>((set) => ({
@@ -23,4 +24,11 @@ export const useTimelineStore = create<TimelineUiState>((set) => ({
   setComparisonMode: (value) => set({ comparisonMode: value }),
   clearComparison: () =>
     set({ compareLeftSha: null, compareRightSha: null, comparisonMode: false }),
+  reset: () =>
+    set({
+      selectedSha: null,
+      compareLeftSha: null,
+      compareRightSha: null,
+      comparisonMode: false,
+    }),
 }));

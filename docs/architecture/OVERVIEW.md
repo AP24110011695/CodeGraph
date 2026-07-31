@@ -1,6 +1,7 @@
 # Architecture
 
 Short overview of the backend. Full notes: `AI_CONTEXT/ARCHITECTURE.md`.
+Full-stack map: [`../PROJECT_ARCHITECTURE.md`](../PROJECT_ARCHITECTURE.md).
 
 ```text
 HTTP (app/api) → engines (app/<domain>) → cache / telemetry / workers

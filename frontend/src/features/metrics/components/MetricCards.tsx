@@ -6,17 +6,22 @@ interface MetricCardsProps {
 }
 
 export function MetricCards({ metrics }: MetricCardsProps) {
-  const { summary, statistics, quality, security, architecture, smells } = metrics;
+  const summary = metrics.summary;
+  const statistics = metrics.statistics;
+  const quality = metrics.quality;
+  const security = metrics.security;
+  const architecture = metrics.architecture;
+  const smells = metrics.smells;
 
   const cards = [
-    { label: 'Files', value: String(summary.total_files) },
-    { label: 'Directories', value: String(summary.total_directories) },
-    { label: 'Total size', value: formatBytes(summary.total_size) },
-    { label: 'Lines of code', value: statistics.code_lines?.toLocaleString() ?? '—' },
-    { label: 'Quality score', value: quality.quality_score?.toString() ?? '—' },
-    { label: 'Security score', value: security.security_score?.toString() ?? '—' },
-    { label: 'Modules', value: String(architecture.modules) },
-    { label: 'Code smells', value: String(smells.smell_count) },
+    { label: 'Files', value: String(summary?.total_files ?? 0) },
+    { label: 'Directories', value: String(summary?.total_directories ?? 0) },
+    { label: 'Total size', value: formatBytes(summary?.total_size ?? 0) },
+    { label: 'Lines of code', value: statistics?.code_lines?.toLocaleString() ?? '—' },
+    { label: 'Quality score', value: quality?.quality_score?.toString() ?? '—' },
+    { label: 'Security score', value: security?.security_score?.toString() ?? '—' },
+    { label: 'Modules', value: String(architecture?.modules ?? 0) },
+    { label: 'Code smells', value: String(smells?.smell_count ?? 0) },
   ];
 
   return (

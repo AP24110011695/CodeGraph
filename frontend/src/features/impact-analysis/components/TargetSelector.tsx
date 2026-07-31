@@ -1,27 +1,29 @@
+import type { UseMutationResult } from '@tanstack/react-query';
 import { Button } from '@/design-system/primitives/Button';
 import { useNotificationStore } from '@/core/store/notification.store';
 import { isAPIError } from '@/core/api/errors';
-import type { ImpactAnalyzeResponse } from '../api/impact.types';
-import { useImpactAnalyzeMutation } from '../api/impact.queries';
+import type { ImpactAnalyzeRequest, ImpactAnalyzeResponse } from '../api/impact.types';
 import { useImpactStore } from '../store/impact.store';
 
 interface TargetSelectorProps {
-  repoId: string;
+  analyzeMutation: UseMutationResult<
+    ImpactAnalyzeResponse,
+    unknown,
+    ImpactAnalyzeRequest
+  >;
   onAnalyzed?: (result: ImpactAnalyzeResponse) => void;
 }
 
 const TARGET_TYPES = ['auto', 'class', 'module', 'file', 'api', 'symbol'] as const;
 const CHANGE_TYPES = ['modify', 'delete', 'rename', 'add'] as const;
 
-export function TargetSelector({ repoId, onAnalyzed }: TargetSelectorProps) {
+export function TargetSelector({ analyzeMutation, onAnalyzed }: TargetSelectorProps) {
   const target = useImpactStore((s) => s.target);
   const targetType = useImpactStore((s) => s.targetType);
   const changeType = useImpactStore((s) => s.changeType);
   const setTarget = useImpactStore((s) => s.setTarget);
   const setTargetType = useImpactStore((s) => s.setTargetType);
   const setChangeType = useImpactStore((s) => s.setChangeType);
-
-  const analyzeMutation = useImpactAnalyzeMutation(repoId);
   const addNotification = useNotificationStore((s) => s.addNotification);
 
   const onAnalyze = async () => {

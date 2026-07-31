@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Skeleton } from '@/design-system/primitives/Skeleton';
 import {
   AnalysisEmptyState,
@@ -18,6 +19,11 @@ export function KnowledgeGraphPanel({ repoId }: KnowledgeGraphPanelProps) {
   const typeFilter = useKnowledgeGraphStore((s) => s.typeFilter);
   const selectedNodeId = useKnowledgeGraphStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useKnowledgeGraphStore((s) => s.setSelectedNodeId);
+  const resetKnowledgeGraph = useKnowledgeGraphStore((s) => s.reset);
+
+  useEffect(() => {
+    resetKnowledgeGraph();
+  }, [repoId, resetKnowledgeGraph]);
 
   const { filtered, isLoading, isError, error, refetch, isFetching } = useFilteredKnowledgeGraph(
     repoId,

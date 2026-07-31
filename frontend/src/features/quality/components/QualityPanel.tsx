@@ -18,16 +18,7 @@ export function QualityPanel({ repoId }: QualityPanelProps) {
   const qualityQuery = useQualityQuery(repoId);
   const smellsQuery = useSmellsQuery(repoId);
 
-  const isLoading = qualityQuery.isLoading || smellsQuery.isLoading;
-  const isError = qualityQuery.isError || smellsQuery.isError;
-  const error = qualityQuery.error ?? smellsQuery.error;
-
-  const onRetry = () => {
-    void qualityQuery.refetch();
-    void smellsQuery.refetch();
-  };
-
-  if (isLoading) {
+  if (qualityQuery.isLoading) {
     return (
       <AnalysisPageShell title="Quality">
         <AnalysisLoadingState rows={5} />
@@ -35,10 +26,16 @@ export function QualityPanel({ repoId }: QualityPanelProps) {
     );
   }
 
-  if (isError) {
+  if (qualityQuery.isError) {
     return (
       <AnalysisPageShell title="Quality">
-        <AnalysisErrorState error={error} onRetry={onRetry} />
+        <AnalysisErrorState
+          error={qualityQuery.error}
+          onRetry={() => {
+            void qualityQuery.refetch();
+            void smellsQuery.refetch();
+          }}
+        />
       </AnalysisPageShell>
     );
   }
@@ -55,11 +52,12 @@ export function QualityPanel({ repoId }: QualityPanelProps) {
   }
 
   const { metadata } = qualityQuery.data;
+  const languageCount = Object.keys(metadata?.languages ?? {}).length;
 
   return (
     <AnalysisPageShell
       title="Quality"
-      description={`${metadata.total_files} files · ${metadata.total_folders} folders · ${Object.keys(metadata.languages).length} languages`}
+      description={`${metadata?.total_files ?? 0} files · ${metadata?.total_folders ?? 0} folders · ${languageCount} languages`}
     >
       <div className="space-y-4">
         <QualityScoreCard
@@ -69,11 +67,19 @@ export function QualityPanel({ repoId }: QualityPanelProps) {
 
         <RecommendationsList recommendations={qualityQuery.data.recommendations} />
 
+        {smellsQuery.isError && (
+          <p className="text-xs text-text-tertiary">
+            Code smell analysis unavailable for this repository. Quality scores above are still valid.
+          </p>
+        )}
+
+        {smellsQuery.isLoading && <AnalysisLoadingState rows={2} />}
+
         {smellsQuery.data && (
           <>
-            <HotspotsList smells={smellsQuery.data.smells} />
+            <HotspotsList smells={smellsQuery.data.smells ?? []} />
             <CodeSmellsList
-              smells={smellsQuery.data.smells}
+              smells={smellsQuery.data.smells ?? []}
               summary={smellsQuery.data.summary}
               technicalDebt={smellsQuery.data.technical_debt}
               estimatedEffort={smellsQuery.data.estimated_effort}

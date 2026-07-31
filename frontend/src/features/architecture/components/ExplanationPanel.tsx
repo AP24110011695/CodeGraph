@@ -28,8 +28,12 @@ export function ExplanationPanel({ repositoryId, selectedModuleName }: Explanati
     event.preventDefault();
     const query = explainQuery.trim();
     if (!query) return;
-    const result = await explainMutation.mutateAsync(query);
-    setExplanation(result);
+    try {
+      const result = await explainMutation.mutateAsync(query);
+      setExplanation(result);
+    } catch {
+      // Error surface via explainMutation.isError below.
+    }
   };
 
   return (
@@ -119,7 +123,7 @@ export function ExplanationPanel({ repositoryId, selectedModuleName }: Explanati
               <p className="text-sm leading-relaxed text-text-secondary">{explanation.summary}</p>
             </div>
 
-            {explanation.referenced_modules.length > 0 && (
+            {explanation.referenced_modules?.length ? (
               <div>
                 <h4 className="mb-1 text-xs font-medium text-text-secondary">Referenced modules</h4>
                 <div className="flex flex-wrap gap-1">
@@ -130,9 +134,9 @@ export function ExplanationPanel({ repositoryId, selectedModuleName }: Explanati
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {explanation.evidence.length > 0 && (
+            {explanation.evidence?.length ? (
               <div>
                 <h4 className="mb-1 text-xs font-medium text-text-secondary">Evidence</h4>
                 <ul className="list-inside list-disc space-y-1 text-xs text-text-tertiary">
@@ -141,9 +145,9 @@ export function ExplanationPanel({ repositoryId, selectedModuleName }: Explanati
                   ))}
                 </ul>
               </div>
-            )}
+            ) : null}
 
-            {explanation.reasoning_trace.length > 0 && (
+            {explanation.reasoning_trace?.length ? (
               <div>
                 <h4 className="mb-1 text-xs font-medium text-text-secondary">Reasoning trace</h4>
                 <ol className="space-y-2">
@@ -155,8 +159,7 @@ export function ExplanationPanel({ repositoryId, selectedModuleName }: Explanati
                   ))}
                 </ol>
               </div>
-            )}
-          </section>
+            ) : null}          </section>
         )}
       </div>
     </aside>

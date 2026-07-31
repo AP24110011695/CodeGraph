@@ -6,7 +6,10 @@ interface TimelineEventsProps {
   hotspots: HotspotDto[];
 }
 
-export function TimelineEvents({ driftEvents, hotspots }: TimelineEventsProps) {
+export function TimelineEvents({
+  driftEvents = [],
+  hotspots = [],
+}: TimelineEventsProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-md border border-border-base bg-bg-elevated p-4">

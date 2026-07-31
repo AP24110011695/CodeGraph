@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AnalysisEmptyState,
   AnalysisErrorState,
@@ -7,6 +7,7 @@ import {
 } from '@/features/_shared';
 import type { ImpactAnalyzeResponse } from '../api/impact.types';
 import { useImpactAnalyzeMutation, useImpactSummaryQuery } from '../api/impact.queries';
+import { useImpactStore } from '../store/impact.store';
 import { AffectedFilesList } from './AffectedFilesList';
 import { ImpactVisualization } from './ImpactVisualization';
 import { RiskSummary } from './RiskSummary';
@@ -19,28 +20,15 @@ interface ImpactPanelProps {
 export function ImpactPanel({ repoId }: ImpactPanelProps) {
   const summaryQuery = useImpactSummaryQuery(repoId);
   const analyzeMutation = useImpactAnalyzeMutation(repoId);
+  const resetImpactStore = useImpactStore((s) => s.reset);
   const [lastResult, setLastResult] = useState<ImpactAnalyzeResponse | null>(null);
 
+  useEffect(() => {
+    resetImpactStore();
+    setLastResult(null);
+  }, [repoId, resetImpactStore]);
+
   const result = analyzeMutation.data ?? lastResult;
-
-  if (summaryQuery.isLoading) {
-    return (
-      <AnalysisPageShell title="Impact Analysis">
-        <AnalysisLoadingState rows={4} />
-      </AnalysisPageShell>
-    );
-  }
-
-  if (summaryQuery.isError) {
-    return (
-      <AnalysisPageShell title="Impact Analysis">
-        <AnalysisErrorState
-          error={summaryQuery.error}
-          onRetry={() => void summaryQuery.refetch()}
-        />
-      </AnalysisPageShell>
-    );
-  }
 
   return (
     <AnalysisPageShell
@@ -51,28 +39,45 @@ export function ImpactPanel({ repoId }: ImpactPanelProps) {
       }
     >
       <div className="space-y-4">
+        {summaryQuery.isLoading && <AnalysisLoadingState rows={2} />}
+
+        {summaryQuery.isError && (
+          <div className="rounded-md border border-border-base bg-bg-elevated p-4">
+            <AnalysisErrorState
+              error={summaryQuery.error}
+              onRetry={() => void summaryQuery.refetch()}
+            />
+            <p className="mt-2 text-center text-xs text-text-tertiary">
+              You can still run a targeted impact analysis below.
+            </p>
+          </div>
+        )}
+
         {summaryQuery.data && (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryStat
               label="High-risk targets"
-              value={String(summaryQuery.data.high_risk_targets.length)}
+              value={String(summaryQuery.data.high_risk_targets?.length ?? 0)}
             />
             <SummaryStat
               label="Critical modules"
-              value={String(summaryQuery.data.critical_modules.length)}
+              value={String(summaryQuery.data.critical_modules?.length ?? 0)}
             />
             <SummaryStat
               label="Avg blast radius"
-              value={summaryQuery.data.average_blast_radius.toFixed(1)}
+              value={Number(summaryQuery.data.average_blast_radius ?? 0).toFixed(1)}
             />
             <SummaryStat
               label="Confidence"
-              value={`${(summaryQuery.data.confidence_score * 100).toFixed(0)}%`}
+              value={`${(Number(summaryQuery.data.confidence_score ?? 0) * 100).toFixed(0)}%`}
             />
           </div>
         )}
 
-        <TargetSelector repoId={repoId} onAnalyzed={setLastResult} />
+        <TargetSelector
+          analyzeMutation={analyzeMutation}
+          onAnalyzed={setLastResult}
+        />
 
         {analyzeMutation.isPending && <AnalysisLoadingState rows={3} />}
 
@@ -88,19 +93,19 @@ export function ImpactPanel({ repoId }: ImpactPanelProps) {
             <RiskSummary
               risk={result.risk}
               statistics={result.statistics}
-              impactSummary={result.impact_summary}
-              whatBreaks={result.what_breaks}
+              impactSummary={result.impact_summary ?? ''}
+              whatBreaks={result.what_breaks ?? []}
             />
             <ImpactVisualization
-              directDependents={result.dependency_impact.direct_dependents}
-              transitiveDependents={result.dependency_impact.transitive_dependents}
-              propagationPaths={result.propagation_paths}
+              directDependents={result.dependency_impact?.direct_dependents ?? []}
+              transitiveDependents={result.dependency_impact?.transitive_dependents ?? []}
+              propagationPaths={result.propagation_paths ?? []}
             />
             <AffectedFilesList
-              modules={result.affected_modules}
-              services={result.affected_services}
-              apis={result.affected_apis}
-              symbols={result.affected_symbols}
+              modules={result.affected_modules ?? []}
+              services={result.affected_services ?? []}
+              apis={result.affected_apis ?? []}
+              symbols={result.affected_symbols ?? []}
             />
           </>
         )}
