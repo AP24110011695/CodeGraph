@@ -72,6 +72,9 @@ async def lifespan(app: FastAPI):
     """Start reliability + worker pool on startup; gracefully stop on shutdown."""
     from app.workers.worker_pool import worker_pool
     from app.reliability.reliability_manager import reliability_manager
+    from storage.database import init_db
+
+    init_db()
     reliability_manager.initialize()
     worker_pool.start()
     yield

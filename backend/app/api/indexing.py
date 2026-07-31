@@ -4,18 +4,24 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.indexing.index_manager import IndexAlreadyExistsError, IndexManager, IndexNotFoundError
+from app.indexing.index_manager import (
+    IndexAlreadyExistsError,
+    IndexNotFoundError,
+    get_shared_index_manager,
+)
 from app.indexing.indexing_models import IndexStatus, RepositoryIndex
 from app.indexing.indexing_pipeline import IndexingPipelineError
 from app.schemas.indexing import IndexResponse
+from storage.repository_store import repository_store
 
 router = APIRouter(prefix="/index", tags=["indexing"])
 EXTRACTED_DIR = Path("storage/extracted")
-index_manager = IndexManager()
+# Shared process-wide manager (SQLite-backed metadata).
+index_manager = get_shared_index_manager()
 
 
 def _project_path(upload_id: str) -> Path:
-    path = EXTRACTED_DIR / upload_id
+    path = repository_store.resolve_path(upload_id) or (EXTRACTED_DIR / upload_id)
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"Extracted project not found for upload_id: {upload_id}")
     if not path.is_dir():
@@ -37,7 +43,9 @@ async def create_index(upload_id: str, force: bool = Query(False)) -> IndexRespo
 @router.get("/{upload_id}", response_model=IndexResponse)
 async def get_index(upload_id: str) -> IndexResponse:
     _project_path(upload_id)
-    index = index_manager.get_index(upload_id) or RepositoryIndex(upload_id=upload_id, status=IndexStatus.NOT_INDEXED)
+    index = index_manager.get_index(upload_id) or RepositoryIndex(
+        upload_id=upload_id, status=IndexStatus.NOT_INDEXED
+    )
     return IndexResponse.from_index(index)
 
 

@@ -6,6 +6,7 @@ from app.services.extraction_service import extraction_service
 from app.repository_state.state_machine import RepositoryStateMachine
 from app.events.event_bus import event_bus
 from app.events.event_types import EventType
+from storage.repository_store import repository_store
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
@@ -14,20 +15,22 @@ router = APIRouter(prefix="/upload", tags=["upload"])
 async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
     upload_id, filename = await upload_service.save_upload(file)
     project_path = extraction_service.extract(upload_id, filename)
-    
+
+    repository_store.register_upload(upload_id, project_path, repository_id=upload_id)
+
     # Initialize state machine
     RepositoryStateMachine(upload_id)
-    
+
     # Publish event
     event_bus.publish(
         event_type=EventType.REPOSITORY_UPLOADED,
         repository_id=upload_id,
         payload={"filename": filename, "project_path": str(project_path)}
     )
-    
+
     return UploadResponse(
-        upload_id=upload_id, 
-        filename=filename, 
+        upload_id=upload_id,
+        filename=filename,
         status="extracted",
         project_path=project_path
     )

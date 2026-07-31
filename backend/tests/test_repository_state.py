@@ -103,25 +103,22 @@ def test_api_not_found():
 
 def test_job_queue_integration():
     repo_id = "repo-queue-test"
-    # Ensure it's not initialized
-    
-    # Create job (should set to QUEUED)
-    # Note: JobManager validates repository exists, so we mock it
-    with patch.object(job_manager, '_validate_repository'):
-        job = job_manager.create_job(repo_id, "indexing")
-        
-        sm = RepositoryStateMachine(repo_id)
-        assert sm.current_state.state == RepositoryStateEnum.QUEUED
-        assert sm.current_state.job_id == job.job_id
-        
-        # Test worker picking it up
-        # We simulate the worker's initial state transition
-        from app.jobs.job_worker import JobWorker
-        # A mock progress callback
-        
-        # Manually invoke process job like the worker does
-        # It's better to just verify that the job manager and worker transitions work
-        # but let's test cancellation from job manager
-        
-        job_manager.cancel_job(job.job_id)
-        assert sm.current_state.state == RepositoryStateEnum.CANCELLED
+    # Ensure in-memory + any stale DB workflow hydrate does not leak prior runs.
+    state_manager._states.pop(repo_id, None)
+
+    # Create job (should set to QUEUED). Use a private manager with no workers
+    # so the global worker pool cannot race past QUEUED before assertions.
+    manager = job_manager.__class__(max_queue_size=10, num_workers=0)
+    try:
+        with patch.object(manager, '_validate_repository'):
+            job = manager.create_job(repo_id, "indexing")
+
+            sm = RepositoryStateMachine(repo_id)
+            assert sm.current_state.state == RepositoryStateEnum.QUEUED
+            assert sm.current_state.job_id == job.job_id
+
+            manager.cancel_job(job.job_id)
+            assert sm.current_state.state == RepositoryStateEnum.CANCELLED
+    finally:
+        manager.shutdown()
+        state_manager._states.pop(repo_id, None)

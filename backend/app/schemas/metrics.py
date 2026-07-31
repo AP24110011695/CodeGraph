@@ -85,7 +85,8 @@ class MetricsSmells(BaseModel):
 
     smell_count: int = 0
     summary: dict[str, int] = Field(default_factory=dict)
-    debt_estimate: int | None = None
+    # Engine may return a structured debt object or a simple scalar.
+    debt_estimate: Any | None = None
 
 
 class MetricsRefactoring(BaseModel):

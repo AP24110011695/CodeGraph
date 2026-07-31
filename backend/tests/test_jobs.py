@@ -313,7 +313,8 @@ class TestJobManager:
     
     def test_cancel_queued_job(self):
         """Test cancelling a queued job."""
-        manager = JobManager(max_queue_size=10, num_workers=1)
+        # num_workers=0 keeps the job queued (no race with background workers).
+        manager = JobManager(max_queue_size=10, num_workers=0)
         
         with patch.object(manager, '_validate_repository'):
             job = manager.create_job("repo-123", "architecture")
@@ -326,7 +327,7 @@ class TestJobManager:
     
     def test_cancel_completed_job(self):
         """Test cancelling a completed job."""
-        manager = JobManager(max_queue_size=10, num_workers=1)
+        manager = JobManager(max_queue_size=10, num_workers=0)
         
         with patch.object(manager, '_validate_repository'):
             job = manager.create_job("repo-123", "architecture")
@@ -339,7 +340,7 @@ class TestJobManager:
     
     def test_list_jobs(self):
         """Test listing jobs with filters."""
-        manager = JobManager(max_queue_size=10, num_workers=1)
+        manager = JobManager(max_queue_size=10, num_workers=0)
         
         with patch.object(manager, '_validate_repository'):
             job1 = manager.create_job("repo-123", "architecture")

@@ -18,11 +18,13 @@ from app.schemas.architecture import (
 from app.services.dependency_graph import graph_builder
 from app.services.framework_detector import detector_service
 from app.services.scanner_service import scanner_service
+from storage.repository_store import repository_store
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/architecture", tags=["architecture"])
 
+# Filesystem fallback / test monkeypatch compatibility.
 EXTRACTED_DIR = Path("storage/extracted")
 
 
@@ -36,9 +38,9 @@ async def analyze_architecture(upload_id: str) -> ArchitectureResponse:
     Returns:
         An ArchitectureResponse containing detected layers, modules, components, and relationships.
     """
-    project_path = EXTRACTED_DIR / upload_id
+    project_path = repository_store.resolve_path(upload_id) or (EXTRACTED_DIR / upload_id)
 
-    if not project_path.exists():
+    if project_path is None or not project_path.exists():
         raise HTTPException(
             status_code=404,
             detail=f"Extracted project not found for upload_id: {upload_id}",
@@ -120,3 +122,16 @@ async def analyze_architecture(upload_id: str) -> ArchitectureResponse:
             relationships=architecture_result.statistics.get("relationships", 0),
         ),
     )
+    try:
+        repository_store.save_analysis(
+            upload_id,
+            "architecture",
+            {
+                "layers": response.layers,
+                "statistics": response.statistics.model_dump(),
+                "module_count": len(response.modules),
+            },
+        )
+    except Exception:
+        pass
+    return response

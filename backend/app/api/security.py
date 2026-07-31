@@ -8,11 +8,13 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.security import SecurityResponse, SecurityIssueSchema, SecuritySummarySchema
 from app.security.security_analyzer import security_analyzer
 from app.services.scanner_service import scanner_service
+from storage.repository_store import repository_store
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/security", tags=["security"])
 
+# Kept for test monkeypatching and filesystem fallback.
 EXTRACTED_DIR = Path("storage/extracted")
 
 
@@ -29,7 +31,7 @@ async def analyze_security(upload_id: str) -> SecurityResponse:
     Raises:
         HTTPException: If the project is not found or an error occurs.
     """
-    project_path = EXTRACTED_DIR / upload_id
+    project_path = repository_store.resolve_path(upload_id) or (EXTRACTED_DIR / upload_id)
 
     if not project_path.exists():
         raise HTTPException(

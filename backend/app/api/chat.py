@@ -6,10 +6,9 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.chat.chat_service import ChatService, ChatServiceError
-from app.indexing.index_manager import IndexManager
+from app.indexing.index_manager import get_shared_index_manager
 from app.rag.embedding_service import EmbeddingService
 from app.rag.retriever import Retriever
-from app.rag.vector_store import InMemoryVectorStore
 from app.schemas.chat import ChatMatch, ChatRequest, ChatResponse
 from app.schemas.conversation import ChatAnswerResponse, ConversationRequest
 from app.services.scanner_service import scanner_service
@@ -21,10 +20,9 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 EXTRACTED_DIR = Path("storage/extracted")
 
 # Global instances
-index_manager = IndexManager()
-vector_store = InMemoryVectorStore()
+index_manager = get_shared_index_manager()
 embedding_service = EmbeddingService()
-retriever = Retriever(vector_store=vector_store, embedding_service=embedding_service)
+retriever = Retriever(vector_store=index_manager.vector_store, embedding_service=embedding_service)
 chat_service = ChatService(index_manager=index_manager, retriever=retriever)
 
 

@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 
 from app.ai.llm_client import LLMError
-from app.indexing.index_manager import IndexManager
+from app.indexing.index_manager import IndexManager, get_shared_index_manager
 from app.readme.readme_generator import (
     EmptyRepositoryError,
     ReadmeGenerationError,
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/readme", tags=["readme"])
 EXTRACTED_DIR = Path("storage/extracted")
-index_manager = IndexManager()
+index_manager = get_shared_index_manager()
 
 
 def _project_path(upload_id: str) -> Path:

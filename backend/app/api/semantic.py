@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.api.search import _project_path, search_service
-from app.indexing.index_manager import IndexManager
+from app.indexing.index_manager import get_shared_index_manager
 from app.knowledge_graph.graph_builder import KnowledgeGraphBuilder
 from app.schemas.semantic import SemanticSearchRequest, SemanticSearchResponse
 from app.semantic.hybrid_retriever import HybridRetriever
@@ -15,7 +15,9 @@ router = APIRouter(prefix="/semantic", tags=["semantic"])
 
 
 def _graph_provider(repository_id: str, project_path: Path):
-    return KnowledgeGraphBuilder(index_manager=IndexManager()).build(project_path, repository_id)
+    return KnowledgeGraphBuilder(index_manager=get_shared_index_manager()).build(
+        project_path, repository_id
+    )
 
 
 semantic_engine = SemanticEngine(SemanticSearch(HybridRetriever(search_service)), _graph_provider)

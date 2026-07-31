@@ -22,7 +22,19 @@ app/
   schemas/    # Pydantic models
   <domain>/   # engines (memory, rag, planning, agents, …)
   main.py
+storage/      # SQLite persistence (repository/index metadata)
 tests/
+```
+
+Repository index metadata and extraction paths are persisted in SQLite
+(`storage/codegraph.db` by default, override with `CODEGRAPH_DB_PATH`).
+Extracted source trees remain on disk under `storage/extracted/`.
+
+When using `--reload`, exclude extract/upload trees so WatchFiles does not
+restart the server on every upload:
+
+```bash
+uvicorn app.main:app --reload --reload-exclude storage --reload-exclude uploads --port 8000
 ```
 
 ## Useful endpoints

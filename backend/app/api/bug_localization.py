@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
 from app.bug_localization.bug_localization_engine import BugLocalizationEngine, BugLocalizationRequest, bug_localization_engine
-from app.indexing.index_manager import IndexManager, IndexNotFoundError
+from app.indexing.index_manager import IndexManager, IndexNotFoundError, get_shared_index_manager
 from app.schemas.bug_localization import BugLocalizationResponse
 
 router = APIRouter(prefix="/bug-localization", tags=["bug-localization"])
@@ -34,7 +34,7 @@ async def localize_bug(
         HTTPException: If repository is not found or not indexed.
     """
     # Initialize index manager
-    index_manager = IndexManager()
+    index_manager = get_shared_index_manager()
 
     # Get the index
     index = index_manager.get_index(upload_id)

@@ -12,6 +12,7 @@ from app.schemas.quality import (
     QualityResponse,
     QualityScoresSchema,
 )
+from storage.repository_store import repository_store
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ async def analyze_quality(upload_id: str) -> QualityResponse:
     Returns:
         A QualityResponse containing quality scores, recommendations, and metadata.
     """
-    project_path = resolve_repository_path(upload_id)
+    project_path = repository_store.resolve_path(upload_id) or resolve_repository_path(upload_id)
 
     if project_path is None:
         raise HTTPException(

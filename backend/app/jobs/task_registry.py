@@ -38,41 +38,40 @@ task_registry = TaskRegistry()
 
 def register_analysis_tasks() -> None:
     """Register all analysis tasks from existing modules."""
-    from app.indexing.index_manager import IndexManager
     from app.analyzers.architecture_builder import architecture_builder
     from app.parsers.parser_engine import ParserEngine
     from app.services.dependency_graph import graph_builder
     from app.services.framework_detector import detector_service
     from app.services.scanner_service import scanner_service
-    from app.api.quality import quality_analyzer
-    from app.api.security import security_analyzer
-    from app.api.metrics import metrics_engine
-    from app.api.risk import risk_engine
-    
+    from app.quality.quality_analyzer import quality_analyzer
+    from app.security.security_analyzer import security_analyzer
+
     EXTRACTED_DIR = Path("storage/extracted")
     
     # Repository indexing task
     def indexing_handler(repository_id: str, progress_callback: Callable[[str, int], None]) -> dict[str, Any]:
         """Execute repository indexing."""
-        from app.indexing.index_manager import IndexManager
-        index_manager = IndexManager()
-        project_path = EXTRACTED_DIR / repository_id
-        
+        from app.indexing.index_manager import get_shared_index_manager
+        from storage.repository_store import repository_store
+
+        index_manager = get_shared_index_manager()
+        project_path = repository_store.resolve_path(repository_id) or (EXTRACTED_DIR / repository_id)
+
         progress_callback("Starting repository scan", 10)
         scan_result = scanner_service.scan(project_path)
-        
+
         progress_callback("Detecting frameworks", 30)
         detection_result = detector_service.detect(project_path, scan_result)
-        
+
         progress_callback("Building dependency graph", 50)
         graph_result = graph_builder.build(project_path, scan_result)
-        
+
         progress_callback("Parsing source code", 70)
         parsing_result = ParserEngine.parse_project(project_path, scan_result)
-        
+
         progress_callback("Creating vector index", 90)
         index = index_manager.create_index(project_path, repository_id, force=True)
-        
+
         progress_callback("Indexing complete", 100)
         return {
             "repository_name": index.repository_name,
@@ -184,16 +183,19 @@ def register_analysis_tasks() -> None:
     # Metrics analysis task
     def metrics_handler(repository_id: str, progress_callback: Callable[[str, int], None]) -> dict[str, Any]:
         """Execute metrics analysis."""
-        from app.indexing.index_manager import IndexManager
+        from app.indexing.index_manager import get_shared_index_manager
         from app.metrics.metrics_engine import MetricsEngine
-        
-        index_manager = IndexManager()
-        project_path = Path("uploads") / repository_id
-        
+        from storage.repository_store import repository_store
+
+        index_manager = get_shared_index_manager()
+        project_path = repository_store.resolve_path(repository_id)
+        if project_path is None:
+            raise FileNotFoundError(f"Project path not found: {repository_id}")
+
         progress_callback("Generating metrics", 50)
         metrics_engine_with_index = MetricsEngine(index_manager=index_manager)
         result = metrics_engine_with_index.generate(project_path, repository_id)
-        
+
         progress_callback("Metrics generation complete", 100)
         return {
             "project_name": result.project_name,
@@ -205,20 +207,23 @@ def register_analysis_tasks() -> None:
             "smells": result.smells,
             "refactoring": result.refactoring,
         }
-    
+
     # Risk analysis task
     def risk_handler(repository_id: str, progress_callback: Callable[[str, int], None]) -> dict[str, Any]:
         """Execute risk analysis."""
-        from app.indexing.index_manager import IndexManager
+        from app.indexing.index_manager import get_shared_index_manager
         from app.risk.risk_engine import RiskEngine
-        
-        index_manager = IndexManager()
-        project_path = Path("uploads") / repository_id
-        
+        from storage.repository_store import repository_store
+
+        index_manager = get_shared_index_manager()
+        project_path = repository_store.resolve_path(repository_id)
+        if project_path is None:
+            raise FileNotFoundError(f"Project path not found: {repository_id}")
+
         progress_callback("Analyzing project risks", 50)
         risk_engine_with_index = RiskEngine(index_manager=index_manager)
         result = risk_engine_with_index.analyze(project_path, repository_id)
-        
+
         progress_callback("Risk analysis complete", 100)
         return {
             "project_name": result.project_name,

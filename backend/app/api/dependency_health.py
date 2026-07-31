@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
 from app.dependency_health.dependency_health_engine import DependencyHealthEngine, dependency_health_engine
-from app.indexing.index_manager import IndexManager, IndexNotFoundError
+from app.indexing.index_manager import IndexManager, IndexNotFoundError, get_shared_index_manager
 from app.schemas.dependency_health import DependencyHealthResponse
 
 router = APIRouter(prefix="/dependency-health", tags=["dependency-health"])
@@ -32,7 +32,7 @@ async def analyze_dependency_health(
         HTTPException: If repository is not found or not indexed.
     """
     # Initialize index manager
-    index_manager = IndexManager()
+    index_manager = get_shared_index_manager()
 
     # Get the index
     index = index_manager.get_index(upload_id)

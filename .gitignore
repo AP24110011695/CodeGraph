@@ -466,7 +466,12 @@ Thumbs.db
 # ============================================
 backend/uploads/**
 !backend/uploads/.gitkeep
-backend/storage/**
+# Persist SQLite DB + extract trees locally; keep Python storage package tracked.
+backend/storage/extracted/
+backend/storage/uploads/
+backend/storage/workflow_checkpoints/
+backend/storage/*.db
+backend/storage/**/__pycache__/
 storage/**
 uploads/**
 backend/.pytest_cache/

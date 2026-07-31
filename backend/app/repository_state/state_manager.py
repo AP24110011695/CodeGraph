@@ -32,6 +32,14 @@ class StateManager:
             )
             self._states[repository_id] = state
             logger.info(f"Initialized repository {repository_id} state to UPLOADED")
+            try:
+                from storage.repository_store import repository_store
+
+                repository_store.save_workflow_state(
+                    repository_id, state.model_dump(mode="json")
+                )
+            except Exception:
+                logger.debug("Failed to persist initial workflow state for %s", repository_id, exc_info=True)
             return state
 
     def get_state(self, repository_id: str) -> Optional[RepositoryState]:
@@ -41,7 +49,20 @@ class StateManager:
             state = self._states.get(repository_id)
             if state:
                 return state.model_copy()
-            return None
+
+        # Fallback to SQLite for process-restart survival
+        try:
+            from storage.repository_store import repository_store
+
+            payload = repository_store.load_workflow_state(repository_id)
+            if payload:
+                restored = RepositoryState.model_validate(payload)
+                with self._lock:
+                    self._states[repository_id] = restored
+                return restored.model_copy()
+        except Exception:
+            logger.debug("No persisted workflow state for %s", repository_id, exc_info=True)
+        return None
 
     def transition_state(
         self, 
@@ -100,7 +121,16 @@ class StateManager:
                 )
             
             logger.info(f"Repository {repository_id} transitioned to {new_state}")
-            return current.model_copy()
+            snapshot = current.model_copy()
+            try:
+                from storage.repository_store import repository_store
+
+                repository_store.save_workflow_state(
+                    repository_id, snapshot.model_dump(mode="json")
+                )
+            except Exception:
+                logger.debug("Failed to persist workflow state for %s", repository_id, exc_info=True)
+            return snapshot
     
     def update_progress(self, repository_id: str, progress: int, current_stage: Optional[str] = None) -> Optional[RepositoryState]:
         """Updates progress and stage without changing state."""

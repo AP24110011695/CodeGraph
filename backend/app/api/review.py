@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from app.indexing.index_manager import IndexManager, IndexNotFoundError
+from app.indexing.index_manager import IndexManager, IndexNotFoundError, get_shared_index_manager
 from app.review.review_engine import ReviewEngine, review_engine
 from app.schemas.review import ReviewResponse
 
@@ -32,7 +32,7 @@ async def generate_review(
         HTTPException: If repository is not found or not indexed.
     """
     # Initialize index manager
-    index_manager = IndexManager()
+    index_manager = get_shared_index_manager()
 
     # Get the index
     index = index_manager.get_index(upload_id)

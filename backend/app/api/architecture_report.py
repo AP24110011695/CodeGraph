@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from app.indexing.index_manager import IndexManager, IndexNotFoundError
+from app.indexing.index_manager import IndexManager, IndexNotFoundError, get_shared_index_manager
 from app.schemas.architecture_report import ArchitectureReportResponse
 from app.architecture_report.architecture_report_engine import ArchitectureReportEngine, architecture_report_engine
 
@@ -31,7 +31,7 @@ async def generate_report(
         HTTPException: If repository is not found or not indexed.
     """
     # Initialize index manager
-    index_manager = IndexManager()
+    index_manager = get_shared_index_manager()
 
     # Get the index
     index = index_manager.get_index(upload_id)
