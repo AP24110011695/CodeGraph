@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.paths import resolve_repository_path
@@ -23,9 +24,14 @@ class RepositoryStore:
     """Source of truth for repository paths, index status, and analysis metadata."""
 
     def __init__(self, session_factory: sessionmaker[Session] | None = None) -> None:
+        # None → resolve lazily via get_session_factory() so reset_engine()/env
+        # overrides are picked up (tests and CODEGRAPH_DB_PATH).
+        self._session_factory = session_factory
         if session_factory is None:
             init_db()
-        self._session_factory = session_factory or get_session_factory()
+
+    def _sessions(self) -> sessionmaker[Session]:
+        return self._session_factory or get_session_factory()
 
     def register_upload(
         self,
@@ -34,10 +40,12 @@ class RepositoryStore:
         *,
         repository_id: str | None = None,
         status: str = "UPLOADED",
+        name: str | None = None,
     ) -> None:
         """Create or update a repository row after upload/extract."""
         path = str(Path(extraction_path))
-        with self._session_factory() as session:
+        display_name = (name or "").strip()
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 row = RepositoryRow(
@@ -46,6 +54,7 @@ class RepositoryStore:
                     extraction_path=path,
                     status=status,
                     indexing_state=IndexStatus.NOT_INDEXED.value,
+                    repository_name=display_name or upload_id,
                     created_at=_utcnow(),
                     updated_at=_utcnow(),
                 )
@@ -54,20 +63,38 @@ class RepositoryStore:
                 row.extraction_path = path
                 row.repository_id = repository_id or row.repository_id or upload_id
                 row.status = status
+                if display_name:
+                    row.repository_name = display_name
                 row.updated_at = _utcnow()
             session.commit()
 
+    def list_repositories(self) -> list[dict[str, Any]]:
+        """Return all registered repositories, newest first."""
+        with self._sessions()() as session:
+            rows = session.scalars(
+                select(RepositoryRow).order_by(RepositoryRow.created_at.desc())
+            ).all()
+            return [self._row_to_summary(row) for row in rows]
+
     def get_repository(self, upload_id: str) -> dict[str, Any] | None:
         """Return a plain dict of repository metadata, or None."""
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 return None
             return self._row_to_dict(row)
 
+    def get_repository_summary(self, upload_id: str) -> dict[str, Any] | None:
+        """Return public summary fields for a repository, or None."""
+        with self._sessions()() as session:
+            row = session.get(RepositoryRow, upload_id)
+            if row is None:
+                return None
+            return self._row_to_summary(row)
+
     def resolve_path(self, upload_id: str) -> Path | None:
         """Resolve extraction path from DB, then filesystem fallbacks."""
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row and row.extraction_path:
                 candidate = Path(row.extraction_path)
@@ -78,7 +105,7 @@ class RepositoryStore:
     def save_index(self, index: RepositoryIndex, extraction_path: str | Path | None = None) -> None:
         """Persist index metadata from a RepositoryIndex domain object."""
         path = str(Path(extraction_path)) if extraction_path else ""
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, index.upload_id)
             if row is None:
                 resolved = path or str(resolve_repository_path(index.upload_id) or "")
@@ -92,7 +119,12 @@ class RepositoryStore:
             elif path:
                 row.extraction_path = path
 
-            row.repository_name = index.repository_name or ""
+            # Keep upload display name when present; fill from index otherwise.
+            if index.repository_name and (
+                not (row.repository_name or "").strip()
+                or row.repository_name == row.upload_id
+            ):
+                row.repository_name = index.repository_name
             row.frameworks_json = json.dumps(list(index.frameworks or []))
             row.languages_json = json.dumps(dict(index.languages or {}))
             row.total_files = int(index.total_files or 0)
@@ -116,7 +148,7 @@ class RepositoryStore:
 
     def load_index(self, upload_id: str) -> RepositoryIndex | None:
         """Load a RepositoryIndex from SQLite, or None if unknown."""
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 return None
@@ -141,20 +173,22 @@ class RepositoryStore:
                 error=row.error,
             )
 
-    def delete_repository(self, upload_id: str) -> None:
-        """Remove repository metadata."""
-        with self._session_factory() as session:
+    def delete_repository(self, upload_id: str) -> bool:
+        """Remove repository metadata. Returns True if a row was deleted."""
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
-            if row is not None:
-                session.delete(row)
-                session.commit()
+            if row is None:
+                return False
+            session.delete(row)
+            session.commit()
+            return True
 
     def save_analysis(self, upload_id: str, kind: str, payload: dict[str, Any] | list[Any]) -> None:
         """Persist an analysis payload JSON blob for a repository."""
         column = self._analysis_column(kind)
         if column is None:
             return
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 path = self.resolve_path(upload_id)
@@ -174,7 +208,7 @@ class RepositoryStore:
         column = self._analysis_column(kind)
         if column is None:
             return None
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 return None
@@ -189,7 +223,7 @@ class RepositoryStore:
         Does not create orphan rows for ephemeral IDs (e.g. unit-test job
         fixtures) so workflow recovery stays tied to real uploads.
         """
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
                 return
@@ -201,7 +235,7 @@ class RepositoryStore:
 
     def load_workflow_state(self, upload_id: str) -> dict[str, Any] | None:
         """Load persisted workflow state for a registered repository, if any."""
-        with self._session_factory() as session:
+        with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None or not row.workflow_state_json:
                 return None
@@ -222,7 +256,55 @@ class RepositoryStore:
         return mapping.get(kind)
 
     @staticmethod
-    def _row_to_dict(row: RepositoryRow) -> dict[str, Any]:
+    def _primary_framework(frameworks: list[Any]) -> str | None:
+        for item in frameworks:
+            if isinstance(item, str) and item.strip():
+                return item.strip()
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("framework")
+                if isinstance(name, str) and name.strip():
+                    return name.strip()
+        return None
+
+    @staticmethod
+    def _primary_language(languages: dict[str, Any] | list[Any]) -> str | None:
+        if isinstance(languages, list):
+            for item in languages:
+                if isinstance(item, str) and item.strip():
+                    return item.strip()
+            return None
+        if not languages:
+            return None
+        # Prefer highest file count when map is language -> count.
+        try:
+            ranked = sorted(
+                ((str(k), int(v)) for k, v in languages.items() if v is not None),
+                key=lambda pair: pair[1],
+                reverse=True,
+            )
+            if ranked:
+                return ranked[0][0]
+        except (TypeError, ValueError):
+            pass
+        return next(iter(languages.keys()), None)
+
+    @classmethod
+    def _row_to_summary(cls, row: RepositoryRow) -> dict[str, Any]:
+        frameworks = json.loads(row.frameworks_json or "[]")
+        languages = json.loads(row.languages_json or "{}")
+        name = (row.repository_name or "").strip() or row.upload_id
+        return {
+            "id": row.upload_id,
+            "name": name,
+            "uploaded_at": row.created_at,
+            "status": row.status or row.indexing_state or "UPLOADED",
+            "framework": cls._primary_framework(frameworks),
+            "language": cls._primary_language(languages),
+        }
+
+    @classmethod
+    def _row_to_dict(cls, row: RepositoryRow) -> dict[str, Any]:
+        summary = cls._row_to_summary(row)
         return {
             "upload_id": row.upload_id,
             "repository_id": row.repository_id,
@@ -238,6 +320,7 @@ class RepositoryStore:
             "created_at": row.created_at,
             "indexed_at": row.indexed_at,
             "error": row.error,
+            **summary,
         }
 
 

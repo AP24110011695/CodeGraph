@@ -1,16 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
 import { Bell, Search, Settings } from 'lucide-react';
-import { useRepositoryStore } from '@/core/store/repository.store';
-import { Badge } from '@/design-system/primitives/Badge';
+import { RepositorySelector } from '@/features/repository';
 import { Avatar } from '@/design-system/primitives/Avatar';
 import { Button } from '@/design-system/primitives/Button';
 import { Separator } from '@/design-system/primitives/Separator';
 
 export function TopBar() {
   const { repoId } = useParams();
-  const activeRepository = useRepositoryStore((s) => s.activeRepository);
-  const indexingStatus = useRepositoryStore((s) => s.indexingStatus);
-  const name = activeRepository?.name ?? repoId ?? 'Repository';
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-4 border-b border-border-base bg-bg-elevated px-4">
@@ -19,12 +15,7 @@ export function TopBar() {
           CodeGraph
         </Link>
         <Separator orientation="vertical" className="h-4" />
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm text-text-secondary">{name}</span>
-          <Badge variant={indexingStatus === 'ready' ? 'success' : 'default'}>
-            {indexingStatus}
-          </Badge>
-        </div>
+        <RepositorySelector />
       </div>
 
       {repoId ? (

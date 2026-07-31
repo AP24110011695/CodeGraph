@@ -35,6 +35,19 @@ export interface RepositoryMetadata {
   source?: 'zip' | 'github';
   uploadedAt?: string;
   filename?: string;
+  framework?: string | null;
+  language?: string | null;
+  status?: string | null;
+}
+
+/** Minimal shape accepted when switching from the repository list API. */
+export interface SelectableRepository {
+  id: string;
+  name: string;
+  uploaded_at?: string;
+  status?: string;
+  framework?: string | null;
+  language?: string | null;
 }
 
 interface RepositoryState {
@@ -47,6 +60,8 @@ interface RepositoryState {
   currentStage: string | null;
   failureReason: string | null;
   setActiveRepository: (id: string, metadata: RepositoryMetadata) => void;
+  /** Switch active repo without treating it as a fresh upload. */
+  selectRepository: (repo: SelectableRepository, options?: { ready?: boolean }) => void;
   ensureRepository: (id: string, metadata?: Partial<RepositoryMetadata>) => void;
   setIndexingStatus: (status: IndexingStatus) => void;
   setBackendState: (state: RepositoryBackendState) => void;
@@ -62,6 +77,49 @@ interface RepositoryState {
     failureReason?: string | null;
   }) => void;
   clearRepository: () => void;
+}
+
+function readinessFromStatus(status: string | undefined, readyFlag?: boolean) {
+  const normalized = (status ?? '').toUpperCase();
+  const ready = readyFlag ?? normalized === 'READY';
+  if (ready) {
+    return {
+      indexingStatus: 'ready' as const,
+      backendState: 'READY' as const,
+      indexStatus: 'READY' as const,
+      progress: 100,
+      currentStage: 'Ready',
+      failureReason: null,
+    };
+  }
+  if (normalized === 'FAILED' || normalized === 'CANCELLED') {
+    return {
+      indexingStatus: 'error' as const,
+      backendState: normalized as RepositoryBackendState,
+      indexStatus: 'FAILED' as const,
+      progress: 0,
+      currentStage: normalized,
+      failureReason: null,
+    };
+  }
+  if (normalized === 'INDEXING' || normalized === 'QUEUED' || normalized === 'SCANNING') {
+    return {
+      indexingStatus: 'indexing' as const,
+      backendState: (normalized as RepositoryBackendState) ?? 'INDEXING',
+      indexStatus: 'INDEXING' as const,
+      progress: 0,
+      currentStage: normalized,
+      failureReason: null,
+    };
+  }
+  return {
+    indexingStatus: 'pending' as const,
+    backendState: 'UPLOADED' as const,
+    indexStatus: 'NOT_INDEXED' as const,
+    progress: 0,
+    currentStage: 'Uploaded',
+    failureReason: null,
+  };
 }
 
 export const useRepositoryStore = create<RepositoryState>()(
@@ -86,6 +144,20 @@ export const useRepositoryStore = create<RepositoryState>()(
           currentStage: 'Uploaded',
           failureReason: null,
         }),
+      selectRepository: (repo, options) =>
+        set({
+          activeRepositoryId: repo.id,
+          activeRepository: {
+            id: repo.id,
+            name: repo.name,
+            source: 'zip',
+            uploadedAt: repo.uploaded_at,
+            framework: repo.framework,
+            language: repo.language,
+            status: repo.status,
+          },
+          ...readinessFromStatus(repo.status, options?.ready),
+        }),
       ensureRepository: (id, metadata) =>
         set((state) => {
           if (state.activeRepositoryId === id && state.activeRepository) {
@@ -105,6 +177,9 @@ export const useRepositoryStore = create<RepositoryState>()(
               source: metadata?.source ?? state.activeRepository?.source ?? 'zip',
               uploadedAt: metadata?.uploadedAt ?? state.activeRepository?.uploadedAt,
               filename: metadata?.filename ?? state.activeRepository?.filename,
+              framework: metadata?.framework ?? state.activeRepository?.framework,
+              language: metadata?.language ?? state.activeRepository?.language,
+              status: metadata?.status ?? state.activeRepository?.status,
             },
           };
         }),

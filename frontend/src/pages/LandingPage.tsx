@@ -1,16 +1,48 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Button } from '@/design-system/primitives/Button';
 import { Badge } from '@/design-system/primitives/Badge';
 import { useRepositoryStore } from '@/core/store/repository.store';
+import { useRepositoriesQuery, isRepositoryReady } from '@/features/repository';
 
 export default function LandingPage() {
   const activeRepositoryId = useRepositoryStore((s) => s.activeRepositoryId);
   const indexingStatus = useRepositoryStore((s) => s.indexingStatus);
   const indexStatus = useRepositoryStore((s) => s.indexStatus);
   const backendState = useRepositoryStore((s) => s.backendState);
+  const selectRepository = useRepositoryStore((s) => s.selectRepository);
+  const clearRepository = useRepositoryStore((s) => s.clearRepository);
+  const listQuery = useRepositoriesQuery();
 
   const ready =
     indexingStatus === 'ready' || indexStatus === 'READY' || backendState === 'READY';
+
+  const repos = listQuery.data?.repositories ?? [];
+  const activeMatch = activeRepositoryId
+    ? repos.find((r) => r.id === activeRepositoryId)
+    : undefined;
+
+  useEffect(() => {
+    if (!listQuery.isSuccess) return;
+    if ((listQuery.data?.total ?? 0) === 0) {
+      clearRepository();
+      return;
+    }
+    if (activeMatch) {
+      selectRepository(activeMatch, { ready: isRepositoryReady(activeMatch.status) });
+    }
+  }, [listQuery.isSuccess, listQuery.data?.total, activeMatch, clearRepository, selectRepository]);
+
+  if (listQuery.isSuccess && (listQuery.data?.total ?? 0) === 0) {
+    return <Navigate to="/upload" replace />;
+  }
+
+  if (activeMatch) {
+    if (isRepositoryReady(activeMatch.status)) {
+      return <Navigate to={`/dashboard/${activeMatch.id}`} replace />;
+    }
+    return <Navigate to={`/indexing/${activeMatch.id}`} replace />;
+  }
 
   if (activeRepositoryId && ready) {
     return <Navigate to={`/dashboard/${activeRepositoryId}`} replace />;

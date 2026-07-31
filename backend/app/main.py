@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import settings
 from app.api.upload import router as upload_router
+from app.api.repositories import router as repositories_router
 from app.api.scanner import router as scanner_router
 from app.api.framework import router as framework_router
 from app.api.dependency_graph import router as dependency_graph_router
@@ -98,6 +99,7 @@ async def telemetry_request_middleware(request, call_next):
     return response
 
 app.include_router(upload_router)
+app.include_router(repositories_router)
 app.include_router(scanner_router)
 app.include_router(framework_router)
 app.include_router(dependency_graph_router)

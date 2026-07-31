@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAPIError } from '@/core/api/errors';
 import { useRepositoryStore } from '@/core/store/repository.store';
+import { repositoryKeys } from '@/features/repository';
 import { adaptIndexingSnapshot, isRepositoryReady } from './indexing.adapters';
 import { createIndex, getIndexStatus, getRepositoryState } from './indexing.api';
 import type { IndexingEvent, IndexResponse, RepositoryStateResponse } from './indexing.types';
@@ -75,6 +76,7 @@ export function useStartIndexingMutation(uploadId: string) {
     onSuccess: (data) => {
       queryClient.setQueryData(indexingKeys.index(uploadId), data);
       void queryClient.invalidateQueries({ queryKey: indexingKeys.state(uploadId) });
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.all });
     },
   });
 }
@@ -84,6 +86,7 @@ export function useStartIndexingMutation(uploadId: string) {
  * SSE is intentionally not used (backend does not expose it).
  */
 export function useIndexingOrchestrator(uploadId: string) {
+  const queryClient = useQueryClient();
   const applyIndexingSnapshot = useRepositoryStore((s) => s.applyIndexingSnapshot);
   const setIndexingStatus = useRepositoryStore((s) => s.setIndexingStatus);
 
@@ -205,6 +208,11 @@ export function useIndexingOrchestrator(uploadId: string) {
       failureReason: snapshot.failureReason,
     });
   }, [snapshot, applyIndexingSnapshot]);
+
+  useEffect(() => {
+    if (!snapshot.isReady) return;
+    void queryClient.invalidateQueries({ queryKey: repositoryKeys.all });
+  }, [snapshot.isReady, queryClient]);
 
   const retry = () => {
     startedRef.current = true;

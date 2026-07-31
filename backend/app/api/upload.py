@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File
+from pathlib import Path
 
 from app.schemas.upload import UploadResponse
 from app.services.upload_service import upload_service
@@ -16,7 +17,13 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
     upload_id, filename = await upload_service.save_upload(file)
     project_path = extraction_service.extract(upload_id, filename)
 
-    repository_store.register_upload(upload_id, project_path, repository_id=upload_id)
+    display_name = Path(file.filename or "repository").stem or upload_id
+    repository_store.register_upload(
+        upload_id,
+        project_path,
+        repository_id=upload_id,
+        name=display_name,
+    )
 
     # Initialize state machine
     RepositoryStateMachine(upload_id)
@@ -25,7 +32,7 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
     event_bus.publish(
         event_type=EventType.REPOSITORY_UPLOADED,
         repository_id=upload_id,
-        payload={"filename": filename, "project_path": str(project_path)}
+        payload={"filename": filename, "project_path": str(project_path), "name": display_name}
     )
 
     return UploadResponse(

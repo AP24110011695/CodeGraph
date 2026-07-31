@@ -11,6 +11,7 @@ export function useRepository() {
   const currentStage = useRepositoryStore((s) => s.currentStage);
   const failureReason = useRepositoryStore((s) => s.failureReason);
   const setActiveRepository = useRepositoryStore((s) => s.setActiveRepository);
+  const selectRepository = useRepositoryStore((s) => s.selectRepository);
   const clearRepository = useRepositoryStore((s) => s.clearRepository);
 
   return {
@@ -23,8 +24,10 @@ export function useRepository() {
     currentStage,
     failureReason,
     setActiveRepository,
+    selectRepository,
     clearRepository,
     isReady:
       indexingStatus === 'ready' || indexStatus === 'READY' || backendState === 'READY',
   };
 }
+
