@@ -31,9 +31,9 @@ export function DashboardRouteGuard({ children }: DashboardRouteGuardProps) {
   const match = repoId
     ? listQuery.data?.repositories.find((r) => r.id === repoId)
     : undefined;
-  const emptyCatalog = listQuery.isSuccess && (listQuery.data?.total ?? 0) === 0;
+  const emptyCatalog = listQuery.isSuccess && !listQuery.isFetching && (listQuery.data?.total ?? 0) === 0;
   const missingFromCatalog =
-    Boolean(repoId) && listQuery.isSuccess && Boolean(listQuery.data) && !match;
+    Boolean(repoId) && listQuery.isSuccess && !listQuery.isFetching && Boolean(listQuery.data) && !match;
 
   useEffect(() => {
     if (!repoId) return;

@@ -1,21 +1,26 @@
 from typing import List
 
+
 class ExecutionPlanner:
     """Builds a deterministic execution graph for the required engines."""
+
+    # Maps each intent to the minimal set of tools needed
+    _INTENT_MODULES: dict[str, List[str]] = {
+        "architecture_explanation": ["RAG Engine", "Architecture Reasoning Engine"],
+        "timeline_analysis": ["Timeline Intelligence Engine", "Repository Memory"],
+        "concept_explanation": ["RAG Engine"],
+        "impact_analysis": ["Impact Analysis Engine", "Knowledge Graph", "Architecture Reasoning Engine"],
+        "code_modification": ["Semantic Engine", "Refactoring Engine"],
+        "code_location": ["Semantic Engine"],
+        "coupling_analysis": ["Knowledge Graph", "RAG Engine"],
+        "security_analysis": ["Engineering Reports", "RAG Engine"],
+        "tech_stack_query": ["Repository Memory", "RAG Engine"],
+        "quality_analysis": ["Engineering Reports", "RAG Engine"],
+        "general_query": ["RAG Engine"],
+    }
+
     def plan_modules(self, intent: str) -> List[str]:
-        if intent == "architecture_explanation":
-            return ["RAG Engine", "Architecture Reasoning Engine"]
-        elif intent == "timeline_analysis":
-            return ["Timeline Intelligence Engine", "Repository Memory", "Knowledge Graph"]
-        elif intent == "concept_explanation":
-            return ["RAG Engine"]
-        elif intent == "impact_analysis":
-            return ["Impact Analysis Engine", "Knowledge Graph", "Architecture Reasoning Engine"]
-        elif intent == "code_modification":
-            return ["Semantic Engine", "Refactoring Engine"]
-        elif intent == "code_location":
-            return ["Semantic Engine"]
-        return ["RAG Engine"]
+        return list(self._INTENT_MODULES.get(intent, self._INTENT_MODULES["general_query"]))
 
     def order_modules(self, modules: List[str]) -> List[str]:
         order = []
@@ -28,6 +33,7 @@ class ExecutionPlanner:
                 "Repository Memory",
                 "Timeline Intelligence Engine",
                 "Impact Analysis Engine",
+                "Engineering Reports",
             ],
             ["Architecture Reasoning Engine", "Refactoring Engine"],
         ]
@@ -39,7 +45,7 @@ class ExecutionPlanner:
             if mod not in order:
                 order.append(mod)
         return order
-        
+
     def estimate_cost(self, modules: List[str]) -> str:
         if "Architecture Reasoning Engine" in modules or "Refactoring Engine" in modules:
             return "High"
@@ -47,6 +53,7 @@ class ExecutionPlanner:
             "RAG Engine" in modules
             or "Timeline Intelligence Engine" in modules
             or "Impact Analysis Engine" in modules
+            or "Engineering Reports" in modules
         ):
             return "Medium"
         return "Low"
