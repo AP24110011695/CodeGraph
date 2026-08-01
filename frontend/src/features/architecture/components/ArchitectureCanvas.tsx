@@ -7,7 +7,6 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-  useStore,
   type Edge,
   type Node,
   type NodeTypes,
@@ -30,7 +29,6 @@ import { Input } from '@/design-system/primitives/Input';
 import {
   GraphEdge,
   GraphGlassToolbar,
-  GraphStatsBar,
   graphToolbarButtonClass,
   languagePaletteColor,
   MINIMAP_CLASS,
@@ -63,12 +61,10 @@ function ArchitectureCanvasInner({
   modules,
   edges,
   layers,
-  projectName = 'Architecture',
 }: ArchitectureCanvasProps) {
   const selectedModuleName = useArchitectureStore((s) => s.selectedModuleName);
   const setSelectedModuleName = useArchitectureStore((s) => s.setSelectedModuleName);
   const { fitView, setCenter, getNode, zoomIn, zoomOut, setViewport, getViewport, getNodes } = useReactFlow();
-  const zoom = useStore((s) => s.transform[2]);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [pulseNodeId, setPulseNodeId] = useState<string | null>(null);
   const [layoutVersion, setLayoutVersion] = useState(0);
@@ -207,24 +203,6 @@ function ArchitectureCanvasInner({
     setPulseNodeId(selectedModuleName);
   }, [getNode, selectedModuleName, setCenter]);
 
-  const stats = useMemo(
-    () => [
-      { label: 'Repository', value: projectName },
-      { label: 'Nodes', value: modules.length },
-      { label: 'Edges', value: edges.length },
-      { label: 'Modules', value: modules.length },
-      { label: 'Layers', value: layers.length },
-      { label: 'Zoom', value: `${Math.round(zoom * 100)}%` },
-      { label: 'Layout', value: 'ELK →' },
-      {
-        label: 'Selected',
-        value: selectedModuleName ?? '—',
-        accent: Boolean(selectedModuleName),
-      },
-    ],
-    [projectName, modules.length, edges.length, layers.length, zoom, selectedModuleName]
-  );
-
   return (
     <div className="relative h-full min-h-0 w-full bg-bg-base">
       <GraphGlassToolbar>
@@ -286,8 +264,6 @@ function ArchitectureCanvasInner({
           <Shrink className="h-3.5 w-3.5" />
         </Button>
       </GraphGlassToolbar>
-
-      <GraphStatsBar items={stats} />
 
       <ReactFlow
         nodes={nodes}

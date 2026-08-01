@@ -14,7 +14,6 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  GraphStatsBar,
   languagePaletteColor,
   MINIMAP_CLASS,
   MINIMAP_MASK,
@@ -27,7 +26,7 @@ import type { GraphEdgeModel, GraphNodeModel } from '../api/dependency-graph.typ
 import { useDependencyGraphStore } from '../store/dependency-graph.store';
 import { DependencyEdge } from './DependencyEdge';
 import { DependencyNode, type DependencyNodeData } from './DependencyNode';
-import { GraphToolbar, useGraphZoomPercent } from './GraphToolbar';
+import { GraphToolbar } from './GraphToolbar';
 
 const nodeTypes: NodeTypes = {
   dependency: DependencyNode,
@@ -46,7 +45,6 @@ interface DependencyGraphCanvasProps {
 function GraphCanvasInner({
   nodes: modelNodes,
   edges: modelEdges,
-  projectName = 'Repository',
 }: DependencyGraphCanvasProps) {
   const selectedNodeId = useDependencyGraphStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useDependencyGraphStore((s) => s.setSelectedNodeId);
@@ -57,7 +55,6 @@ function GraphCanvasInner({
 
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [layoutReady, setLayoutReady] = useState(false);
-  const zoomPercent = useGraphZoomPercent();
 
   useEffect(() => {
     let active = true;
@@ -97,24 +94,6 @@ function GraphCanvasInner({
 
   const focusId = selectedNodeId ?? hoveredNodeId;
   const neighborhood = useNodeNeighborhood(edgesToRender, focusId);
-
-  const layerEstimate = useMemo(() => {
-    if (!layoutReady || nodesToRender.length === 0) return 0;
-    const xs = nodesToRender.map((n) => positions[n.id]?.x ?? 0);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    return Math.max(1, Math.round((maxX - minX) / 160) + 1);
-  }, [layoutReady, nodesToRender, positions]);
-
-  const moduleEstimate = useMemo(() => {
-    const folders = new Set(nodesToRender.map((n) => n.folder));
-    return folders.size;
-  }, [nodesToRender]);
-
-  const selectedLabel = useMemo(() => {
-    if (!selectedNodeId) return '—';
-    return modelNodes.find((n) => n.id === selectedNodeId)?.name ?? selectedNodeId;
-  }, [modelNodes, selectedNodeId]);
 
   const initialNodes = useMemo<Node[]>(() => {
     const hasFocus = Boolean(focusId);
@@ -228,29 +207,6 @@ function GraphCanvasInner({
     []
   );
 
-  const stats = useMemo(
-    () => [
-      { label: 'Repository', value: projectName },
-      { label: 'Nodes', value: modelNodes.length },
-      { label: 'Edges', value: modelEdges.length },
-      { label: 'Modules', value: moduleEstimate },
-      { label: 'Layers', value: layerEstimate },
-      { label: 'Zoom', value: `${zoomPercent}%` },
-      { label: 'Layout', value: 'ELK →' },
-      { label: 'Selected', value: selectedLabel, accent: Boolean(selectedNodeId) },
-    ],
-    [
-      projectName,
-      modelNodes.length,
-      modelEdges.length,
-      moduleEstimate,
-      layerEstimate,
-      zoomPercent,
-      selectedLabel,
-      selectedNodeId,
-    ]
-  );
-
   return (
     <div className="relative h-full min-h-0 w-full bg-bg-base">
       <GraphToolbar
@@ -262,7 +218,6 @@ function GraphCanvasInner({
         nodeCount={modelNodes.length}
         onSearchHit={onSearchHit}
       />
-      <GraphStatsBar items={stats} className="left-auto max-w-[min(52%,36rem)]" />
       <ReactFlow
         nodes={nodes}
         edges={edges}

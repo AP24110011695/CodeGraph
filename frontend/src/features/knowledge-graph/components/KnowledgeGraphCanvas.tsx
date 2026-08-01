@@ -7,7 +7,6 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-  useStore,
   type Edge,
   type Node,
   type NodeTypes,
@@ -30,7 +29,6 @@ import { Input } from '@/design-system/primitives/Input';
 import {
   GraphEdge,
   GraphGlassToolbar,
-  GraphStatsBar,
   graphToolbarButtonClass,
   languagePaletteColor,
   MINIMAP_CLASS,
@@ -61,12 +59,10 @@ interface KnowledgeGraphCanvasProps {
 function KnowledgeGraphCanvasInner({
   nodes: modelNodes,
   edges: modelEdges,
-  projectName = 'Knowledge Graph',
 }: KnowledgeGraphCanvasProps) {
   const selectedNodeId = useKnowledgeGraphStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useKnowledgeGraphStore((s) => s.setSelectedNodeId);
   const { fitView, setCenter, getNode, zoomIn, zoomOut, setViewport, getViewport, getNodes } = useReactFlow();
-  const zoom = useStore((s) => s.transform[2]);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [pulseNodeId, setPulseNodeId] = useState<string | null>(null);
   const [layoutVersion, setLayoutVersion] = useState(0);
@@ -110,8 +106,6 @@ function KnowledgeGraphCanvasInner({
 
   const focusId = selectedNodeId ?? hoveredNodeId;
   const neighborhood = useNodeNeighborhood(edgesToRender, focusId);
-
-  const typeModules = useMemo(() => new Set(nodesToRender.map((n) => n.type)).size, [nodesToRender]);
 
   const initialNodes = useMemo<Node[]>(() => {
     const hasFocus = Boolean(focusId);
@@ -208,25 +202,6 @@ function KnowledgeGraphCanvasInner({
     setPulseNodeId(selectedNodeId);
   }, [getNode, selectedNodeId, setCenter]);
 
-  const selectedLabel = useMemo(() => {
-    if (!selectedNodeId) return '—';
-    return modelNodes.find((n) => n.id === selectedNodeId)?.name ?? selectedNodeId;
-  }, [modelNodes, selectedNodeId]);
-
-  const stats = useMemo(
-    () => [
-      { label: 'Repository', value: projectName },
-      { label: 'Nodes', value: modelNodes.length },
-      { label: 'Edges', value: modelEdges.length },
-      { label: 'Modules', value: typeModules },
-      { label: 'Layers', value: Math.max(1, Math.round(Math.sqrt(modelNodes.length))) },
-      { label: 'Zoom', value: `${Math.round(zoom * 100)}%` },
-      { label: 'Layout', value: 'ELK →' },
-      { label: 'Selected', value: selectedLabel, accent: Boolean(selectedNodeId) },
-    ],
-    [projectName, modelNodes.length, modelEdges.length, typeModules, zoom, selectedLabel, selectedNodeId]
-  );
-
   return (
     <div className="relative h-full min-h-0 w-full bg-bg-base">
       <GraphGlassToolbar>
@@ -288,8 +263,6 @@ function KnowledgeGraphCanvasInner({
           <Shrink className="h-3.5 w-3.5" />
         </Button>
       </GraphGlassToolbar>
-
-      <GraphStatsBar items={stats} />
 
       <ReactFlow
         nodes={nodes}
