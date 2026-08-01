@@ -44,6 +44,8 @@ class CollaborationEngine:
             summary = " | ".join([f"[{res.agent_name}]: {res.result}" for res in agent_results])
             
         exec_time = int((time.time() - start_time) * 1000)
+        if agent_results and exec_time == 0:
+            exec_time = 1
         
         agent_statistics.record_execution(len(agents_to_run), exec_time)
         

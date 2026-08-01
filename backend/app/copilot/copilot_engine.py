@@ -27,6 +27,19 @@ from app.workspace.repository_registry import RepositoryRegistry, repository_reg
 logger = logging.getLogger(__name__)
 
 
+def normalize_orchestration_intent(query: str, capability_intent: str) -> str:
+    """Map capability-registry intents to planning-era names for chat/execute APIs."""
+    query_lower = query.lower()
+
+    if capability_intent == "architecture_health" and "explain" in query_lower:
+        return "architecture_explanation"
+
+    if capability_intent == "general_query" and "explain" in query_lower:
+        return "concept_explanation"
+
+    return capability_intent
+
+
 class CopilotEngine:
     """AI Software Architect Copilot — orchestration facade."""
 
@@ -154,6 +167,7 @@ class CopilotEngine:
 
             # 1. Intent routing (CapabilityRegistry) — not the generic PlanningClassifier path
             plan = self.intent_router.build_execution_plan(query, repository_id=repository_id)
+            plan["intent"] = normalize_orchestration_intent(query, str(plan.get("intent") or "general_query"))
 
             # 2. Assemble context (Memory + RAG + conversation — no duplicate retrieval logic)
             turns = self.conversations.get_recent_turns(session.conversation_id, limit=10)

@@ -335,8 +335,27 @@ class CapabilityRegistry:
         These rules capture specific query patterns that should map to intents
         regardless of keyword ordering or partial matches.
         """
-        # Metrics intent: languages, tech stack, frameworks, file counts
-        metrics_patterns = [
+        # Repository overview: file/folder counts (before language metrics)
+        file_count_patterns = [
+            "how many files",
+            "number of files",
+            "file count",
+            "files in the repository",
+            "files in repository",
+            "total files",
+            "how many folders",
+            "repository size",
+        ]
+        for pattern in file_count_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "repository_overview",
+                    "module": "metrics",
+                    "matched_keyword": pattern,
+                }
+
+        # Language / tech stack metrics
+        language_patterns = [
             "programming language",
             "programming languages",
             "what language",
@@ -346,13 +365,8 @@ class CapabilityRegistry:
             "tech stack",
             "frameworks",
             "framework",
-            "number of files",
-            "how many files",
-            "file count",
-            "total files",
-            "repository size",
         ]
-        for pattern in metrics_patterns:
+        for pattern in language_patterns:
             if pattern in query_lower:
                 return {
                     "capability": "language_analysis",
@@ -398,25 +412,6 @@ class CapabilityRegistry:
                 return {
                     "capability": "security_analysis",
                     "module": "security",
-                    "matched_keyword": pattern,
-                }
-
-        # Code explanation intent: explain, how does, flow, authentication, implementation
-        explanation_patterns = [
-            "explain",
-            "how does",
-            "how do",
-            "flow",
-            "authentication flow",
-            "implementation",
-            "how work",
-            "how works",
-        ]
-        for pattern in explanation_patterns:
-            if pattern in query_lower:
-                return {
-                    "capability": "api_flow",
-                    "module": "api_flow",
                     "matched_keyword": pattern,
                 }
 
