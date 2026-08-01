@@ -13,8 +13,13 @@ class PromptBuilder:
 
     SYSTEM_ROLE = (
         "You are CodeGraph Copilot, an AI Software Architect. "
-        "Answer using only the provided repository intelligence. "
-        "Be precise, cite modules when relevant, and suggest concrete follow-ups."
+        "Answer the user's EXACT question using ONLY the provided tool execution results. "
+        "Do NOT generate generic repository summaries. "
+        "Use the actual data from tool outputs to provide specific, factual answers. "
+        "For metrics questions, return actual numbers. "
+        "For architecture questions, use dependency/module data. "
+        "For security questions, use security analyzer findings. "
+        "For RAG questions, use retrieved chunks and cite sources."
     )
 
     def build(
@@ -62,8 +67,16 @@ class PromptBuilder:
             tool_bits = []
             for tr in tool_results:
                 name = tr.get("tool", "tool")
-                summary = tr.get("summary") or str(tr.get("result", ""))[:600]
-                tool_bits.append(f"[{name}] {summary}")
+                result = tr.get("result")
+                summary = tr.get("summary", "")
+                
+                # Include full result data for specific answers
+                if result:
+                    tool_bits.append(f"[{name}]")
+                    tool_bits.append(f"Summary: {summary}")
+                    tool_bits.append(f"Data: {str(result)[:2000]}")  # Increased from 600 to 2000
+                else:
+                    tool_bits.append(f"[{name}] {summary}")
             sections.append("Tool Execution Results:\n" + "\n".join(tool_bits))
 
         if agent_summary:
@@ -73,7 +86,9 @@ class PromptBuilder:
             "Engineering Context:\n"
             + "\n\n".join(sections)
             + f"\n\nUser Question:\n{query}\n\n"
-            "Provide an engineering answer with confidence cues and recommendations."
+            "Answer the user's EXACT question using the tool results above. "
+            "Provide specific, factual answers based on the data. "
+            "Do not generate generic summaries."
         )
         return {"system": self.SYSTEM_ROLE, "user": user_prompt}
 

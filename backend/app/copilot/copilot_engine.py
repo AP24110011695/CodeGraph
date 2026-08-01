@@ -176,7 +176,8 @@ class CopilotEngine:
             retrieved = [
                 t.get("tool") for t in tool_results if t.get("status") == "ok"
             ]
-            logger.info("RETRIEVED SOURCES: %s", retrieved)
+            logger.info("RETRIEVED_CONTEXT: %s", retrieved)
+            logger.info("TOOL_OUTPUT_BEFORE_LLM: %s", tool_results)
 
             agent_summary = None
             for tr in tool_results:
@@ -185,14 +186,18 @@ class CopilotEngine:
 
             # 4. Prompt + LLM provider (abstracted)
             prompts = self.prompt_builder.build(query, context, tool_results, agent_summary)
+            logger.info("FINAL_PROMPT: %s", prompts["user"][:1000])
+            logger.info("TOOL_RESULTS_USED: %s", [t.get("tool") for t in tool_results if t.get("status") == "ok"])
             generation = self.provider_manager.generate(
                 prompts["user"],
                 system=prompts["system"],
                 provider=provider or "local",
             )
+            logger.info("RAW_LLM_RESPONSE: %s", generation.get("text", "")[:500])
             answer = generation.get("text") or self.prompt_builder.build_fallback_answer(
                 query, context, tool_results, agent_summary
             )
+            logger.info("FINAL_RESPONSE_RETURNED: %s", answer[:500])
 
             exec_ms = int((time.time() - start) * 1000)
 

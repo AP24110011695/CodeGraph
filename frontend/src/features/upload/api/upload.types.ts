@@ -7,7 +7,7 @@ export interface UploadResponse {
   project_path?: string | null;
 }
 
-export const MAX_ZIP_BYTES = 200 * 1024 * 1024; // Match backend UploadService limit
+export const MAX_ZIP_BYTES = 50 * 1024 * 1024; // 50 MB
 
 
 export function validateZipFile(file: File): string | null {
@@ -19,7 +19,7 @@ export function validateZipFile(file: File): string | null {
     return 'The selected file is empty.';
   }
   if (file.size > MAX_ZIP_BYTES) {
-    return 'File exceeds the 500 MB upload limit.';
+    return 'Repository ZIP exceeds the 50 MB limit. Please upload a smaller archive.';
   }
   return null;
 }

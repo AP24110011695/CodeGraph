@@ -8,7 +8,7 @@ from fastapi import UploadFile, HTTPException
 
 
 class UploadService:
-    MAX_FILE_SIZE = 200 * 1024 * 1024  # 200 MB
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
     UPLOAD_DIR = Path("uploads")
     ALLOWED_MIME_TYPES = [
         "application/zip",
@@ -27,7 +27,7 @@ class UploadService:
         if file.size > self.MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=413,
-                detail=f"File size exceeds maximum allowed size of {self.MAX_FILE_SIZE / (1024 * 1024)} MB",
+                detail="Repository ZIP exceeds the 50 MB limit. Please upload a smaller archive.",
             )
 
         if file.content_type not in self.ALLOWED_MIME_TYPES:

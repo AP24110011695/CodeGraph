@@ -293,6 +293,12 @@ class CapabilityRegistry:
         """Resolve query intent to capability."""
         query_lower = query.lower()
 
+        # Deterministic intent rules (pre-check before keyword matching)
+        deterministic_match = self._apply_deterministic_rules(query_lower)
+        if deterministic_match:
+            logger.info(f"Deterministic rule matched: {deterministic_match['capability']}")
+            return deterministic_match
+
         # Prefer longer keyword matches first across all capabilities
         candidates: list[tuple[int, str, dict[str, Any], str]] = []
         for capability_name, capability_info in self.capabilities.items():
@@ -322,6 +328,99 @@ class CapabilityRegistry:
             "module": "rag",
             "matched_keyword": None,
         }
+
+    def _apply_deterministic_rules(self, query_lower: str) -> dict[str, Any] | None:
+        """Apply deterministic intent rules before keyword matching.
+
+        These rules capture specific query patterns that should map to intents
+        regardless of keyword ordering or partial matches.
+        """
+        # Metrics intent: languages, tech stack, frameworks, file counts
+        metrics_patterns = [
+            "programming language",
+            "programming languages",
+            "what language",
+            "which language",
+            "languages used",
+            "language used",
+            "tech stack",
+            "frameworks",
+            "framework",
+            "number of files",
+            "how many files",
+            "file count",
+            "total files",
+            "repository size",
+        ]
+        for pattern in metrics_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "language_analysis",
+                    "module": "metrics",
+                    "matched_keyword": pattern,
+                }
+
+        # Architecture intent: modules, dependencies, coupling, structure
+        architecture_patterns = [
+            "architecture",
+            "modules",
+            "dependencies",
+            "coupling",
+            "coupled",
+            "structure",
+            "design",
+            "module structure",
+            "dependency graph",
+            "module dependency",
+        ]
+        for pattern in architecture_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "architecture_health",
+                    "module": "architecture_report",
+                    "matched_keyword": pattern,
+                }
+
+        # Security intent: security, vulnerabilities, risks, issues
+        security_patterns = [
+            "security",
+            "vulnerability",
+            "vulnerabilities",
+            "security risk",
+            "security risks",
+            "threat",
+            "cve",
+            "exploit",
+            "security issue",
+        ]
+        for pattern in security_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "security_analysis",
+                    "module": "security",
+                    "matched_keyword": pattern,
+                }
+
+        # Code explanation intent: explain, how does, flow, authentication, implementation
+        explanation_patterns = [
+            "explain",
+            "how does",
+            "how do",
+            "flow",
+            "authentication flow",
+            "implementation",
+            "how work",
+            "how works",
+        ]
+        for pattern in explanation_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "api_flow",
+                    "module": "api_flow",
+                    "matched_keyword": pattern,
+                }
+
+        return None
 
     def get_capability_handler(
         self,

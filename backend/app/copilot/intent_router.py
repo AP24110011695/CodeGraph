@@ -112,8 +112,9 @@ class IntentRouter:
         }
 
         logger.info("QUERY: %s", query)
-        logger.info("INTENT: %s", intent)
-        logger.info("SELECTED TOOLS: %s", modules)
+        logger.info("CLASSIFIED_INTENT: %s", intent)
+        logger.info("CONFIDENCE: %.2f", confidence)
+        logger.info("SELECTED_TOOLS: %s", modules)
         return plan
 
     def _calculate_confidence(

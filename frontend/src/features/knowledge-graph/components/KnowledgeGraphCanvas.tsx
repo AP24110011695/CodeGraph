@@ -78,12 +78,23 @@ function KnowledgeGraphCanvasInner({ nodes: modelNodes, edges: modelEdges }: Kno
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
+  // Auto-fit on initial load and repository change
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void fitView({ padding: 0.2, duration: 200 });
-    }, 50);
+      // Calculate padding based on graph size
+      const nodeCount = modelNodes.length;
+      let padding = 0.15; // Default 15% padding
+      
+      if (nodeCount < 20) {
+        padding = 0.2; // More padding for small graphs
+      } else if (nodeCount > 100) {
+        padding = 0.1; // Less padding for large graphs
+      }
+      
+      void fitView({ padding, duration: 300, includeHiddenNodes: false });
+    }, 100);
     return () => window.clearTimeout(timer);
-  }, [modelNodes.length, fitView]);
+  }, [modelNodes.length, modelEdges.length, fitView]);
 
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
