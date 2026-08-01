@@ -42,7 +42,7 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 page-fade-in">
       <IndexingHeader
         repositoryName={name}
         progress={snapshot.progress}
@@ -51,15 +51,15 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
       />
 
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-md border border-border-base bg-bg-elevated p-4">
-          <h2 className="mb-4 text-sm font-medium text-text-secondary">Progress steps</h2>
+        <div className="rounded-2xl border border-border-base bg-[#181614] p-5 shadow-xl">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-tertiary">Progress steps</h2>
           <IndexingProgressStepper steps={snapshot.steps} />
         </div>
         <IndexingEventLog events={snapshot.events} />
       </div>
 
       {snapshot.clientStatus === 'error' && (
-        <div className="space-y-3 rounded-md border border-danger/30 bg-danger/10 p-4">
+        <div className="space-y-3 rounded-2xl border border-danger/30 bg-danger/10 p-5 shadow-lg">
           <p className="text-sm text-danger">
             {snapshot.failureReason ?? 'Indexing failed. You can retry.'}
           </p>
@@ -73,3 +73,4 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
     </div>
   );
 }
+

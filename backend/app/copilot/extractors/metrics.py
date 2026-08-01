@@ -96,7 +96,17 @@ class MetricsExtractor:
         if not languages and data_str:
             matches = re.findall(r'["\']?(\w+)["\']?\s*:\s*(\d+)', data_str)
             for lang, count in matches:
-                if lang.lower() not in ['node_count', 'edge_count', 'total', 'summary', 'languages']:
+                # Exclude metadata keys that aren't actual languages
+                excluded_keys = [
+                    'node_count', 'edge_count', 'total', 'summary', 'languages',
+                    'critical', 'high', 'medium', 'low', 'severity', 'issue',
+                    'file_count', 'repo_size', 'framework', 'directory',
+                    'total_issues', 'affected_files', 'recent_commits'
+                ]
+                # Also exclude keys that are all lowercase and less than 4 chars (likely metadata)
+                if (lang.lower() not in excluded_keys and 
+                    len(lang) > 2 and 
+                    (lang[0].isupper() or len(lang) > 4)):
                     languages.append((lang, int(count)))
         
         return languages

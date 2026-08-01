@@ -12,6 +12,9 @@ export type ArchitectureNodeData = {
   fileCount: number;
   incomingCount: number;
   outgoingCount: number;
+  highlighted?: boolean;
+  dimmed?: boolean;
+  pulse?: boolean;
 };
 
 function layerTone(layer: string): string {
@@ -25,40 +28,62 @@ function layerTone(layer: string): string {
   if (key.includes('data') || key.includes('infrastructure') || key.includes('persistence')) {
     return 'border-warning/40 bg-warning/10';
   }
-  return 'border-border-base bg-bg-elevated';
+  return 'border-border-base bg-[#181614]';
 }
 
 function ArchitectureNodeComponent({ data, selected }: NodeProps) {
   const nodeData = data as ArchitectureNodeData;
+  const isActive = selected || nodeData.highlighted;
 
   return (
     <div
       className={cn(
-        'min-w-[200px] max-w-[240px] rounded-md border px-3 py-2 shadow-none transition-transform duration-fast',
+        'group relative min-w-[220px] max-w-[260px] rounded-2xl border px-4 py-3.5',
+        'shadow-[0_10px_28px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out',
+        'hover:z-10 hover:scale-[1.02] hover:border-accent-default hover:shadow-[0_16px_36px_rgba(0,0,0,0.5)]',
         layerTone(nodeData.layer),
-        selected && 'scale-105 border-accent-default ring-1 ring-accent-default'
+        isActive &&
+          'z-10 scale-[1.02] border-accent-default shadow-[0_0_24px_rgba(232,160,69,0.35)] ring-2 ring-accent-default/40',
+        nodeData.dimmed && 'opacity-25',
+        nodeData.pulse && 'animate-graph-pulse'
       )}
     >
-      <Handle type="target" position={Position.Top} className="!h-2 !w-2 !bg-accent-default" />
-      <div className="flex items-start gap-2">
-        <Boxes className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-secondary" aria-hidden />
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium text-text-primary">{nodeData.label}</p>
-          <p className="truncate text-[10px] text-text-tertiary">{nodeData.moduleType}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-1">
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!h-3 !w-3 !border-2 !border-[#0F0E0D] !bg-accent-default opacity-0 transition-opacity group-hover:opacity-100"
+      />
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border-base bg-[#121110] text-text-secondary shadow-inner">
+          <Boxes className="h-4 w-4" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold tracking-tight text-text-primary transition-colors group-hover:text-accent-default">
+            {nodeData.label}
+          </p>
+          <p className="mt-0.5 truncate text-[10px] text-text-tertiary">{nodeData.moduleType}</p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
             <Badge variant="default" className="px-1.5 py-0 text-[10px]">
               {nodeData.layer}
             </Badge>
             <span className="text-[10px] text-text-tertiary">
               {nodeData.componentCount} comp · {nodeData.fileCount} files
             </span>
+            <span className="ml-auto text-[10px] font-semibold tabular-nums text-text-tertiary">
+              <span className="text-accent-default">↓</span>
+              {nodeData.outgoingCount}
+              <span className="mx-1 text-border-base">·</span>
+              <span className="text-info">↑</span>
+              {nodeData.incomingCount}
+            </span>
           </div>
-          <p className="mt-0.5 text-[10px] text-text-tertiary">
-            ↓{nodeData.outgoingCount} · ↑{nodeData.incomingCount}
-          </p>
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !bg-accent-default" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!h-3 !w-3 !border-2 !border-[#0F0E0D] !bg-accent-default opacity-0 transition-opacity group-hover:opacity-100"
+      />
     </div>
   );
 }

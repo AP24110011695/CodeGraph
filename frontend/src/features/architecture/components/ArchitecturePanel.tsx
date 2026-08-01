@@ -73,7 +73,12 @@ export function ArchitecturePanel({ repoId }: ArchitecturePanelProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <ArchitectureLayers layers={data.layers} moduleCounts={layerCounts} />
         <div className="min-h-0 flex-1">
-          <ArchitectureCanvas modules={data.modules} edges={data.edges} layers={data.layers} />
+          <ArchitectureCanvas
+            modules={data.modules}
+            edges={data.edges}
+            layers={data.layers}
+            projectName={data.projectName ?? repoId}
+          />
         </div>
       </div>
       <ExplanationPanel repositoryId={repoId} selectedModuleName={selectedModuleName} />

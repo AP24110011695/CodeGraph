@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { DashboardOverviewPanel } from '@/features/dashboard';
+import { DashboardOverviewPanel } from '@/features/dashboard/components/new-dashboard/DashboardOverviewPanel';
 
 export default function OverviewPage() {
   const { repoId } = useParams();

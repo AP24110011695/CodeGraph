@@ -97,7 +97,11 @@ export function KnowledgeGraphPanel({ repoId }: KnowledgeGraphPanelProps) {
         totalCount={totalCount}
       />
       <div className="min-w-0 flex-1">
-        <KnowledgeGraphCanvas nodes={filtered.nodes} edges={filtered.edges} />
+        <KnowledgeGraphCanvas
+          nodes={filtered.nodes}
+          edges={filtered.edges}
+          projectName={repoId}
+        />
       </div>
       <EntityDetailPanel
         node={selectedNode}

@@ -133,8 +133,8 @@ class ReportEngine:
     def list_reports(self, repository_id: str) -> EngineeringReportListResponse:
         reports = self.store.list(repository_id)
         if not reports:
-            # Auto-generate an executive report so GET is useful
-            generated = self.generate(repository_id, ReportGenerateRequest())
+            # Auto-generate an executive report in markdown format so GET is useful
+            generated = self.generate(repository_id, ReportGenerateRequest(export_format=ReportFormat.MARKDOWN))
             reports = [generated]
         return EngineeringReportListResponse(
             repository_id=repository_id,
@@ -150,7 +150,7 @@ class ReportEngine:
 
         latest = self.store.latest(repository_id)
         if latest is None:
-            latest = self.generate(repository_id, ReportGenerateRequest())
+            latest = self.generate(repository_id, ReportGenerateRequest(export_format=ReportFormat.MARKDOWN))
 
         summary = EngineeringReportSummary(
             repository_id=repository_id,

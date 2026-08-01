@@ -1,6 +1,6 @@
 export const typography = {
   fontFamily: {
-    sans: '"Geist", ui-sans-serif, system-ui, sans-serif',
+    sans: '"Inter", system-ui, -apple-system, sans-serif',
     mono: '"Geist Mono", ui-monospace, SFMono-Regular, monospace',
   },
   scale: {
@@ -13,3 +13,4 @@ export const typography = {
     '3xl': { fontSize: '30px', lineHeight: '36px' },
   },
 } as const;
+

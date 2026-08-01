@@ -5,36 +5,45 @@
 :root {
   color-scheme: dark;
 
-  --cg-bg-base: #0a0a0a;
-  --cg-bg-elevated: #111111;
-  --cg-bg-overlay: #1a1a1a;
-  --cg-bg-subtle: #141414;
+  /* Warm Carbon + Amber Theme */
+  --cg-bg-base: #0F0E0D;
+  --cg-bg-sidebar: #121110;
+  --cg-bg-elevated: #181614;
+  --cg-bg-overlay: #221E1A;
+  --cg-bg-subtle: #121110;
+  --cg-bg-hover: #2A2420;
 
-  --cg-border-base: #1f1f1f;
-  --cg-border-subtle: #171717;
-  --cg-border-strong: #2a2a2a;
+  --cg-border-base: #322B26;
+  --cg-border-subtle: #26201C;
+  --cg-border-strong: #4A3D33;
 
-  --cg-text-primary: #fafafa;
-  --cg-text-secondary: #a1a1aa;
-  --cg-text-tertiary: #52525b;
-  --cg-text-inverse: #0a0a0a;
+  --cg-text-primary: #F6F3EF;
+  --cg-text-secondary: #B7AB9C;
+  --cg-text-tertiary: #8A8177;
+  --cg-text-muted: #8A8177;
+  --cg-text-disabled: #5E5751;
+  --cg-text-inverse: #0F0E0D;
 
-  --cg-accent-default: #7c3aed;
-  --cg-accent-hover: #6d28d9;
-  --cg-accent-subtle: #1e1033;
-  --cg-accent-muted: #4c1d95;
+  /* Amber Accent */
+  --cg-accent-default: #E8A045;
+  --cg-accent-hover: #F2B65A;
+  --cg-accent-pressed: #D98A22;
+  --cg-accent-subtle: rgba(232, 160, 69, 0.12);
+  --cg-accent-muted: #4A351B;
 
-  --cg-success: #22c55e;
-  --cg-warning: #f59e0b;
-  --cg-danger: #ef4444;
-  --cg-info: #3b82f6;
+  /* Semantic Colors */
+  --cg-success: #34C759;
+  --cg-warning: #F5A524;
+  --cg-danger: #FF5C5C;
+  --cg-info: #4F9DFF;
 
-  --cg-syntax-keyword: #c084fc;
-  --cg-syntax-string: #86efac;
-  --cg-syntax-comment: #52525b;
-  --cg-syntax-number: #fca5a5;
-  --cg-syntax-function: #93c5fd;
-  --cg-syntax-type: #f0abfc;
+  /* Syntax Highlighting */
+  --cg-syntax-keyword: #E8A045;
+  --cg-syntax-string: #34C759;
+  --cg-syntax-comment: #8A8177;
+  --cg-syntax-number: #F28C28;
+  --cg-syntax-function: #4F9DFF;
+  --cg-syntax-type: #27C6B7;
 }
 
 html,
@@ -47,13 +56,89 @@ body {
   margin: 0;
   background-color: var(--cg-bg-base);
   color: var(--cg-text-primary);
-  font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   border-color: var(--cg-border-base);
+}
+
+/* Layered Card Utility */
+.cg-card {
+  background-color: #181614;
+  border: 1px solid #322B26;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cg-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: #4A3D33;
+  background-color: #1D1A17;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* Page Transition Animation */
+.page-fade-in {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #322B26;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4A3D33;
+}
+
+/* Graph search / selection pulse */
+@keyframes graphPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 160, 69, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(232, 160, 69, 0);
+  }
+}
+
+.animate-graph-pulse {
+  animation: graphPulse 1.1s ease-out 2;
+}
+
+/* Amber minimap viewport frame */
+.react-flow__minimap-mask {
+  fill: rgba(15, 14, 13, 0.82) !important;
+}
+
+.react-flow__minimap svg > path:last-of-type {
+  stroke: #e8a045 !important;
+  stroke-width: 2 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -66,3 +151,4 @@ body {
     scroll-behavior: auto !important;
   }
 }
+

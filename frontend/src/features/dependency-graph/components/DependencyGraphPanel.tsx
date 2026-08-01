@@ -1,5 +1,4 @@
 import { Button } from '@/design-system/primitives/Button';
-import { Skeleton } from '@/design-system/primitives/Skeleton';
 import { isAPIError } from '@/core/api/errors';
 import { useFilteredGraph } from '../api/dependency-graph.queries';
 import { useDependencyGraphStore } from '../store/dependency-graph.store';
@@ -9,6 +8,22 @@ import { NodeDetailPanel } from './NodeDetailPanel';
 
 interface DependencyGraphPanelProps {
   repoId: string;
+}
+
+function GraphLoadingState() {
+  return (
+    <div className="flex h-full min-h-[480px] items-center justify-center bg-bg-base">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 h-12 w-12 animate-spin rounded-full border-2 border-border-base border-t-accent-default" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-text-primary">Building repository graph...</h3>
+          <p className="text-xs text-text-tertiary">Analyzing dependencies and computing layout</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function DependencyGraphPanel({ repoId }: DependencyGraphPanelProps) {
@@ -32,18 +47,7 @@ export function DependencyGraphPanel({ repoId }: DependencyGraphPanelProps) {
     id;
 
   if (isLoading) {
-    return (
-      <div className="flex h-full min-h-[480px] gap-0">
-        <Skeleton className="h-full w-56 rounded-none" />
-        <div className="relative flex-1 p-4">
-          <div className="grid h-full grid-cols-4 gap-3">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <Skeleton key={index} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <GraphLoadingState />;
   }
 
   if (isError) {
@@ -88,7 +92,11 @@ export function DependencyGraphPanel({ repoId }: DependencyGraphPanelProps) {
         totalCount={filtered.statistics?.nodes ?? filtered.nodes.length}
       />
       <div className="min-w-0 flex-1">
-        <DependencyGraphCanvas nodes={filtered.nodes} edges={filtered.edges} />
+        <DependencyGraphCanvas
+          nodes={filtered.nodes}
+          edges={filtered.edges}
+          projectName={filtered.projectName ?? repoId}
+        />
       </div>
       <NodeDetailPanel
         node={selectedNode}

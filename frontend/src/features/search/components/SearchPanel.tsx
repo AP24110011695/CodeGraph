@@ -66,20 +66,20 @@ export function SearchPanel({ repoId }: SearchPanelProps) {
   }, [selected, selectedResultId, setSelectedResultId]);
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] min-h-[480px] flex-col">
-      <div className="space-y-3 border-b border-border-base p-4">
+    <div className="flex h-[calc(100vh-3rem)] min-h-[480px] flex-col page-fade-in">
+      <div className="space-y-4 border-b border-border-base bg-[#181614] p-5 shadow-sm">
         <div>
-          <h1 className="text-xl font-medium text-text-primary">Search</h1>
-          <p className="text-sm text-text-secondary">
-            Semantic / hybrid / keyword search via `/semantic` and `/search` adapters.
+          <h1 className="text-xl font-semibold tracking-tight text-text-primary">Search & Code Discovery</h1>
+          <p className="text-xs text-text-secondary mt-0.5">
+            Semantic vector embeddings and hybrid index search across your codebase.
           </p>
         </div>
         <SearchBar />
         <SearchFilterChips languages={languages} />
       </div>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
-        <div className="min-h-0 overflow-y-auto border-r border-border-base">
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)]">
+        <div className="min-h-0 overflow-y-auto border-r border-border-base bg-[#0F0E0D]">
           {!committedQuery && <SearchEmptyState kind="idle" />}
           {committedQuery && query.isLoading && <SearchResultsSkeleton />}
           {committedQuery && query.isError && (
@@ -109,10 +109,11 @@ export function SearchPanel({ repoId }: SearchPanelProps) {
             </div>
           )}
         </div>
-        <div className="min-h-0 overflow-hidden bg-bg-elevated">
+        <div className="min-h-0 overflow-hidden bg-[#121110]">
           <CodePreviewPanel result={selected} />
         </div>
       </div>
     </div>
   );
 }
+

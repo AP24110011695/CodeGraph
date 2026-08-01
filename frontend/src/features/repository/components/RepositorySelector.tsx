@@ -120,25 +120,27 @@ export function RepositorySelector() {
         <button
           type="button"
           className={cn(
-            'flex max-w-[min(100%,22rem)] items-center gap-2 rounded-md border border-border-base bg-bg-base px-2.5 py-1.5 text-left transition-colors',
-            'hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-default/40'
+            'flex max-w-[min(100%,22rem)] items-center gap-2.5 rounded-lg border border-border-base bg-[#181614] px-3 py-1.5 text-left transition-all duration-normal',
+            'hover:border-border-strong hover:bg-[#2A2420] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-default/40'
           )}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={menuId}
           onClick={() => setOpen((value) => !value)}
         >
-          <FolderGit2 className="h-3.5 w-3.5 shrink-0 text-text-tertiary" aria-hidden />
-          <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-subtle text-accent-default">
+            <FolderGit2 className="h-3.5 w-3.5" aria-hidden />
+          </div>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
             {active?.name ?? 'Select repository'}
           </span>
           {active ? (
-            <Badge variant={statusBadgeVariant(active.status)} className="shrink-0">
+            <Badge variant={statusBadgeVariant(active.status)} className="shrink-0 text-[10px] uppercase font-semibold">
               {active.status}
             </Badge>
           ) : null}
           <ChevronDown
-            className={cn('h-3.5 w-3.5 shrink-0 text-text-tertiary transition-transform', open && 'rotate-180')}
+            className={cn('h-3.5 w-3.5 shrink-0 text-text-tertiary transition-transform duration-normal', open && 'rotate-180')}
             aria-hidden
           />
         </button>
@@ -147,13 +149,14 @@ export function RepositorySelector() {
           <div
             id={menuId}
             role="listbox"
-            className="absolute left-0 top-[calc(100%+0.35rem)] z-50 w-[min(100vw-2rem,24rem)] overflow-hidden rounded-lg border border-border-base bg-bg-elevated shadow-md"
+            className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,26rem)] overflow-hidden rounded-2xl border border-border-base bg-[#181614] p-1.5 shadow-2xl backdrop-blur-md"
+            style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.6)' }}
           >
-            <div className="max-h-72 overflow-auto p-1">
+            <div className="max-h-80 overflow-auto space-y-1 p-1">
               {listQuery.isLoading ? (
-                <p className="px-3 py-4 text-sm text-text-secondary">Loading repositories…</p>
+                <p className="px-3 py-4 text-xs text-text-secondary">Loading repositories…</p>
               ) : repositories.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-text-secondary">No repositories yet.</p>
+                <p className="px-3 py-4 text-xs text-text-secondary">No repositories yet.</p>
               ) : (
                 repositories.map((repo) => {
                   const selected = repo.id === activeRepositoryId;
@@ -161,8 +164,10 @@ export function RepositorySelector() {
                     <div
                       key={repo.id}
                       className={cn(
-                        'group flex items-start gap-2 rounded-md px-2 py-2',
-                        selected ? 'bg-accent-subtle/60' : 'hover:bg-bg-subtle'
+                        'group flex items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-fast',
+                        selected
+                          ? 'bg-[rgba(232,160,69,0.12)] border border-accent-muted/30'
+                          : 'hover:bg-[#2A2420] hover:translate-x-0.5'
                       )}
                     >
                       <button
@@ -172,47 +177,69 @@ export function RepositorySelector() {
                         className="min-w-0 flex-1 text-left"
                         onClick={() => void switchTo(repo)}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="truncate text-sm font-medium text-text-primary">{repo.name}</span>
-                          {selected ? (
-                            <span className="text-[10px] uppercase tracking-wide text-accent-default">Current</span>
-                          ) : null}
-                        </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <Badge variant={statusBadgeVariant(repo.status)}>{repo.status}</Badge>
-                          {repo.framework ? <Badge variant="accent">{repo.framework}</Badge> : null}
-                          {repo.language ? <Badge variant="info">{repo.language}</Badge> : null}
-                          <span className="text-xs text-text-tertiary">{formatUploadedAt(repo.uploaded_at)}</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn(
+                            'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border',
+                            selected
+                              ? 'border-accent-default/40 bg-accent-subtle text-accent-default'
+                              : 'border-border-base bg-[#121110] text-text-tertiary group-hover:text-text-primary'
+                          )}>
+                            <FolderGit2 className="h-4 w-4" aria-hidden />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-sm font-medium text-text-primary">{repo.name}</span>
+                              {selected ? (
+                                <span className="rounded bg-accent-default/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-default">Active</span>
+                              ) : null}
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <Badge variant={statusBadgeVariant(repo.status)} className="text-[10px] uppercase">
+                                {repo.status}
+                              </Badge>
+                              {repo.language ? (
+                                <span className="rounded border border-border-base bg-[#121110] px-1.5 py-0.5 text-[10px] text-text-secondary">
+                                  {repo.language}
+                                </span>
+                              ) : null}
+                              {repo.framework ? (
+                                <span className="rounded border border-border-base bg-[#121110] px-1.5 py-0.5 text-[10px] text-text-tertiary">
+                                  {repo.framework}
+                                </span>
+                              ) : null}
+                              <span className="text-[11px] text-text-tertiary ml-auto">{formatUploadedAt(repo.uploaded_at)}</span>
+                            </div>
+                          </div>
                         </div>
                       </button>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="shrink-0 opacity-70 hover:opacity-100"
+                        className="ml-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-fast h-7 w-7 p-0"
                         aria-label={`Delete ${repo.name}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           setPendingDelete(repo);
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-danger" />
+                        <Trash2 className="h-3.5 w-3.5 text-danger hover:text-danger/80" />
                       </Button>
                     </div>
                   );
                 })
               )}
             </div>
-            <div className="border-t border-border-base p-1">
+            <div className="mt-1 border-t border-border-base pt-1">
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-text-primary hover:bg-bg-subtle"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-text-secondary hover:bg-[#2A2420] hover:text-text-primary transition-colors"
                 onClick={() => {
                   setOpen(false);
                   navigate('/upload');
                 }}
               >
-                <Plus className="h-3.5 w-3.5" aria-hidden />
+                <Plus className="h-3.5 w-3.5 text-accent-default" aria-hidden />
                 Add Repository
               </button>
             </div>
@@ -228,4 +255,5 @@ export function RepositorySelector() {
       />
     </>
   );
+
 }

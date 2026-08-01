@@ -70,20 +70,35 @@ export function UploadDropzone({ disabled, error, onFileSelected }: UploadDropzo
       animate={dragging ? { scale: 1.01 } : { scale: 1 }}
       transition={{ duration: 0.15 }}
       className={cn(
-        'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border-strong bg-bg-elevated px-6 py-16 text-center transition-colors duration-fast',
-        dragging && 'border-accent-default bg-accent-subtle',
+        'relative flex cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-[#4A3D33] bg-[#181614] px-8 py-20 text-center transition-all duration-normal shadow-2xl overflow-hidden',
+        'hover:border-accent-default hover:bg-[#1D1A17]',
+        dragging && 'border-accent-default bg-accent-subtle/30 ring-4 ring-accent-default/20',
         error && 'border-danger/50 bg-danger/5',
         disabled && 'pointer-events-none opacity-60'
       )}
     >
-      <UploadCloud className={cn('h-8 w-8', error ? 'text-danger' : 'text-accent-default')} />
-      <div className="space-y-1">
-        <p className="text-base text-text-primary">Drag and drop a ZIP archive</p>
-        <p className="text-sm text-text-secondary">or click to browse your files</p>
-      </div>
-      {selectedName && !error && (
-        <p className="text-xs text-text-tertiary">{selectedName}</p>
+      {dragging && (
+        <div className="absolute inset-0 bg-gradient-to-t from-accent-default/10 via-transparent to-transparent animate-pulse pointer-events-none" />
       )}
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+        className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border-base bg-[#121110] shadow-md"
+      >
+        <UploadCloud className={cn('h-7 w-7', error ? 'text-danger' : 'text-accent-default')} />
+      </motion.div>
+
+      <div className="space-y-1 z-10">
+        <p className="text-base font-semibold text-text-primary">Drag and drop a ZIP archive</p>
+        <p className="text-xs text-text-secondary">or click to browse your local filesystem</p>
+      </div>
+
+      {selectedName && !error && (
+        <span className="z-10 rounded-full border border-accent-muted/40 bg-accent-subtle px-3 py-1 text-xs font-medium text-accent-default">
+          {selectedName}
+        </span>
+      )}
+
       <input
         ref={inputRef}
         type="file"
@@ -94,4 +109,5 @@ export function UploadDropzone({ disabled, error, onFileSelected }: UploadDropzo
       />
     </motion.div>
   );
+
 }

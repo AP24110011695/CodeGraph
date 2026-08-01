@@ -28,7 +28,7 @@ class ReportFormat(str, Enum):
 
 class ReportGenerateRequest(BaseModel):
     report_type: ReportType = Field(default=ReportType.EXECUTIVE)
-    export_format: ReportFormat = Field(default=ReportFormat.JSON)
+    export_format: ReportFormat = Field(default=ReportFormat.MARKDOWN)
     include_sections: List[str] = Field(
         default_factory=list,
         description="Optional section ids for custom reports; empty = type defaults",

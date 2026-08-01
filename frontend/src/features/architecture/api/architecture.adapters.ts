@@ -78,35 +78,27 @@ export function adaptArchitecture(dto: ArchitectureResponse): ArchitectureModel 
   };
 }
 
-/** Vertical layer layout: each layer is a column, modules stack within the column. */
-export function layoutArchitectureNodes(
+import { computeElkLayout, type ElkNode, type ElkEdge } from '@/lib/elk-layout';
+
+export async function layoutArchitectureNodes(
   modules: ArchitectureModuleModel[],
-  layers: string[]
-): Record<string, { x: number; y: number }> {
-  const layerOrder = layers.length > 0 ? [...layers] : Array.from(new Set(modules.map((m) => m.layer)));
-  const layerIndex = new Map(layerOrder.map((layer, index) => [layer, index]));
+  edges: ArchitectureEdgeModel[],
+  _layers: string[]
+): Promise<Record<string, { x: number; y: number }>> {
+  const elkNodes: ElkNode[] = modules.map((mod) => ({
+    id: mod.id,
+    width: 240,
+    height: 100,
+  }));
 
-  const byLayer = new Map<string, string[]>();
-  for (const mod of modules) {
-    const list = byLayer.get(mod.layer) ?? [];
-    list.push(mod.id);
-    byLayer.set(mod.layer, list);
-  }
+  const elkEdges: ElkEdge[] = edges.map((edge) => ({
+    id: edge.id,
+    sources: [edge.source],
+    targets: [edge.target],
+  }));
 
-  const positions: Record<string, { x: number; y: number }> = {};
-  const xGap = 300;
-  const yGap = 110;
-
-  for (const [layer, ids] of byLayer) {
-    const column = layerIndex.get(layer) ?? layerOrder.length;
-    ids.sort();
-    ids.forEach((id, index) => {
-      positions[id] = {
-        x: column * xGap,
-        y: index * yGap,
-      };
-    });
-  }
-
-  return positions;
+  return computeElkLayout(elkNodes, elkEdges, {
+    direction: 'RIGHT',
+    nodeCount: modules.length,
+  });
 }

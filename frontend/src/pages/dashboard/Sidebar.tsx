@@ -58,7 +58,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex h-full shrink-0 flex-col border-r border-border-base bg-bg-elevated transition-[width] duration-normal ease-out-expo',
+        'flex h-full shrink-0 flex-col border-r border-border-base bg-[#121110] transition-[width] duration-normal ease-out-expo',
         collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
       )}
       aria-label="Dashboard navigation"
@@ -67,7 +67,7 @@ export function Sidebar() {
         {primaryNav.map((item) => (
           <SidebarLink key={item.label} item={item} collapsed={collapsed} />
         ))}
-        <Separator className="my-2" />
+        <Separator className="my-2 bg-border-base" />
         {secondaryNav.map((item) => (
           <SidebarLink key={item.to} item={item} collapsed={collapsed} />
         ))}
@@ -77,7 +77,7 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className={cn('w-full', collapsed ? 'justify-center px-0' : 'justify-start')}
+            className={cn('w-full text-text-tertiary hover:text-text-primary', collapsed ? 'justify-center px-0' : 'justify-start')}
             onClick={toggleSidebarCollapsed}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -104,14 +104,29 @@ function SidebarLink({
       end={item.end}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-md px-2 py-2 text-sm text-text-secondary transition-colors duration-fast hover:bg-bg-subtle hover:text-text-primary',
+          'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-normal',
           collapsed && 'justify-center px-0',
-          isActive && 'bg-accent-subtle text-text-primary'
+          isActive
+            ? 'bg-[rgba(232,160,69,0.12)] font-medium text-white'
+            : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
         )
       }
     >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden />
-      {!collapsed && <span>{item.label}</span>}
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-accent-default" />
+          )}
+          <Icon
+            className={cn(
+              'h-4 w-4 shrink-0 transition-colors duration-fast',
+              isActive ? 'text-accent-default' : 'text-text-tertiary group-hover:text-text-secondary'
+            )}
+            aria-hidden
+          />
+          {!collapsed && <span>{item.label}</span>}
+        </>
+      )}
     </NavLink>
   );
 
@@ -125,3 +140,4 @@ function SidebarLink({
 
   return link;
 }
+

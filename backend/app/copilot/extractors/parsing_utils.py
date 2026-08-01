@@ -124,20 +124,30 @@ class ParsingUtils:
         return list(set(matches))
     
     @staticmethod
-    def extract_capitalized_words(data_str: str, min_length: int = 3, exclude: List[str] = None) -> List[str]:
-        """Extract capitalized words from data string.
+    def extract_capitalized_words(data_str: str, exclude: List[str] = None) -> List[str]:
+        """Extract capitalized words from a string.
         
         Args:
-            data_str: String containing words
-            min_length: Minimum word length to include
+            data_str: String to extract from
             exclude: Words to exclude from results
             
         Returns:
-            List of unique capitalized words
+            List of capitalized words
         """
         if exclude is None:
-            exclude = ['subsystem', 'component', 'data', 'summary', 'recent']
+            exclude = []
         
         words = re.findall(r'\b[A-Z][a-z]+\b', data_str)
-        filtered = [w for w in words if len(w) >= min_length and w.lower() not in exclude]
-        return list(set(filtered))
+        
+        # Filter out excluded words and common non-content words
+        filtered = []
+        common_exclusions = [
+            'data', 'summary', 'recent', 'total', 'count', 'node', 'edge', 
+            'file', 'module', 'critical', 'high', 'medium', 'low', 'severity',
+            'issue', 'type', 'author', 'message', 'language', 'framework'
+        ]
+        for word in words:
+            if word.lower() not in [e.lower() for e in exclude + common_exclusions]:
+                filtered.append(word)
+        
+        return filtered

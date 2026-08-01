@@ -76,77 +76,26 @@ export function adaptDependencyGraph(dto: DependencyGraphResponseDto): Dependenc
   };
 }
 
-/** Simple layered layout from roots (no incoming edges) left → right. */
-export function layoutGraphNodes(
+import { computeElkLayout, type ElkNode, type ElkEdge } from '@/lib/elk-layout';
+
+export async function layoutGraphNodes(
   nodes: GraphNodeModel[],
   edges: GraphEdgeModel[]
-): Record<string, { x: number; y: number }> {
-  const incoming = new Map<string, number>();
-  const outgoing = new Map<string, string[]>();
+): Promise<Record<string, { x: number; y: number }>> {
+  const elkNodes: ElkNode[] = nodes.map((node) => ({
+    id: node.id,
+    width: 250,
+    height: 90,
+  }));
 
-  for (const node of nodes) {
-    incoming.set(node.id, 0);
-    outgoing.set(node.id, []);
-  }
+  const elkEdges: ElkEdge[] = edges.map((edge) => ({
+    id: edge.id,
+    sources: [edge.source],
+    targets: [edge.target],
+  }));
 
-  for (const edge of edges) {
-    if (!incoming.has(edge.target) || !outgoing.has(edge.source)) continue;
-    incoming.set(edge.target, (incoming.get(edge.target) ?? 0) + 1);
-    outgoing.get(edge.source)?.push(edge.target);
-  }
-
-  const depth = new Map<string, number>();
-  const queue: string[] = [];
-
-  for (const node of nodes) {
-    if ((incoming.get(node.id) ?? 0) === 0) {
-      depth.set(node.id, 0);
-      queue.push(node.id);
-    }
-  }
-
-  if (queue.length === 0 && nodes.length > 0) {
-    depth.set(nodes[0].id, 0);
-    queue.push(nodes[0].id);
-  }
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const currentDepth = depth.get(current) ?? 0;
-    for (const next of outgoing.get(current) ?? []) {
-      const nextDepth = currentDepth + 1;
-      if (!depth.has(next) || (depth.get(next) ?? 0) < nextDepth) {
-        depth.set(next, nextDepth);
-        queue.push(next);
-      }
-    }
-  }
-
-  for (const node of nodes) {
-    if (!depth.has(node.id)) depth.set(node.id, 0);
-  }
-
-  const columns = new Map<number, string[]>();
-  for (const node of nodes) {
-    const d = depth.get(node.id) ?? 0;
-    const list = columns.get(d) ?? [];
-    list.push(node.id);
-    columns.set(d, list);
-  }
-
-  const positions: Record<string, { x: number; y: number }> = {};
-  const xGap = 260;
-  const yGap = 90;
-
-  for (const [column, ids] of columns) {
-    ids.sort();
-    ids.forEach((id, index) => {
-      positions[id] = {
-        x: column * xGap,
-        y: index * yGap,
-      };
-    });
-  }
-
-  return positions;
+  return computeElkLayout(elkNodes, elkEdges, {
+    direction: 'RIGHT',
+    nodeCount: nodes.length,
+  });
 }
