@@ -84,7 +84,7 @@ class TestCapabilityRegistry:
         result = capability_registry.resolve_intent("xyz abc def")
 
         assert result is not None
-        assert result["capability"] == "repository_info"
+        assert result["capability"] == "general_query"
 
     def test_resolve_intent_security(self, capability_registry: CapabilityRegistry) -> None:
         """Test resolving security intent."""

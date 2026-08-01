@@ -57,7 +57,7 @@ class CopilotEngine:
         self.statistics = stats or default_execution_statistics
         self._planning = planning
 
-        self.intent_router = intent_router or IntentRouter()
+        self.intent_router = intent_router or default_intent_router
         self.context_assembler = context_assembler or ContextAssembler()
         self.capability_registry = capability_registry or CapabilityRegistry()
         self.repository_registry = repository_registry or RepositoryRegistry()
@@ -152,9 +152,8 @@ class CopilotEngine:
             session = self.conversations.start(repository_id, conversation_id)
             self.conversations.add_user_message(session.conversation_id, query)
 
-            # 1. Planning Engine decides work
-            plan_obj = self._planning_engine().plan(repository_id, query)
-            plan = plan_obj.model_dump(mode="json") if hasattr(plan_obj, "model_dump") else dict(plan_obj)
+            # 1. Intent routing (CapabilityRegistry) — not the generic PlanningClassifier path
+            plan = self.intent_router.build_execution_plan(query, repository_id=repository_id)
 
             # 2. Assemble context (Memory + RAG + conversation — no duplicate retrieval logic)
             turns = self.conversations.get_recent_turns(session.conversation_id, limit=10)
@@ -173,6 +172,11 @@ class CopilotEngine:
             tool_results = self.tool_executor.execute_plan(
                 repository_id, query, plan, options=opts
             )
+
+            retrieved = [
+                t.get("tool") for t in tool_results if t.get("status") == "ok"
+            ]
+            logger.info("RETRIEVED SOURCES: %s", retrieved)
 
             agent_summary = None
             for tr in tool_results:

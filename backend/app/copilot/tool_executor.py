@@ -7,20 +7,28 @@ from __future__ import annotations
 
 import logging
 import re
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 ToolHandler = Callable[[str, str, Dict[str, Any]], Dict[str, Any]]
 
+# Intents that should include repository memory as a baseline context tool.
+_MEMORY_ALWAYS_INTENTS = {
+    "repository_timeline",
+}
+
 
 class ToolExecutor:
     """Executes planning-required modules as reusable tools."""
 
-    # Map Planning Engine module names → tool ids
+    # Map plan module names → tool ids
     MODULE_ALIASES = {
         "RAG Engine": "rag",
         "Architecture Reasoning Engine": "architecture_reasoning",
+        "Architecture Analyzer": "architecture",
+        "Dependency Graph": "dependency_graph",
         "Timeline Intelligence Engine": "timeline",
         "Repository Memory": "repository_memory",
         "Knowledge Graph": "knowledge_graph",
@@ -29,6 +37,10 @@ class ToolExecutor:
         "Refactoring Engine": "agents",
         "Engineering Reports": "engineering_reports",
         "Multi-Agent Framework": "agents",
+        "Metrics Engine": "metrics",
+        "Language Analyzer": "language_analyzer",
+        "Repository Overview": "repository_overview",
+        "Security Analyzer": "security",
     }
 
     def __init__(self) -> None:
@@ -51,34 +63,37 @@ class ToolExecutor:
     ) -> List[Dict[str, Any]]:
         """Run tools for modules listed in the planning response."""
         options = options or {}
+        intent = plan.get("intent", "general_query")
         modules = list(plan.get("execution_order") or plan.get("required_modules") or [])
-        # Always ensure repository memory is available early when not listed
-        if "Repository Memory" not in modules:
+
+        if "Repository Memory" not in modules and intent in _MEMORY_ALWAYS_INTENTS:
             modules = ["Repository Memory"] + modules
 
-        # Optional explicit tools from execute API
         extra = options.get("tools") or []
         for t in extra:
             if t not in modules and t not in self.MODULE_ALIASES.values():
                 modules.append(t)
 
-        # Report-oriented queries
         q = query.lower()
         if any(k in q for k in ("engineering report", "health report", "executive report")):
             if "Engineering Reports" not in modules:
                 modules.append("Engineering Reports")
 
-        # Agent collaboration when explicitly requested or on execute-style options
-        intent = plan.get("intent", "")
         use_agents = bool(options.get("use_agents")) or "agents" in (options.get("tools") or [])
         if use_agents and intent in (
+            "architecture_health",
             "architecture_explanation",
             "impact_analysis",
+            "repository_timeline",
             "timeline_analysis",
             "code_modification",
         ):
             if "Multi-Agent Framework" not in modules:
                 modules.append("Multi-Agent Framework")
+
+        logger.info("QUERY: %s", query)
+        logger.info("INTENT: %s", intent)
+        logger.info("SELECTED TOOLS: %s", modules)
 
         results: List[Dict[str, Any]] = []
         seen: set[str] = set()
@@ -125,18 +140,36 @@ class ToolExecutor:
                         "result": None,
                     }
                 )
+
+        ok_sources = [r["tool"] for r in results if r.get("status") == "ok"]
+        logger.info("RETRIEVED SOURCES: %s", ok_sources)
         return results
 
     def _register_defaults(self) -> None:
         self.register("repository_memory", self._tool_memory)
         self.register("rag", self._tool_rag)
         self.register("architecture_reasoning", self._tool_reasoning)
+        self.register("architecture", self._tool_architecture)
+        self.register("dependency_graph", self._tool_dependency_graph)
         self.register("timeline", self._tool_timeline)
         self.register("impact_analysis", self._tool_impact)
         self.register("engineering_reports", self._tool_reports)
         self.register("agents", self._tool_agents)
         self.register("knowledge_graph", self._tool_knowledge_graph)
         self.register("semantic_search", self._tool_semantic)
+        self.register("metrics", self._tool_metrics)
+        self.register("language_analyzer", self._tool_language_analyzer)
+        self.register("repository_overview", self._tool_repository_overview)
+        self.register("security", self._tool_security)
+
+    @staticmethod
+    def _resolve_path(repository_id: str) -> Path:
+        from storage.repository_store import repository_store
+
+        path = repository_store.resolve_path(repository_id)
+        if path is None or not path.is_dir():
+            raise FileNotFoundError(f"Repository path not found: {repository_id}")
+        return path
 
     # --- Handlers (composition only) ---
 
@@ -170,6 +203,139 @@ class ToolExecutor:
             "summary": (rag.llm_context or "")[:500],
             "result": rag.model_dump(mode="json") if hasattr(rag, "model_dump") else rag,
             "citations": citations or ["Advanced RAG"],
+        }
+
+    def _tool_metrics(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        from app.indexing.index_manager import get_shared_index_manager
+        from app.services.scanner_service import scanner_service
+
+        index = get_shared_index_manager().get_index(repository_id)
+        languages: dict[str, Any] = dict(getattr(index, "languages", None) or {})
+        total_files = int(getattr(index, "total_files", 0) or 0)
+        frameworks = list(getattr(index, "frameworks", None) or [])
+
+        if not languages and not total_files:
+            path = self._resolve_path(repository_id)
+            scan = scanner_service.scan(path)
+            languages = dict(scan.languages or {})
+            total_files = int(scan.total_files or 0)
+
+        summary = (
+            f"Repository metrics: {total_files} files; "
+            f"languages={languages or {}}; frameworks={frameworks or []}"
+        )
+        return {
+            "summary": summary,
+            "result": {
+                "total_files": total_files,
+                "languages": languages,
+                "frameworks": frameworks,
+            },
+            "citations": ["Metrics Engine"],
+        }
+
+    def _tool_language_analyzer(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        metrics = self._tool_metrics(repository_id, query, ctx)
+        languages = (metrics.get("result") or {}).get("languages") or {}
+        if isinstance(languages, dict) and languages:
+            ranked = sorted(languages.items(), key=lambda item: int(item[1] or 0), reverse=True)
+            parts = [f"{name} ({count})" for name, count in ranked]
+            summary = "Programming languages detected: " + ", ".join(parts)
+        else:
+            summary = "No programming language breakdown available yet."
+        return {
+            "summary": summary,
+            "result": {"languages": languages},
+            "citations": ["Language Analyzer", "Metrics Engine"],
+        }
+
+    def _tool_repository_overview(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        metrics = self._tool_metrics(repository_id, query, ctx)
+        result = metrics.get("result") or {}
+        total_files = result.get("total_files", 0)
+        summary = f"Repository overview: {total_files} files indexed for {repository_id}."
+        return {
+            "summary": summary,
+            "result": result,
+            "citations": ["Repository Overview", "Metrics Engine"],
+        }
+
+    def _tool_security(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        from app.security.security_analyzer import security_analyzer
+
+        path = self._resolve_path(repository_id)
+        analysis = security_analyzer.analyze(path)
+        total = int(getattr(analysis, "total_issues", 0) or 0)
+        summary_counts = getattr(analysis, "summary", None) or {}
+        summary = f"Security analysis found {total} issue(s). Summary: {summary_counts}"
+        return {
+            "summary": summary,
+            "result": {
+                "total_issues": total,
+                "summary": summary_counts,
+                "issues": list(getattr(analysis, "issues", None) or [])[:25],
+            },
+            "citations": ["Security Analyzer"],
+            "recommendations": [
+                f"Review {total} security finding(s)." if total else "No security issues detected."
+            ],
+        }
+
+    def _tool_architecture(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        from app.analyzers.architecture_builder import architecture_builder
+        from app.parsers.parser_engine import ParserEngine
+        from app.services.dependency_graph import graph_builder
+        from app.services.framework_detector import detector_service
+        from app.services.scanner_service import scanner_service
+
+        path = self._resolve_path(repository_id)
+        scan = scanner_service.scan(path)
+        detection = detector_service.detect(path, scan)
+        graph = graph_builder.build(path, scan)
+        parsing = ParserEngine.parse_project(path, scan)
+        architecture = architecture_builder.build(scan, detection, graph, parsing)
+
+        layers = list(getattr(architecture, "layers", None) or [])
+        modules = list(getattr(architecture, "modules", None) or [])
+        stats = getattr(architecture, "statistics", None) or {}
+        summary = (
+            f"Architecture: {len(layers)} layer(s), {len(modules)} module(s). "
+            f"Statistics={stats}"
+        )
+        related = []
+        for mod in modules[:12]:
+            name = getattr(mod, "name", None) or (mod.get("name") if isinstance(mod, dict) else None)
+            if name:
+                related.append(str(name))
+        return {
+            "summary": summary,
+            "result": {
+                "layers": [getattr(layer, "name", str(layer)) for layer in layers],
+                "module_count": len(modules),
+                "statistics": stats,
+            },
+            "citations": ["Architecture Analyzer"],
+            "related_components": related,
+        }
+
+    def _tool_dependency_graph(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.dependency_graph import graph_builder
+        from app.services.scanner_service import scanner_service
+
+        path = self._resolve_path(repository_id)
+        scan = scanner_service.scan(path)
+        graph = graph_builder.build(path, scan)
+        nodes = list(getattr(graph, "nodes", None) or [])
+        edges = list(getattr(graph, "edges", None) or [])
+        summary = f"Dependency graph: {len(nodes)} node(s), {len(edges)} edge(s)."
+        return {
+            "summary": summary,
+            "result": {
+                "node_count": len(nodes),
+                "edge_count": len(edges),
+                "statistics": getattr(graph, "statistics", None) or {},
+            },
+            "citations": ["Dependency Graph"],
         }
 
     def _tool_reasoning(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
@@ -241,11 +407,11 @@ class ToolExecutor:
             rtype = ReportType.ARCHITECTURE
         elif "debt" in q:
             rtype = ReportType.TECHNICAL_DEBT
-        elif "security" in q:
+        elif "security" in q or "risk" in q or "vulnerability" in q:
             rtype = ReportType.SECURITY_OVERVIEW
         elif "impact" in q:
             rtype = ReportType.IMPACT_ANALYSIS
-        elif "health" in q:
+        elif "health" in q or "quality" in q or "maintainability" in q:
             rtype = ReportType.REPOSITORY_HEALTH
         report = report_engine.generate(repository_id, ReportGenerateRequest(report_type=rtype))
         return {
@@ -258,7 +424,6 @@ class ToolExecutor:
     def _tool_agents(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
         from app.agents.agent_manager import agent_manager
 
-        # Avoid recursive double-agent runs if already present
         if ctx.get("_skip_agents"):
             return {"summary": "Agents skipped (already executed)", "result": None}
         response = agent_manager.execute(repository_id, query)
@@ -269,7 +434,6 @@ class ToolExecutor:
         }
 
     def _tool_knowledge_graph(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
-        # Do not rebuild graphs — surface memory-backed structural hints only
         from app.repository_memory.memory_engine import memory_engine
 
         memory = memory_engine.get_memory(repository_id)
@@ -284,7 +448,6 @@ class ToolExecutor:
         }
 
     def _tool_semantic(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
-        # Prefer RAG semantic path to avoid requiring project_path wiring
         from app.rag.rag_engine import rag_engine
 
         rag = rag_engine.generate_context(repository_id, query, max_tokens=1500)

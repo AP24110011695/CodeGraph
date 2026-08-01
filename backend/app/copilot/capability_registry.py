@@ -3,10 +3,23 @@
 Registers all available CodeGraph capabilities for routing queries.
 """
 
+from __future__ import annotations
+
 import logging
+import re
 from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
+
+
+def _keyword_matches(keyword: str, query_lower: str) -> bool:
+    """Match multi-word phrases by substring; single tokens by word boundary."""
+    keyword = keyword.lower().strip()
+    if not keyword:
+        return False
+    if " " in keyword:
+        return keyword in query_lower
+    return re.search(rf"\b{re.escape(keyword)}\b", query_lower) is not None
 
 
 class CapabilityRegistry:
@@ -17,15 +30,50 @@ class CapabilityRegistry:
 
     def __init__(self):
         """Initialize the capability registry."""
-        self.capabilities = {}
+        self.capabilities: dict[str, dict[str, Any]] = {}
         self._register_capabilities()
 
     def _register_capabilities(self) -> None:
-        """Register all available capabilities."""
-        # Architecture capabilities
+        """Register all available capabilities.
+
+        Order matters: more specific phrases / capabilities first.
+        """
+        # Language / metrics (before generic "repository" and short tokens like "pr")
+        self.register_capability(
+            "language_analysis",
+            [
+                "programming language",
+                "programming languages",
+                "what language",
+                "which language",
+                "languages used",
+                "language used",
+                "languages",
+                "language",
+                "tech stack",
+                "frameworks",
+                "framework",
+            ],
+            "metrics",
+        )
+        self.register_capability(
+            "repository_overview",
+            [
+                "how many files",
+                "number of files",
+                "file count",
+                "files in the repository",
+                "files in repository",
+                "total files",
+                "how many folders",
+            ],
+            "metrics",
+        )
+
+        # Architecture
         self.register_capability(
             "architecture_health",
-            ["architecture", "health", "structure", "design"],
+            ["architecture", "architectural", "structure", "design", "summarize architecture"],
             "architecture_report",
         )
         self.register_capability(
@@ -35,7 +83,7 @@ class CapabilityRegistry:
         )
         self.register_capability(
             "architecture_drift",
-            ["drift", "change", "evolution"],
+            ["drift", "evolution"],
             "architecture_drift",
         )
         self.register_capability(
@@ -61,7 +109,7 @@ class CapabilityRegistry:
                 "propagation",
                 "depend on this",
                 "change risk",
-                "if I modify",
+                "if i modify",
             ],
             "impact_analysis",
         )
@@ -77,7 +125,7 @@ class CapabilityRegistry:
             "engineering_reports",
         )
 
-        # Quality capabilities
+        # Quality
         self.register_capability(
             "quality_analysis",
             ["quality", "code quality", "maintainability"],
@@ -89,29 +137,29 @@ class CapabilityRegistry:
             "code_generation",
         )
 
-        # Security capabilities
+        # Security (before generic "risk")
         self.register_capability(
             "security_analysis",
-            ["security", "vulnerability", "threat"],
+            ["security", "vulnerability", "vulnerabilities", "threat", "cve", "exploit"],
             "security",
         )
 
-        # Risk capabilities
+        # Risk
         self.register_capability(
             "risk_analysis",
-            ["risk", "technical debt", "danger"],
+            ["risks", "risk", "technical debt", "danger"],
             "risk",
         )
 
-        # Dependency capabilities
+        # Dependency
         self.register_capability(
             "dependency_health",
-            ["dependency", "package", "library"],
+            ["package", "library", "dependency health"],
             "dependency_health",
         )
         self.register_capability(
             "dependency_graph",
-            ["graph", "dependency map", "connections"],
+            ["dependency graph", "dependency map", "connections", "dependencies"],
             "dependency_graph",
         )
 
@@ -122,42 +170,34 @@ class CapabilityRegistry:
             "bug_localization",
         )
 
-        # Metrics
+        # Metrics (generic)
         self.register_capability(
             "metrics",
-            ["metric", "measurement", "stat"],
+            ["metric", "measurement", "statistics", "stats"],
             "metrics",
         )
 
-        # Design patterns
+        # Design patterns / SOLID / microservices / schema / API
         self.register_capability(
             "design_patterns",
-            ["pattern", "design pattern", "implementation"],
+            ["design pattern", "patterns", "pattern", "implementation"],
             "design_patterns",
         )
-
-        # SOLID principles
         self.register_capability(
             "solid_principles",
             ["solid", "oop", "principle"],
             "solid",
         )
-
-        # Microservices
         self.register_capability(
             "microservices",
-            ["microservice", "service boundary", "service"],
+            ["microservice", "service boundary"],
             "microservices",
         )
-
-        # Database schema
         self.register_capability(
             "database_schema",
             ["database", "schema", "sql", "table"],
             "database_schema",
         )
-
-        # API flow
         self.register_capability(
             "api_flow",
             ["api", "endpoint", "route", "rest"],
@@ -167,7 +207,7 @@ class CapabilityRegistry:
         # Documentation
         self.register_capability(
             "documentation",
-            ["readme", "docs", "api docs"],
+            ["readme", "docs", "documentation"],
             "readme",
         )
         self.register_capability(
@@ -176,73 +216,61 @@ class CapabilityRegistry:
             "apidocs",
         )
 
-        # UML diagrams
+        # UML / knowledge graph
         self.register_capability(
             "uml_diagrams",
             ["uml", "diagram", "class diagram", "sequence"],
             "uml",
         )
-
-        # Knowledge graph
         self.register_capability(
             "knowledge_graph",
-            ["knowledge", "graph", "entity", "relationship"],
+            ["knowledge graph", "entity", "relationship"],
             "knowledge_graph",
         )
 
-        # Repository comparison
+        # Repository comparison / release notes / dashboard / team
         self.register_capability(
             "repository_comparison",
             ["compare", "difference", "versus", "against"],
             "repository_comparison",
         )
-
-        # Release notes
         self.register_capability(
             "release_notes",
             ["release", "changelog", "version"],
             "release_notes",
         )
-
-        # Dashboard
         self.register_capability(
             "dashboard",
-            ["dashboard", "overview", "summary", "executive"],
+            ["dashboard", "executive summary"],
             "dashboard",
         )
-
-        # Team analytics
         self.register_capability(
             "team_analytics",
-            ["team", "analytics", "workspace", "metrics"],
+            ["team", "analytics", "workspace"],
             "team_analytics",
         )
 
-        # CI/CD
+        # CI/CD / GitHub / Jira — avoid short ambiguous tokens like bare "pr"
         self.register_capability(
             "cicd",
-            ["cicd", "pipeline", "build", "deploy"],
+            ["cicd", "ci/cd", "pipeline", "build", "deploy"],
             "cicd",
         )
-
-        # GitHub
         self.register_capability(
             "github",
-            ["github", "commit", "pr", "pull request"],
+            ["github", "commit", "pull request", "pull-request"],
             "github",
         )
-
-        # Jira
         self.register_capability(
             "jira",
-            ["jira", "issue", "ticket", "project"],
+            ["jira", "ticket"],
             "jira",
         )
 
-        # General repository info
+        # Generic repository info (last among repository phrases)
         self.register_capability(
             "repository_info",
-            ["repository", "repo", "info", "overview"],
+            ["repository info", "repo info", "overview"],
             "scanner",
         )
 
@@ -252,13 +280,7 @@ class CapabilityRegistry:
         keywords: list[str],
         module_name: str,
     ) -> None:
-        """Register a capability.
-
-        Args:
-            capability_name: Name of the capability.
-            keywords: Keywords that trigger this capability.
-            module_name: Module that provides this capability.
-        """
+        """Register a capability."""
         self.capabilities[capability_name] = {
             "keywords": keywords,
             "module": module_name,
@@ -268,46 +290,44 @@ class CapabilityRegistry:
         self,
         query: str,
     ) -> dict[str, Any] | None:
-        """Resolve query intent to capability.
-
-        Args:
-            query: User query.
-
-        Returns:
-            Dictionary with capability info or None.
-        """
+        """Resolve query intent to capability."""
         query_lower = query.lower()
 
-        # Check for keyword matches
+        # Prefer longer keyword matches first across all capabilities
+        candidates: list[tuple[int, str, dict[str, Any], str]] = []
         for capability_name, capability_info in self.capabilities.items():
             for keyword in capability_info["keywords"]:
-                if keyword in query_lower:
-                    return {
-                        "capability": capability_name,
-                        "module": capability_info["module"],
-                        "matched_keyword": keyword,
-                    }
+                if _keyword_matches(keyword, query_lower):
+                    candidates.append(
+                        (
+                            len(keyword),
+                            capability_name,
+                            capability_info,
+                            keyword,
+                        )
+                    )
 
-        # Default to general repository info
+        if candidates:
+            candidates.sort(key=lambda item: item[0], reverse=True)
+            _, capability_name, capability_info, keyword = candidates[0]
+            return {
+                "capability": capability_name,
+                "module": capability_info["module"],
+                "matched_keyword": keyword,
+            }
+
+        # Default: general RAG explanation (not scanner/memory)
         return {
-            "capability": "repository_info",
-            "module": "scanner",
-            "matched_keyword": "repository",
+            "capability": "general_query",
+            "module": "rag",
+            "matched_keyword": None,
         }
 
     def get_capability_handler(
         self,
         capability_name: str,
     ) -> Callable | None:
-        """Get handler for a capability.
-
-        Args:
-            capability_name: Name of the capability.
-
-        Returns:
-            Handler function or None.
-        """
-        # Handlers are resolved by ToolExecutor / engine wiring, not here.
+        """Get handler for a capability."""
         return None
 
 
