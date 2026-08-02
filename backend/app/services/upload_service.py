@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import UploadFile, HTTPException
+from app.core.config import settings
 
 
 class UploadService:
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
-    UPLOAD_DIR = Path("uploads")
     ALLOWED_MIME_TYPES = [
         "application/zip",
         "application/x-zip-compressed",
@@ -18,7 +18,8 @@ class UploadService:
     EXECUTABLE_EXTENSIONS = {".exe", ".bat", ".cmd", ".sh", ".ps1", ".msi", ".dll", ".so", ".dylib"}
 
     def __init__(self) -> None:
-        self.UPLOAD_DIR.mkdir(exist_ok=True)
+        self.UPLOAD_DIR = Path(settings.UPLOAD_DIR)
+        self.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     def validate_file(self, file: UploadFile) -> None:
         if file.size is None or file.size == 0:

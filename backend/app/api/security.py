@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-
+from app.core.paths import get_extracted_dir
 from app.schemas.security import SecurityResponse, SecurityIssueSchema, SecuritySummarySchema
 from app.security.security_analyzer import security_analyzer
 from app.services.scanner_service import scanner_service
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/security", tags=["security"])
 
 # Kept for test monkeypatching and filesystem fallback.
-EXTRACTED_DIR = Path("storage/extracted")
+EXTRACTED_DIR = get_extracted_dir()
 
 
 @router.post("/{upload_id}", response_model=SecurityResponse, status_code=200)

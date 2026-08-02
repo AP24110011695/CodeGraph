@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-
+from app.core.paths import get_extracted_dir
 from app.chat.chat_service import ChatService, ChatServiceError
 from app.indexing.index_manager import get_shared_index_manager
 from app.rag.embedding_service import EmbeddingService
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-EXTRACTED_DIR = Path("storage/extracted")
+EXTRACTED_DIR = get_extracted_dir()
 
 # Global instances
 index_manager = get_shared_index_manager()

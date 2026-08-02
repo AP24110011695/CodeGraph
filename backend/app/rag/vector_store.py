@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -245,7 +246,7 @@ class PersistentVectorStore(VectorStore):
             dimension: Embedding dimension (auto-detected if None)
         """
         if storage_path is None:
-            storage_path = Path("storage/vectors")
+            storage_path = Path(settings.VECTOR_STORAGE_PATH) if settings.VECTOR_STORAGE_PATH else Path("storage/vectors")
         
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)

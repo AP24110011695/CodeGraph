@@ -22,7 +22,8 @@ from app.search.search_service import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/search", tags=["search"])
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 
 index_manager = get_shared_index_manager()
 embedding_service = EmbeddingService()

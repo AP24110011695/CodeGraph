@@ -14,8 +14,9 @@ from typing import Any, Callable, Dict
 
 logger = logging.getLogger(__name__)
 
-EXTRACTED_DIR = Path("storage/extracted")
-UPLOADS_DIR = Path("uploads")
+from app.core.paths import get_extracted_dir, get_upload_dir
+EXTRACTED_DIR = get_extracted_dir()
+UPLOADS_DIR = get_upload_dir()
 
 
 def _repo_path(repository_id: str) -> Path:

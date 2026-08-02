@@ -238,8 +238,9 @@ class JobManager:
             ValueError: If repository is not found.
         """
         # Check both possible locations
-        extracted_path = Path("storage/extracted") / repository_id
-        uploads_path = Path("uploads") / repository_id
+        from app.core.paths import get_extracted_dir, get_upload_dir
+        extracted_path = get_extracted_dir() / repository_id
+        uploads_path = get_upload_dir() / repository_id
         
         if not extracted_path.exists() and not uploads_path.exists():
             raise ValueError(f"Repository not found: {repository_id}")

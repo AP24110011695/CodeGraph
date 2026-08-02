@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-
+from app.core.config import settings
 from app.analyzers.architecture_builder import architecture_builder
 from app.parsers.parser_engine import ParserEngine
 from app.schemas.architecture import (
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/architecture", tags=["architecture"])
 
 # Filesystem fallback / test monkeypatch compatibility.
-EXTRACTED_DIR = Path("storage/extracted")
+EXTRACTED_DIR = Path(settings.STORAGE_DIR) / "extracted"
 
 
 @router.get("/{upload_id}", response_model=ArchitectureResponse, status_code=200)

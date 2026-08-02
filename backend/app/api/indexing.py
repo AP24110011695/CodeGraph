@@ -15,7 +15,8 @@ from app.schemas.indexing import IndexResponse
 from storage.repository_store import repository_store
 
 router = APIRouter(prefix="/index", tags=["indexing"])
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 # Shared process-wide manager (SQLite-backed metadata).
 index_manager = get_shared_index_manager()
 

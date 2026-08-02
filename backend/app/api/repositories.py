@@ -22,17 +22,19 @@ router = APIRouter(prefix="/repositories", tags=["repositories"])
 
 def _cleanup_repository_files(upload_id: str, extraction_path: str | None) -> None:
     """Best-effort removal of extracted tree and uploaded zip."""
+    from app.core.paths import get_extracted_dir, get_upload_dir
+    
     if extraction_path:
         path = Path(extraction_path)
         if path.is_dir():
             shutil.rmtree(path, ignore_errors=True)
 
-    for root in (Path("storage/extracted"), Path("uploads")):
+    for root in (get_extracted_dir(), get_upload_dir()):
         candidate = root / upload_id
         if candidate.is_dir():
             shutil.rmtree(candidate, ignore_errors=True)
 
-    for zip_root in (Path("uploads"), Path("storage/uploads")):
+    for zip_root in (get_upload_dir(), Path("storage/uploads")):
         zip_path = zip_root / f"{upload_id}.zip"
         if zip_path.is_file():
             try:

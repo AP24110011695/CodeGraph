@@ -8,6 +8,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from app.core.config import settings
 
 DEFAULT_DB_PATH = Path("storage") / "codegraph.db"
 
@@ -17,6 +18,8 @@ _SessionLocal: sessionmaker[Session] | None = None
 
 def get_db_path() -> Path:
     """Resolve SQLite file path (override with CODEGRAPH_DB_PATH)."""
+    if settings.CODEGRAPH_DB_PATH:
+        return Path(settings.CODEGRAPH_DB_PATH)
     override = os.environ.get("CODEGRAPH_DB_PATH")
     if override:
         return Path(override)

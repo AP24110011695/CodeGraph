@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/parse", tags=["parse"])
 
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 
 
 @router.get("/{upload_id}", response_model=ProjectParsingResult, status_code=200)

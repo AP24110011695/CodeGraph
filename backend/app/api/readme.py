@@ -22,7 +22,8 @@ from app.schemas.readme import ReadmeResponse
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/readme", tags=["readme"])
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 index_manager = get_shared_index_manager()
 
 

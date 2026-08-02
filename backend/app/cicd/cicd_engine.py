@@ -201,7 +201,8 @@ class CICDEngine:
             if repo_info.repository_name == f"{owner}/{repo}" or repo_info.repository_name == repo:
                 # Construct path from upload_id
                 from pathlib import Path
-                extracted_dir = Path("storage/extracted") / repo_info.upload_id
+                from app.core.paths import get_extracted_dir
+                extracted_dir = get_extracted_dir() / repo_info.upload_id
                 if extracted_dir.exists():
                     return str(extracted_dir)
 
@@ -217,7 +218,8 @@ class CICDEngine:
             Repository path or None if not found.
         """
         from pathlib import Path
-        extracted_dir = Path("storage/extracted") / repository_id
+        from app.core.paths import get_extracted_dir
+        extracted_dir = get_extracted_dir() / repository_id
         if extracted_dir.exists():
             return str(extracted_dir)
 

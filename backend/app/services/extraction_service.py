@@ -3,6 +3,7 @@ import shutil
 import zipfile
 from pathlib import Path
 from fastapi import HTTPException
+from app.core.config import settings
 
 class ExtractionService:
     MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB max individual file size
@@ -10,9 +11,9 @@ class ExtractionService:
     MAX_FILES = 10000
 
     def __init__(self) -> None:
-        self.STORAGE_DIR = Path("storage/extracted")
+        self.STORAGE_DIR = Path(settings.STORAGE_DIR) / "extracted"
         self.STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-        self.UPLOAD_DIR = Path("uploads")
+        self.UPLOAD_DIR = Path(settings.UPLOAD_DIR)
 
     def extract(self, upload_id: str, filename: str) -> str:
         zip_path = self.UPLOAD_DIR / filename

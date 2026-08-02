@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/scan", tags=["scan"])
 
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 
 
 @router.post("/{upload_id}", response_model=ScanResponse, status_code=200)

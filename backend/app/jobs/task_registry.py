@@ -45,8 +45,9 @@ def register_analysis_tasks() -> None:
     from app.services.scanner_service import scanner_service
     from app.quality.quality_analyzer import quality_analyzer
     from app.security.security_analyzer import security_analyzer
+    from app.core.paths import get_extracted_dir
 
-    EXTRACTED_DIR = Path("storage/extracted")
+    EXTRACTED_DIR = get_extracted_dir()
     
     # Repository indexing task
     def indexing_handler(repository_id: str, progress_callback: Callable[[str, int], None]) -> dict[str, Any]:

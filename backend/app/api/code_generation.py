@@ -47,7 +47,8 @@ async def generate_code(
         )
 
     # Determine project path from uploads directory
-    project_path = Path("uploads") / upload_id
+    from app.core.paths import get_project_path
+    project_path = get_project_path(upload_id)
     if not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project path not found: {project_path}")
 

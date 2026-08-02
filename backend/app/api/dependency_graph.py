@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dependency-graph", tags=["dependency-graph"])
 
-EXTRACTED_DIR = Path("storage/extracted")
+from app.core.paths import get_extracted_dir
+EXTRACTED_DIR = get_extracted_dir()
 
 
 @router.get("/{upload_id}", response_model=DependencyGraphResponse, status_code=200)
