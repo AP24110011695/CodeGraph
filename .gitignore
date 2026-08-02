@@ -18,7 +18,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Ignore Python lib directories specifically, not frontend/src/lib
+**/__pycache__/lib/
 lib64/
 parts/
 sdist/
