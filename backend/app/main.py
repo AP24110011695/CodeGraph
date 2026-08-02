@@ -98,10 +98,11 @@ app = FastAPI(
 
 # Configure CORS based on environment
 if settings.FRONTEND_URL:
-    # Production: specific frontend URL
+    # Production: specific frontend URL(s) - split by comma for multiple origins
+    allowed_origins = [origin.strip() for origin in settings.FRONTEND_URL.split(',')]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.FRONTEND_URL],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
