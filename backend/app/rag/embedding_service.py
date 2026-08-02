@@ -132,6 +132,10 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
 class SentenceTransformerProvider(EmbeddingProvider):
     """Sentence-transformers provider implementation (local, no API key required)."""
 
+    # Class-level model cache to prevent multiple downloads
+    _model_cache = {}
+    _loading_lock = None
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """Initialize Sentence-transformers provider.
 
@@ -141,16 +145,42 @@ class SentenceTransformerProvider(EmbeddingProvider):
         self.model_name = model_name
         self._model = None
         self._dimension = 384  # all-MiniLM-L6-v2 dimension
+        
+        # Initialize threading lock for model loading
+        if SentenceTransformerProvider._loading_lock is None:
+            import threading
+            SentenceTransformerProvider._loading_lock = threading.Lock()
 
     def _get_model(self):
-        """Lazy load the model."""
-        if self._model is None:
+        """Lazy load the model with singleton pattern."""
+        if self._model is not None:
+            return self._model
+        
+        # Check if model is already cached
+        if self.model_name in SentenceTransformerProvider._model_cache:
+            self._model = SentenceTransformerProvider._model_cache[self.model_name]
+            return self._model
+        
+        # Load model with thread safety
+        with SentenceTransformerProvider._loading_lock:
+            # Double-check after acquiring lock
+            if self.model_name in SentenceTransformerProvider._model_cache:
+                self._model = SentenceTransformerProvider._model_cache[self.model_name]
+                return self._model
+            
             try:
                 from sentence_transformers import SentenceTransformer
-                self._model = SentenceTransformer(self.model_name)
+                logger.info("Loading SentenceTransformer model: %s", self.model_name)
+                model = SentenceTransformer(self.model_name)
+                SentenceTransformerProvider._model_cache[self.model_name] = model
+                self._model = model
+                logger.info("Successfully loaded SentenceTransformer model")
+                return model
             except ImportError:
                 raise ImportError("sentence-transformers package is required for SentenceTransformerProvider")
-        return self._model
+            except Exception as e:
+                logger.error("Failed to load SentenceTransformer model: %s", e)
+                raise
 
     def embed(self, text: str) -> list[float]:
         """Generate embedding for a single text."""

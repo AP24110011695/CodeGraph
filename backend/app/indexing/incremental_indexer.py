@@ -45,11 +45,15 @@ class IncrementalIndexer:
         Returns:
             IncrementalResult with counts of added, modified, deleted, unchanged files.
         """
+        logger.info("INCREMENTAL_INDEXER: Starting indexing for %s (force=%s)", upload_id, force)
+        
         scan_result = self.pipeline.scanner.scan(project_path)
         
         # Exclude snapshot file from being indexed
         scan_result.files = [f for f in scan_result.files if f.name != ".codegraph_snapshot.json"]
         scan_result.total_files = len(scan_result.files)
+        
+        logger.info("INCREMENTAL_INDEXER: Scanned %d files for %s", scan_result.total_files, upload_id)
         
         if not scan_result.files:
             from app.indexing.indexing_pipeline import IndexingPipelineError
@@ -58,7 +62,7 @@ class IncrementalIndexer:
         new_snapshot = RepositorySnapshot.compute(project_path, upload_id, scan_result)
         
         if force:
-            logger.info(f"Force rebuild requested for {upload_id}")
+            logger.info("INCREMENTAL_INDEXER: Force rebuild requested for %s", upload_id)
             old_snapshot = None
             self.index_manager.delete_index(upload_id, keep_record=True)
             new_snapshot.delete(project_path)
@@ -73,6 +77,7 @@ class IncrementalIndexer:
         if not old_snapshot:
             # First time indexing or forced rebuild
             added_files = [f for f in scan_result.files if f.language != "Unknown"]
+            logger.info("INCREMENTAL_INDEXER: First-time indexing - %d files to add", len(added_files))
         else:
             # Compare snapshots
             old_files = old_snapshot.files
@@ -93,14 +98,19 @@ class IncrementalIndexer:
             for path in old_files:
                 if path not in new_files:
                     deleted_paths.append(path)
+            
+            logger.info("INCREMENTAL_INDEXER: File changes - added: %d, modified: %d, deleted: %d, unchanged: %d",
+                       len(added_files), len(modified_files), len(deleted_paths), unchanged_count)
 
         # 1. Delete vectors for DELETED and MODIFIED files
         paths_to_delete = deleted_paths + [f.path for f in modified_files]
         if paths_to_delete:
+            logger.info("INCREMENTAL_INDEXER: Deleting vectors for %d files", len(paths_to_delete))
             self.index_manager.delete_file_vectors(upload_id, paths_to_delete)
 
         # 2. Index NEW and MODIFIED files
         files_to_index = added_files + modified_files
+        logger.info("INCREMENTAL_INDEXER: Indexing %d files", len(files_to_index))
         
         # We need to run the pipeline on the subset of files
         if files_to_index:
@@ -135,7 +145,7 @@ class IncrementalIndexer:
             total_chunks = 0
             total_embeddings = 0
 
-        return IncrementalResult(
+        result = IncrementalResult(
             repository_name=repository_name,
             frameworks=frameworks,
             languages=languages,
@@ -147,3 +157,8 @@ class IncrementalIndexer:
             deleted=len(deleted_paths),
             unchanged=unchanged_count,
         )
+        
+        logger.info("INCREMENTAL_INDEXER: Indexing complete for %s - chunks: %d, embeddings: %d, added: %d, modified: %d, deleted: %d",
+                   upload_id, result.total_chunks, result.total_embeddings, result.added, result.modified, result.deleted)
+        
+        return result

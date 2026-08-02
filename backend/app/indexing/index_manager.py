@@ -10,7 +10,7 @@ from app.indexing.indexing_models import IndexStatus, RepositoryIndex
 from app.indexing.indexing_pipeline import IndexingPipeline, IndexingPipelineError
 from app.rag.chunker import Chunker
 from app.rag.embedding_service import EmbeddingService
-from app.rag.vector_store import InMemoryVectorStore, VectorStore
+from app.rag.vector_store import PersistentVectorStore, VectorStore
 from app.services.framework_detector import detector_service
 from app.services.scanner_service import scanner_service
 
@@ -39,7 +39,7 @@ class IndexManager:
         pipeline: IndexingPipeline | None = None,
         repository_store: RepositoryStore | None = None,
     ) -> None:
-        self.vector_store = vector_store or InMemoryVectorStore()
+        self.vector_store = vector_store or PersistentVectorStore()
         self.pipeline = pipeline or IndexingPipeline(
             scanner=scanner_service,
             detector=detector_service,

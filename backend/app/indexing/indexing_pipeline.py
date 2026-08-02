@@ -37,18 +37,29 @@ class IndexingPipeline:
 
     def index(self, project_path: Path, upload_id: str) -> dict[str, object]:
         """Index supported readable files, preserving progress through local failures."""
+        logger.info("INDEXING_PIPELINE: Starting indexing for %s at %s", upload_id, project_path)
+        
         scan_result = self.scanner.scan(project_path)
         if not scan_result.files:
             raise IndexingPipelineError("Repository is empty")
+
+        logger.info("INDEXING_PIPELINE: Scanned %d files", scan_result.total_files)
+        logger.info("INDEXING_PIPELINE: Languages detected: %s", dict(scan_result.languages))
 
         detection = self.detector.detect(project_path, scan_result)
         parsing = ParserEngine.parse_project(project_path, scan_result)
         parsed_by_path = {result.path: result for result in parsing.files}
 
+        logger.info("INDEXING_PIPELINE: Parsed %d files successfully", len(parsed_by_path))
+
         chunks: list[Chunk] = []
         seen_chunk_ids: set[str] = set()
+        indexed_files = 0
+        skipped_files = 0
+        
         for file_info in scan_result.files:
             if file_info.language == "Unknown":
+                skipped_files += 1
                 continue
             try:
                 file_chunks = self.chunker.chunk_file(
@@ -62,19 +73,37 @@ class IndexingPipeline:
                     if chunk.chunk_id not in seen_chunk_ids and chunk.content.strip():
                         seen_chunk_ids.add(chunk.chunk_id)
                         chunks.append(chunk)
+                indexed_files += 1
             except Exception:
                 logger.warning("Skipping file that could not be chunked: %s", file_info.path, exc_info=True)
+                skipped_files += 1
+
+        logger.info("INDEXING_PIPELINE: Generated %d chunks from %d files (skipped %d)", len(chunks), indexed_files, skipped_files)
 
         if not chunks:
             raise IndexingPipelineError("Repository contains no supported indexable files")
 
         documents = self._embed_documents(chunks)
+        logger.info("INDEXING_PIPELINE: Generated %d embeddings from %d chunks", len(documents), len(chunks))
+        
         if not documents:
             raise IndexingPipelineError("No embeddings could be generated for repository")
 
         self.vector_store.add(documents)
+        logger.info("INDEXING_PIPELINE: Stored %d vectors in vector store", len(documents))
+        
+        # Trigger save for persistent vector stores
+        if hasattr(self.vector_store, 'save'):
+            self.vector_store.save()
+        
+        # Trigger save for persistent vector stores
+        if hasattr(self.vector_store, '_save'):
+            self.vector_store._save()
+        
         frameworks = [match.name for match in detection.frameworks + detection.backend]
-        return {
+        logger.info("INDEXING_PIPELINE: Frameworks detected: %s", frameworks)
+        
+        result = {
             "repository_name": scan_result.project_name,
             "frameworks": list(dict.fromkeys(frameworks)),
             "languages": dict(scan_result.languages),
@@ -82,8 +111,15 @@ class IndexingPipeline:
             "chunks": len(documents),
             "embeddings": len(documents),
         }
+        
+        logger.info("INDEXING_PIPELINE: Indexing complete for %s - chunks: %d, embeddings: %d", 
+                   upload_id, result["chunks"], result["embeddings"])
+        
+        return result
 
     def index_files(self, project_path: Path, upload_id: str, original_scan: object, files_to_index: list) -> dict[str, object]:
+        logger.info("INDEXING_PIPELINE: Indexing %d files for %s", len(files_to_index), upload_id)
+        
         import copy
         subset_scan = copy.copy(original_scan)
         subset_scan.files = files_to_index
@@ -94,6 +130,8 @@ class IndexingPipeline:
         
         chunks: list[Chunk] = []
         seen_chunk_ids: set[str] = set()
+        indexed_files = 0
+        
         for file_info in files_to_index:
             if file_info.language == "Unknown":
                 continue
@@ -109,11 +147,15 @@ class IndexingPipeline:
                     if chunk.chunk_id not in seen_chunk_ids and chunk.content.strip():
                         seen_chunk_ids.add(chunk.chunk_id)
                         chunks.append(chunk)
+                indexed_files += 1
             except Exception:
                 logger.warning("Skipping file that could not be chunked: %s", file_info.path, exc_info=True)
                 
+        logger.info("INDEXING_PIPELINE: Generated %d chunks from %d files", len(chunks), indexed_files)
+                
         if not chunks:
             frameworks = [match.name for match in detection.frameworks + detection.backend]
+            logger.info("INDEXING_PIPELINE: No chunks generated, returning empty result")
             return {
                 "repository_name": original_scan.project_name,
                 "frameworks": list(dict.fromkeys(frameworks)),
@@ -124,11 +166,18 @@ class IndexingPipeline:
             }
 
         documents = self._embed_documents(chunks)
+        logger.info("INDEXING_PIPELINE: Generated %d embeddings from %d chunks", len(documents), len(chunks))
+        
         if documents:
             self.vector_store.add(documents)
+            logger.info("INDEXING_PIPELINE: Stored %d vectors in vector store", len(documents))
+            
+            # Trigger save for persistent vector stores
+            if hasattr(self.vector_store, 'save'):
+                self.vector_store.save()
 
         frameworks = [match.name for match in detection.frameworks + detection.backend]
-        return {
+        result = {
             "repository_name": original_scan.project_name,
             "frameworks": list(dict.fromkeys(frameworks)),
             "languages": dict(original_scan.languages),
@@ -136,6 +185,11 @@ class IndexingPipeline:
             "chunks": len(documents),
             "embeddings": len(documents),
         }
+        
+        logger.info("INDEXING_PIPELINE: File indexing complete for %s - chunks: %d, embeddings: %d", 
+                   upload_id, result["chunks"], result["embeddings"])
+        
+        return result
 
     def _embed_documents(self, chunks: list[Chunk]) -> list[VectorDocument]:
         """Embed in a batch; fall back per chunk so one bad input does not stop a run."""

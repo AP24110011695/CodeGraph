@@ -5,6 +5,8 @@ Designed for extensibility - new providers can be added easily.
 """
 
 import logging
+import os
+import time
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -89,7 +91,7 @@ class OpenAIProvider(LLMProvider):
 
     def validate_config(self) -> bool:
         """Validate OpenAI configuration."""
-        return self.api_key is not None and len(self.api_key) > 0
+        return self.api_key is not None and len(self.api_key) > 0 and self.api_key.strip() != ""
 
 
 class GeminiProvider(LLMProvider):
@@ -135,7 +137,7 @@ class GeminiProvider(LLMProvider):
 
     def validate_config(self) -> bool:
         """Validate Gemini configuration."""
-        return self.api_key is not None and len(self.api_key) > 0
+        return self.api_key is not None and len(self.api_key) > 0 and self.api_key.strip() != ""
 
 
 class AnthropicProvider(LLMProvider):
@@ -184,7 +186,128 @@ class AnthropicProvider(LLMProvider):
 
     def validate_config(self) -> bool:
         """Validate Anthropic configuration."""
-        return self.api_key is not None and len(self.api_key) > 0
+        return self.api_key is not None and len(self.api_key) > 0 and self.api_key.strip() != ""
+
+
+class GroqProvider(LLMProvider):
+    """Groq API provider implementation."""
+
+    def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile"):
+        """Initialize Groq provider.
+
+        Args:
+            api_key: Groq API key (defaults to environment variable or settings)
+            model: Model name to use
+        """
+        self.api_key = api_key or os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", None)
+        self.model = model
+        self._client = None
+        self.timeout = 30.0  # Default timeout in seconds
+
+    def _get_client(self):
+        """Lazy load the Groq client."""
+        if self._client is None:
+            try:
+                from groq import Groq as GroqClient
+                self._client = GroqClient(api_key=self.api_key)
+            except ImportError:
+                raise ImportError("groq package is required for GroqProvider. Install with: pip install groq")
+        return self._client
+
+    def generate(self, prompt: str, **kwargs: Any) -> str:
+        """Generate response using Groq API."""
+        start_time = time.time()
+        logger.info("GroqProvider: Request started", extra={
+            "provider": "GroqProvider",
+            "model": self.model,
+            "prompt_length": len(prompt)
+        })
+
+        try:
+            client = self._get_client()
+            
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert software architect. Provide clear, concise, and accurate architecture explanations.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=kwargs.get("temperature", 0.7),
+                max_tokens=kwargs.get("max_tokens", 2000),
+                timeout=self.timeout,
+            )
+
+            latency = time.time() - start_time
+            text = response.choices[0].message.content
+            
+            # Log token usage if available
+            token_info = {}
+            if hasattr(response, 'usage') and response.usage:
+                token_info = {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                }
+            
+            logger.info("GroqProvider: Request completed", extra={
+                "provider": "GroqProvider",
+                "model": self.model,
+                "latency_seconds": round(latency, 3),
+                **token_info
+            })
+
+            return text
+
+        except ImportError as e:
+            logger.error("GroqProvider: Import error", extra={
+                "provider": "GroqProvider",
+                "error": str(e)
+            })
+            raise LLMError(f"Groq package not installed: {str(e)}")
+        
+        except Exception as e:
+            latency = time.time() - start_time
+            error_msg = str(e)
+            
+            # Categorize error types
+            error_type = "unknown"
+            if "authentication" in error_msg.lower() or "unauthorized" in error_msg.lower() or "401" in error_msg:
+                error_type = "authentication"
+            elif "rate limit" in error_msg.lower() or "429" in error_msg:
+                error_type = "rate_limit"
+            elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                error_type = "timeout"
+            elif "connection" in error_msg.lower() or "network" in error_msg.lower():
+                error_type = "network"
+            
+            logger.error("GroqProvider: Request failed", extra={
+                "provider": "GroqProvider",
+                "model": self.model,
+                "latency_seconds": round(latency, 3),
+                "error_type": error_type,
+                "error": error_msg
+            })
+            
+            # Provide meaningful error messages
+            if error_type == "authentication":
+                raise LLMError("Invalid Groq API key. Please check your GROQ_API_KEY environment variable.")
+            elif error_type == "rate_limit":
+                raise LLMError("Groq API rate limit exceeded. Please wait and try again.")
+            elif error_type == "timeout":
+                raise LLMError(f"Groq API request timed out after {self.timeout} seconds.")
+            elif error_type == "network":
+                raise LLMError("Network error connecting to Groq API. Please check your connection.")
+            else:
+                raise LLMError(f"Groq API error: {error_msg}")
+
+    def validate_config(self) -> bool:
+        """Validate Groq configuration."""
+        result = self.api_key is not None and len(self.api_key) > 0 and self.api_key.strip() != ""
+        logger.info("PROVIDER_DEBUG: GroqProvider.validate_config() returned: %s", result)
+        return result
 
 
 class LLMError(Exception):

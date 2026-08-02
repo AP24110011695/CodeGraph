@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = Field(default=None, description="OpenAI API key")
     ANTHROPIC_API_KEY: str | None = Field(default=None, description="Anthropic API key")
     GEMINI_API_KEY: str | None = Field(default=None, description="Google Gemini API key")
+    GROQ_API_KEY: str | None = Field(default=None, description="Groq API key")
 
     # Safety defaults for RC-1
     EXPOSE_ERROR_DETAILS: bool = Field(

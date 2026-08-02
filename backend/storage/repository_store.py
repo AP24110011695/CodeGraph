@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,8 @@ from app.core.paths import resolve_repository_path
 from app.indexing.indexing_models import IndexStatus, RepositoryIndex
 from storage.database import get_session_factory, init_db
 from storage.models import RepositoryRow
+
+logger = logging.getLogger(__name__)
 
 
 def _utcnow() -> datetime:
@@ -45,6 +48,11 @@ class RepositoryStore:
         """Create or update a repository row after upload/extract."""
         path = str(Path(extraction_path))
         display_name = (name or "").strip()
+        
+        # Log registration details
+        logger.info("REPOSITORY_STORE: Registering upload - upload_id: %s, repository_id: %s, name: %s, path: %s",
+                   upload_id, repository_id or upload_id, display_name or upload_id, path)
+        
         with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
             if row is None:
@@ -59,6 +67,7 @@ class RepositoryStore:
                     updated_at=_utcnow(),
                 )
                 session.add(row)
+                logger.info("REPOSITORY_STORE: Created new repository row for %s", upload_id)
             else:
                 row.extraction_path = path
                 row.repository_id = repository_id or row.repository_id or upload_id
@@ -66,7 +75,9 @@ class RepositoryStore:
                 if display_name:
                     row.repository_name = display_name
                 row.updated_at = _utcnow()
+                logger.info("REPOSITORY_STORE: Updated existing repository row for %s", upload_id)
             session.commit()
+            logger.info("REPOSITORY_STORE: Repository registration committed for %s", upload_id)
 
     def list_repositories(self) -> list[dict[str, Any]]:
         """Return all registered repositories, newest first."""

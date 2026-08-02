@@ -18,12 +18,19 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
     project_path = extraction_service.extract(upload_id, filename)
 
     display_name = Path(file.filename or "repository").stem or upload_id
+    
+    # Register repository with proper metadata
     repository_store.register_upload(
         upload_id,
         project_path,
         repository_id=upload_id,
         name=display_name,
     )
+    
+    # Log repository registration
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("UPLOAD: Registered repository %s (%s) at %s", display_name, upload_id, project_path)
 
     # Initialize state machine
     RepositoryStateMachine(upload_id)
