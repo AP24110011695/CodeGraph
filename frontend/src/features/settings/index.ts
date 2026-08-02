@@ -1,2 +1,2 @@
-/** Feature scaffold — implementation in a later phase. */
+/** Feature scaffold - implementation in a later phase. */
 export {};
