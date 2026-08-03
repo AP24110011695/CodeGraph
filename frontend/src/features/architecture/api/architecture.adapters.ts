@@ -83,7 +83,6 @@ import { computeElkLayout, type ElkNode, type ElkEdge } from '@/lib/elk-layout';
 export async function layoutArchitectureNodes(
   modules: ArchitectureModuleModel[],
   edges: ArchitectureEdgeModel[],
-  _layers: string[]
 ): Promise<Record<string, { x: number; y: number }>> {
   const elkNodes: ElkNode[] = modules.map((mod) => ({
     id: mod.id,

@@ -78,9 +78,7 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
     return (
       <div className="min-h-screen bg-bg-base">
         <NavigationSection 
-          repoId={repoId} 
           onNavigate={handleNavigation}
-          status="loading"
         />
         <div className="mx-auto grid w-full max-w-5xl gap-6 p-6 md:grid-cols-2">
           <Skeleton className="h-64 w-full" />
@@ -93,9 +91,7 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
   return (
     <div className="min-h-screen bg-bg-base">
       <NavigationSection 
-        repoId={repoId} 
         onNavigate={handleNavigation}
-        status={snapshot.clientStatus}
       />
       
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 page-fade-in">
@@ -156,13 +152,9 @@ export function IndexingPanel({ repoId }: IndexingPanelProps) {
 }
 
 function NavigationSection({ 
-  repoId, 
-  onNavigate, 
-  status 
+  onNavigate 
 }: { 
-  repoId: string; 
   onNavigate: (path: string) => void;
-  status: 'loading' | 'success' | 'error' | 'processing';
 }) {
   return (
     <div className="sticky top-0 z-50 border-b border-border-base bg-bg-base/95 backdrop-blur-sm">

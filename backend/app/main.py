@@ -96,26 +96,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS based on environment
-if settings.FRONTEND_URL:
-    # Production: specific frontend URL(s) - split by comma for multiple origins
-    allowed_origins = [origin.strip() for origin in settings.FRONTEND_URL.split(',')]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    # Development: allow all origins (same as Vite proxy behavior)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Configure CORS for local development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
@@ -209,5 +197,4 @@ async def health() -> dict[str, str]:
     return {
         "status": "healthy",
         "version": settings.APP_VERSION,
-        "environment": settings.APP_ENV,
     }

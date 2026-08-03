@@ -17,7 +17,7 @@ import {
   GraphGlassToolbar,
   graphToolbarButtonClass,
 } from '@/features/_shared/components/graph';
-import { adaptiveFitOptions, nodeCenter, smartFitView } from '@/lib/graph-camera';
+import { nodeCenter, smartFitView } from '@/lib/graph-camera';
 import { useDependencyGraphStore } from '../store/dependency-graph.store';
 import type { GraphNodeModel } from '../api/dependency-graph.types';
 import { cn } from '@/lib/cn';
@@ -219,11 +219,14 @@ export function GraphToolbar({
     </GraphGlassToolbar>
   );
 }
+ 
 
+/* eslint-disable react-refresh/only-export-components */
 /** Live zoom percentage for stats bar. */
 export function useGraphZoomPercent(): number {
   const zoom = useStore((s) => s.transform[2]);
   return Math.round(zoom * 100);
 }
+/* eslint-enable react-refresh/only-export-components */
 
-export { adaptiveFitOptions };
+

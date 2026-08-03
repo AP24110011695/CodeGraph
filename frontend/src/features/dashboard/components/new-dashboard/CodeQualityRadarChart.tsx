@@ -40,7 +40,7 @@ export function CodeQualityRadarChart({ scores, loading = false }: CodeQualityRa
     { subject: 'Documentation', value: scores.documentation ?? 0, fullMark: 100 },
   ];
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { subject: string; value: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

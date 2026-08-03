@@ -43,7 +43,7 @@ export function RepositoryCompositionChart({ data, loading = false }: Repository
     color: COMPOSITION_COLORS[item.name] || '#6B7280',
   }));
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

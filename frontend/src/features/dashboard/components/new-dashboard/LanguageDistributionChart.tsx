@@ -59,7 +59,7 @@ export function LanguageDistributionChart({ data, loading = false }: LanguageDis
 
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number } }> }) => {
     if (active && payload && payload.length) {
       const itemData = payload[0].payload;
       const percentage = ((itemData.value / total) * 100).toFixed(1);
