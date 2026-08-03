@@ -14,5 +14,10 @@
     "FRONTEND_URL": "https://code-graph-alpha.vercel.app",
     "LOG_LEVEL": "INFO",
     "PYTHONUNBUFFERED": "1"
+  },
+  "volumes": {
+    "data": {
+      "mountPath": "/app/backend/storage"
+    }
   }
 }
