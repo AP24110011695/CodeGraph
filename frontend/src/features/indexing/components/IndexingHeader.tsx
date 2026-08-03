@@ -5,7 +5,7 @@ interface IndexingHeaderProps {
   repositoryName: string;
   progress: number;
   currentStage: string;
-  status: 'loading' | 'success' | 'error';
+  status: 'loading' | 'success' | 'error' | 'processing';
 }
 
 export function IndexingHeader({
@@ -15,7 +15,7 @@ export function IndexingHeader({
   status,
 }: IndexingHeaderProps) {
   const badgeVariant =
-    status === 'success' ? 'success' : status === 'error' ? 'danger' : 'accent';
+    status === 'success' ? 'success' : status === 'error' ? 'danger' : status === 'processing' ? 'accent' : 'secondary';
 
   return (
     <div className="rounded-2xl border border-border-base bg-[#181614] p-6 shadow-xl space-y-4">

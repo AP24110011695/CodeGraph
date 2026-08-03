@@ -133,6 +133,22 @@ export function adaptIndexingSnapshot(params: {
     repositoryState?.state === 'FAILED';
   const isReady = index?.status === 'READY' || repositoryState?.state === 'READY';
 
+  // Build detailed failure reason
+  let failureReason: string | null = null;
+  if (failed) {
+    if (createErrorMessage) {
+      failureReason = createErrorMessage;
+    } else if (repositoryState?.failure_reason) {
+      failureReason = repositoryState.failure_reason;
+    } else if (index?.status === 'FAILED') {
+      failureReason = 'Indexing failed';
+    } else if (!repositoryState && !index) {
+      failureReason = 'Repository not found - it may have been deleted or the upload failed';
+    } else if (repositoryState?.state === 'FAILED') {
+      failureReason = `Indexing failed: ${repositoryState.state}`;
+    }
+  }
+
   return {
     uploadId,
     index,
@@ -142,10 +158,7 @@ export function adaptIndexingSnapshot(params: {
     progress: resolveProgress(index, repositoryState, createInFlight),
     currentStage: resolveCurrentStage(index, repositoryState, createInFlight),
     clientStatus: failed ? 'error' : isReady ? 'success' : 'loading',
-    failureReason:
-      createErrorMessage ??
-      repositoryState?.failure_reason ??
-      (index?.status === 'FAILED' ? 'Indexing failed' : null),
+    failureReason,
     isReady,
   };
 }

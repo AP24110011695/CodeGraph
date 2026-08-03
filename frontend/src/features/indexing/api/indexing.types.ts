@@ -75,7 +75,7 @@ export interface IndexingSnapshot {
   events: IndexingEvent[];
   progress: number;
   currentStage: string;
-  clientStatus: 'loading' | 'success' | 'error';
+  clientStatus: 'loading' | 'success' | 'error' | 'processing';
   failureReason: string | null;
   isReady: boolean;
 }
