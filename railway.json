@@ -12,6 +12,7 @@
   "variables": {
     "APP_ENV": "production",
     "FRONTEND_URL": "https://code-graph-alpha.vercel.app",
-    "LOG_LEVEL": "INFO"
+    "LOG_LEVEL": "INFO",
+    "PYTHONUNBUFFERED": "1"
   }
 }
