@@ -11,6 +11,7 @@
   },
   "variables": {
     "APP_ENV": "production",
-    "FRONTEND_URL": "https://code-graph-alpha.vercel.app"
+    "FRONTEND_URL": "https://code-graph-alpha.vercel.app",
+    "LOG_LEVEL": "INFO"
   }
 }
