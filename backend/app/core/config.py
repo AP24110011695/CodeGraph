@@ -6,7 +6,7 @@ from pydantic import Field, model_validator
 class Settings(BaseSettings):
     APP_NAME: str = Field(default="CodeGraph", description="Application name")
     APP_VERSION: str = Field(default="1.0.0-rc.1", description="Application version")
-    APP_ENV: str = Field(default="development", description="Environment")
+    APP_ENV: str = Field(default_factory=lambda: os.getenv("APP_ENV", "development"), description="Environment")
     HOST: str = Field(default="127.0.0.1", description="Server host")
     
     # Railway sets PORT via environment variable
