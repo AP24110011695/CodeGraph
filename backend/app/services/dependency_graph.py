@@ -8,9 +8,11 @@ import logging
 import posixpath
 import re
 from dataclasses import dataclass, field
+from typing import Any
 from pathlib import Path
 
 from app.services.scanner_service import ScanResult
+from app.cache.analysis_cache import memoize_by_path
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +70,7 @@ class GraphResult:
 class DependencyGraphBuilder:
     """Builds an internal dependency graph using deterministic rule-based analysis."""
 
+    @memoize_by_path(ttl_seconds=300)
     def build(self, root_path: Path, scan_result: ScanResult) -> GraphResult:
         """Parse source files to extract relationships and return a GraphResult."""
         root = root_path.resolve()

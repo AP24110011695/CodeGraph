@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { isAPIError } from '@/core/api/errors';
 import { useUploadMutation } from '../api/upload.queries';
 import { validateZipFile } from '../api/upload.types';
+import { beginIndexingFlow } from '@/core/navigation/flow-session';
 
 export function useUpload() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export function useUpload() {
           onProgress: setProgress,
         });
         setProgress(100);
+        beginIndexingFlow(result.upload_id);
         navigate(`/indexing/${result.upload_id}`);
       } catch (error) {
         const message = isAPIError(error)

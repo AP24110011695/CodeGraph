@@ -53,15 +53,19 @@ export function DashboardRouteGuard({ children }: DashboardRouteGuardProps) {
   }, [emptyCatalog, missingFromCatalog, clearRepository]);
 
   if (!repoId) {
-    return <Navigate to="/upload" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (emptyCatalog || missingFromCatalog) {
-    return <Navigate to="/upload" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (match && !isRepositoryReady(match.status)) {
     return <Navigate to={`/indexing/${repoId}`} replace />;
+  }
+
+  if (match && isRepositoryReady(match.status)) {
+    return <>{children}</>;
   }
 
   if (!ready && listQuery.isSuccess) {

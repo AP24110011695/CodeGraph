@@ -18,9 +18,20 @@ interface ArchitectureSummaryCardProps {
   layers?: string[];
   stats?: ArchitectureStats;
   loading?: boolean;
+  error?: boolean;
 }
 
-export function ArchitectureSummaryCard({ summary, layers, stats, loading = false }: ArchitectureSummaryCardProps) {
+export function ArchitectureSummaryCard({ summary, layers, stats, loading = false, error = false }: ArchitectureSummaryCardProps) {
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-danger/20 bg-danger/5 backdrop-blur-sm p-5 shadow-sm min-h-[200px] flex flex-col items-center justify-center">
+        <Building2 className="h-8 w-8 text-danger mb-3" />
+        <p className="text-sm font-medium text-danger">Architecture Analysis Failed</p>
+        <p className="text-xs text-danger/70 mt-1">Unable to load architecture data</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border-base bg-bg-elevated/50 backdrop-blur-sm p-5 shadow-sm">

@@ -15,6 +15,7 @@ interface RiskSummaryPanelProps {
   overallScore?: number | null;
   overallLevel?: string | null;
   loading?: boolean;
+  error?: boolean;
 }
 
 const RISK_CATEGORIES: Record<string, { icon: LucideIcon; color: string }> = {
@@ -25,7 +26,17 @@ const RISK_CATEGORIES: Record<string, { icon: LucideIcon; color: string }> = {
   'Broken Imports': { icon: XCircle, color: 'text-danger' },
 };
 
-export function RiskSummaryPanel({ risks, overallScore, overallLevel, loading = false }: RiskSummaryPanelProps) {
+export function RiskSummaryPanel({ risks, overallScore, overallLevel, loading = false, error = false }: RiskSummaryPanelProps) {
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-danger/20 bg-danger/5 backdrop-blur-sm p-5 shadow-sm min-h-[200px] flex flex-col items-center justify-center">
+        <AlertTriangle className="h-8 w-8 text-danger mb-3" />
+        <p className="text-sm font-medium text-danger">Risk Analysis Failed</p>
+        <p className="text-xs text-danger/70 mt-1">Unable to load repository risks</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border-base bg-bg-elevated/50 backdrop-blur-sm p-5 shadow-sm">

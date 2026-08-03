@@ -4,6 +4,7 @@ import { AuthGuard } from '@/core/auth/AuthGuard';
 import { DashboardRouteGuard } from '@/core/auth/RouteGuard';
 import DashboardLayout from '@/pages/dashboard/DashboardLayout';
 import { RouteFallback } from './RouteFallback';
+import { IndexingRouteGuard, UploadRouteGuard } from '@/core/navigation/FlowRouteGuards';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const UploadPage = lazy(() => import('@/pages/UploadPage'));
@@ -34,11 +35,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/upload',
-    element: <AuthGuard>{withSuspense(<UploadPage />)}</AuthGuard>,
+    element: <AuthGuard><UploadRouteGuard>{withSuspense(<UploadPage />)}</UploadRouteGuard></AuthGuard>,
   },
   {
     path: '/indexing/:repoId',
-    element: <AuthGuard>{withSuspense(<IndexingPage />)}</AuthGuard>,
+    element: <AuthGuard><IndexingRouteGuard>{withSuspense(<IndexingPage />)}</IndexingRouteGuard></AuthGuard>,
   },
   {
     path: '/dashboard/:repoId',

@@ -1,6 +1,7 @@
 """API route for framework detection on extracted repositories."""
 
 import logging
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -46,7 +47,7 @@ async def detect_frameworks(upload_id: str) -> FrameworkDetectionResponse:
         )
 
     try:
-        scan_result = scanner_service.scan(project_path)
+        scan_result = await asyncio.to_thread(scanner_service.scan, project_path)
     except PermissionError:
         raise HTTPException(
             status_code=403,
@@ -54,7 +55,7 @@ async def detect_frameworks(upload_id: str) -> FrameworkDetectionResponse:
         )
 
     try:
-        detection_result = detector_service.detect(project_path, scan_result)
+        detection_result = await asyncio.to_thread(detector_service.detect, project_path, scan_result)
     except Exception as e:
         logger.exception("Error detecting frameworks for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during detection")

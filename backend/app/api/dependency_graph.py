@@ -1,6 +1,7 @@
 """API route for building internal dependency graphs."""
 
 import logging
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -48,7 +49,7 @@ async def build_dependency_graph(upload_id: str) -> DependencyGraphResponse:
         )
 
     try:
-        scan_result = scanner_service.scan(project_path)
+        scan_result = await asyncio.to_thread(scanner_service.scan, project_path)
     except PermissionError:
         raise HTTPException(
             status_code=403,
@@ -56,7 +57,7 @@ async def build_dependency_graph(upload_id: str) -> DependencyGraphResponse:
         )
 
     try:
-        graph_result = graph_builder.build(project_path, scan_result)
+        graph_result = await asyncio.to_thread(graph_builder.build, project_path, scan_result)
     except Exception as e:
         logger.exception("Error building dependency graph for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during graph build")

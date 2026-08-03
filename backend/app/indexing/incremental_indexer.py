@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.indexing.repository_snapshot import RepositorySnapshot
 from app.services.scanner_service import ScanResult, FileInfo
+from app.cache.analysis_cache import clear_analysis_cache
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,9 @@ class IncrementalIndexer:
         logger.info("INCREMENTAL_INDEXER: Starting indexing for %s (force=%s)", upload_id, force)
         
         try:
+            logger.info("INCREMENTAL_INDEXER: Step 0 - Clearing analysis cache")
+            clear_analysis_cache(project_path)
+            
             logger.info("INCREMENTAL_INDEXER: Step 1 - Scanning project")
             scan_result = self.pipeline.scanner.scan(project_path)
             

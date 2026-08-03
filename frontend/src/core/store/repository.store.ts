@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 /** Client-facing indexing lifecycle used by route guards and UI. */
 export type IndexingStatus =
@@ -123,7 +122,6 @@ function readinessFromStatus(status: string | undefined, readyFlag?: boolean) {
 }
 
 export const useRepositoryStore = create<RepositoryState>()(
-  persist(
     (set) => ({
       activeRepositoryId: null,
       activeRepository: null,
@@ -214,19 +212,5 @@ export const useRepositoryStore = create<RepositoryState>()(
           currentStage: null,
           failureReason: null,
         }),
-    }),
-    {
-      name: 'codegraph-repository',
-      partialize: (state) => ({
-        activeRepositoryId: state.activeRepositoryId,
-        activeRepository: state.activeRepository,
-        indexingStatus: state.indexingStatus,
-        backendState: state.backendState,
-        indexStatus: state.indexStatus,
-        progress: state.progress,
-        currentStage: state.currentStage,
-        failureReason: state.failureReason,
-      }),
-    }
-  )
+    })
 );

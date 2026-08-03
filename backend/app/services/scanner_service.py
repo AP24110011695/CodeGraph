@@ -3,6 +3,8 @@
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Iterator
+from app.cache.analysis_cache import memoize_by_path
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +122,7 @@ class RepositoryScanner:
     def __init__(self, ignored_dirs: frozenset[str] | None = None) -> None:
         self._ignored_dirs = ignored_dirs if ignored_dirs is not None else IGNORED_DIRECTORIES
 
+    @memoize_by_path(ttl_seconds=300)
     def scan(self, root_path: Path) -> ScanResult:
         """Scan the directory tree rooted at root_path.
 

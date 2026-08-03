@@ -1,6 +1,7 @@
 """API route for architecture analysis on extracted repositories."""
 
 import logging
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -53,7 +54,7 @@ async def analyze_architecture(upload_id: str) -> ArchitectureResponse:
         )
 
     try:
-        scan_result = scanner_service.scan(project_path)
+        scan_result = await asyncio.to_thread(scanner_service.scan, project_path)
     except PermissionError:
         raise HTTPException(
             status_code=403,
@@ -61,26 +62,26 @@ async def analyze_architecture(upload_id: str) -> ArchitectureResponse:
         )
 
     try:
-        detection_result = detector_service.detect(project_path, scan_result)
+        detection_result = await asyncio.to_thread(detector_service.detect, project_path, scan_result)
     except Exception as e:
         logger.exception("Error detecting frameworks for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during detection")
 
     try:
-        graph_result = graph_builder.build(project_path, scan_result)
+        graph_result = await asyncio.to_thread(graph_builder.build, project_path, scan_result)
     except Exception as e:
         logger.exception("Error building dependency graph for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during graph building")
 
     try:
-        parsing_result = ParserEngine.parse_project(project_path, scan_result)
+        parsing_result = await asyncio.to_thread(ParserEngine.parse_project, project_path, scan_result)
     except Exception as e:
         logger.exception("Error parsing project for upload_id: %s", upload_id)
         raise HTTPException(status_code=500, detail="Internal server error during parsing")
 
     try:
-        architecture_result = architecture_builder.build(
-            scan_result, detection_result, graph_result, parsing_result
+        architecture_result = await asyncio.to_thread(
+            architecture_builder.build, scan_result, detection_result, graph_result, parsing_result
         )
     except Exception as e:
         logger.exception("Error building architecture for upload_id: %s", upload_id)

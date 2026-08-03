@@ -6,10 +6,24 @@ interface ChartCardProps {
   icon?: LucideIcon;
   children: React.ReactNode;
   loading?: boolean;
+  error?: boolean;
   className?: string;
 }
 
-export function ChartCard({ title, icon: Icon, children, loading = false, className }: ChartCardProps) {
+export function ChartCard({ title, icon: Icon, children, loading = false, error = false, className }: ChartCardProps) {
+  if (error) {
+    return (
+      <div className={className}>
+        <div className="rounded-2xl border border-danger/20 bg-danger/5 backdrop-blur-sm p-5 shadow-sm min-h-[260px] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-sm font-medium text-danger">Data unavailable</p>
+            <p className="text-xs text-danger/70 mt-1">Analysis failed</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className={className}>

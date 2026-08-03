@@ -10,6 +10,7 @@ import { Button } from '@/design-system/primitives/Button';
 import { useRepositoriesQuery, useDeleteRepositoryMutation } from '../api/repositories.queries';
 import { isRepositoryReady, type RepositorySummary } from '../api/repositories.types';
 import { DeleteRepositoryDialog } from './DeleteRepositoryDialog';
+import { beginUploadFlow } from '@/core/navigation/flow-session';
 
 function statusBadgeVariant(status: string): 'success' | 'warning' | 'danger' | 'default' | 'info' {
   const value = status.toUpperCase();
@@ -101,6 +102,7 @@ export function RepositorySelector() {
       clearRepository();
       await queryClient.invalidateQueries();
       if (remaining.length === 0) {
+        beginUploadFlow();
         navigate('/upload');
         return;
       }
@@ -236,6 +238,7 @@ export function RepositorySelector() {
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-text-secondary hover:bg-[#2A2420] hover:text-text-primary transition-colors"
                 onClick={() => {
                   setOpen(false);
+                  beginUploadFlow();
                   navigate('/upload');
                 }}
               >

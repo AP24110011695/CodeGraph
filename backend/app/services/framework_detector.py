@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from app.services.scanner_service import ScanResult
+from app.cache.analysis_cache import memoize_by_path
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,7 @@ class FrameworkDetector:
     Source code is never read or parsed.
     """
 
+    @memoize_by_path(ttl_seconds=300)
     def detect(self, root_path: Path, scan_result: ScanResult) -> DetectionResult:
         """Run all detection rules against a project.
 

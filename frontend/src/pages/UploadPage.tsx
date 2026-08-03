@@ -1,27 +1,61 @@
-import { Link } from 'react-router-dom';
-import { UploadPanel } from '@/features/upload';
+import { PageNavbar } from './shared/components';
+import { UploadCard, UploadInfoCards, GitHubImport, ProcessSteps } from './upload/components';
+import { useUpload } from '@/features/upload/hooks/useUpload';
 import { Button } from '@/design-system/primitives/Button';
 
 export default function UploadPage() {
+  const { startUpload, reset, isUploading, error } = useUpload();
+
   return (
-    <div className="relative min-h-screen bg-[#0F0E0D] px-4 py-10 overflow-hidden">
-      {/* Extremely subtle amber particle gradient near the bottom */}
-      <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 h-[450px] w-[800px] rounded-full bg-[radial-gradient(ellipse_at_bottom,rgba(232,160,69,0.07)_0%,rgba(15,14,13,0)_70%)] blur-3xl" />
-      
-      <div className="relative z-10 mx-auto max-w-5xl">
-        <div className="mb-12 flex items-center justify-between">
-          <Link to="/" className="text-base font-semibold text-text-primary tracking-tight">
-            CodeGraph
-          </Link>
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              Back
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-bg-base">
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(232, 160, 69, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(232, 160, 69, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '64px 64px',
+        }}
+      />
+      <PageNavbar backHref="/" />
+
+      <main className="mx-auto max-w-[1280px] px-6 pb-16 pt-8">
+        <div className="mb-8 space-y-2">
+          <h1 className="text-3xl font-medium text-text-primary">Upload a repository</h1>
+          <p className="text-base text-text-secondary">
+            Drop a ZIP archive to analyze your project architecture.
+          </p>
         </div>
-        <UploadPanel />
-      </div>
+
+        <div className="grid gap-6 lg:grid-cols-[65%_35%]">
+          <div className="space-y-6">
+            <UploadCard
+              disabled={isUploading}
+              error={error}
+              onFileSelected={(file) => {
+                void startUpload(file);
+              }}
+            />
+
+            {error && (
+              <div className="space-y-3 rounded-xl border border-danger/30 bg-danger/10 p-4">
+                <p className="text-sm text-danger">{error}</p>
+                <Button variant="danger" size="sm" onClick={reset}>
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            <UploadInfoCards />
+            <GitHubImport />
+          </div>
+
+          <div className="space-y-6">
+            <ProcessSteps />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
-

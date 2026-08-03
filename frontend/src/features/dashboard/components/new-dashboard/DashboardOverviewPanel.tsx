@@ -66,6 +66,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.healthScore || 0}
           statusColor={overview.healthScore && overview.healthScore >= 80 ? 'success' : overview.healthScore && overview.healthScore >= 60 ? 'info' : overview.healthScore && overview.healthScore >= 40 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
         <KPICard
           icon={Shield}
@@ -75,6 +76,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.qualityScores?.security}
           statusColor={overview.qualityScores?.security && overview.qualityScores.security >= 80 ? 'success' : overview.qualityScores?.security && overview.qualityScores.security >= 60 ? 'info' : overview.qualityScores?.security && overview.qualityScores.security >= 40 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
         <KPICard
           icon={Building2}
@@ -84,6 +86,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.qualityScores?.architecture}
           statusColor={overview.qualityScores?.architecture && overview.qualityScores.architecture >= 80 ? 'success' : overview.qualityScores?.architecture && overview.qualityScores.architecture >= 60 ? 'info' : overview.qualityScores?.architecture && overview.qualityScores.architecture >= 40 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
         <KPICard
           icon={Wrench}
@@ -93,6 +96,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.qualityScores?.maintainability}
           statusColor={overview.qualityScores?.maintainability && overview.qualityScores.maintainability >= 80 ? 'success' : overview.qualityScores?.maintainability && overview.qualityScores.maintainability >= 60 ? 'info' : overview.qualityScores?.maintainability && overview.qualityScores.maintainability >= 40 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
         <KPICard
           icon={FileCode2}
@@ -102,6 +106,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.qualityScores?.complexity}
           statusColor={overview.qualityScores?.complexity && overview.qualityScores.complexity <= 20 ? 'success' : overview.qualityScores?.complexity && overview.qualityScores.complexity <= 40 ? 'info' : overview.qualityScores?.complexity && overview.qualityScores.complexity <= 60 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
         <KPICard
           icon={FileCode2}
@@ -111,6 +116,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           progress={overview.qualityScores?.documentation}
           statusColor={overview.qualityScores?.documentation && overview.qualityScores.documentation >= 80 ? 'success' : overview.qualityScores?.documentation && overview.qualityScores.documentation >= 60 ? 'info' : overview.qualityScores?.documentation && overview.qualityScores.documentation >= 40 ? 'warning' : 'danger'}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         />
       </div>
 
@@ -128,6 +134,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           title="Code Quality" 
           icon={BarChart3}
           loading={queries.quality.isLoading}
+          error={queries.quality.isError}
         >
           <CodeQualityRadarChart scores={overview.qualityScores || undefined} loading={queries.quality.isLoading} />
         </ChartCard>
@@ -150,6 +157,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           overallScore={overview.overallRiskScore}
           overallLevel={overview.overallRiskLevel}
           loading={queries.risk.isLoading}
+          error={queries.risk.isError}
         />
         
         <ArchitectureSummaryCard
@@ -157,6 +165,7 @@ export function DashboardOverviewPanel({ repoId }: DashboardOverviewPanelProps) 
           layers={overview.architectureLayers}
           stats={overview.architectureStats || undefined}
           loading={queries.architecture.isLoading}
+          error={queries.architecture.isError}
         />
       </div>
 

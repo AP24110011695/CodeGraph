@@ -1,6 +1,7 @@
 """API route for quality analysis on extracted repositories."""
 
 import logging
+import asyncio
 
 from fastapi import APIRouter, HTTPException
 
@@ -44,7 +45,7 @@ async def analyze_quality(upload_id: str) -> QualityResponse:
         )
 
     try:
-        result = quality_analyzer.analyze(project_path)
+        result = await asyncio.to_thread(quality_analyzer.analyze, project_path)
     except PermissionError:
         raise HTTPException(
             status_code=403,

@@ -17,6 +17,7 @@ interface KPICardProps {
   progress?: number;
   statusColor?: 'success' | 'warning' | 'danger' | 'info' | 'default';
   loading?: boolean;
+  error?: boolean;
 }
 
 export function KPICard({
@@ -29,7 +30,19 @@ export function KPICard({
   progress,
   statusColor = 'default',
   loading = false,
+  error = false,
 }: KPICardProps) {
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-danger/20 bg-danger/5 backdrop-blur-sm p-5 shadow-sm flex items-center justify-center min-h-[140px]">
+        <div className="text-center">
+          <p className="text-sm font-medium text-danger">Data unavailable</p>
+          <p className="text-xs text-danger/70 mt-1">Analysis failed</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border-base bg-bg-elevated/50 backdrop-blur-sm p-5 shadow-sm">

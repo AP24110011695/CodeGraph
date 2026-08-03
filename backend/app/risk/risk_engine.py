@@ -7,6 +7,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+import concurrent.futures
 
 from app.analyzers.architecture_builder import architecture_builder
 from app.indexing.index_manager import IndexManager
@@ -118,18 +119,24 @@ class RiskEngine:
 
         logger.info(f"Starting risk analysis for project: {project_path}")
 
-        # Step 1: Generate comprehensive metrics (this runs all analyzers)
-        logger.info("Generating metrics")
-        metrics_result = self.metrics_engine.generate(project_path, upload_id)
+        # Step 1 & 2: Generate metrics and extract risk evidence concurrently
+        logger.info("Extracting risk evidence from analyzers concurrently")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=7) as executor:
+            future_metrics = executor.submit(self.metrics_engine.generate, project_path, upload_id)
+            future_security = executor.submit(self._extract_security_issues, project_path)
+            future_quality = executor.submit(self._extract_quality_recommendations, project_path)
+            future_smells = executor.submit(self._extract_smell_issues, project_path)
+            future_arch = executor.submit(self._extract_architecture_result, project_path)
+            future_dep = executor.submit(self._extract_dependency_result, project_path)
+            future_review = executor.submit(self._extract_review_issues, project_path, upload_id)
 
-        # Step 2: Extract risk evidence from individual analyzers
-        logger.info("Extracting risk evidence from analyzers")
-        security_issues = self._extract_security_issues(project_path)
-        quality_recommendations = self._extract_quality_recommendations(project_path)
-        smell_issues = self._extract_smell_issues(project_path)
-        architecture_result = self._extract_architecture_result(project_path)
-        dependency_result = self._extract_dependency_result(project_path)
-        review_issues = self._extract_review_issues(project_path, upload_id)
+            metrics_result = future_metrics.result()
+            security_issues = future_security.result()
+            quality_recommendations = future_quality.result()
+            smell_issues = future_smells.result()
+            architecture_result = future_arch.result()
+            dependency_result = future_dep.result()
+            review_issues = future_review.result()
 
         # Step 3: Convert metrics to dict format for calculator
         metrics_dict = self._metrics_to_dict(metrics_result)

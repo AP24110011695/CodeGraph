@@ -1,6 +1,7 @@
 """Risk analysis API endpoint for CodeGraph."""
 
 import json
+import asyncio
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
@@ -21,7 +22,7 @@ async def analyze_risk(
     index_manager, _index, project_path = require_ready_index(upload_id)
 
     risk_engine_with_index = RiskEngine(index_manager=index_manager)
-    result = risk_engine_with_index.analyze(project_path, upload_id)
+    result = await asyncio.to_thread(risk_engine_with_index.analyze, project_path, upload_id)
 
     response = RiskResponse(
         project_name=result.project_name,
