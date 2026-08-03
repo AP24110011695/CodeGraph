@@ -79,7 +79,7 @@ function ArchitectureCanvasInner({
     setLayoutReady(false);
 
     async function runLayout() {
-      const result = await layoutArchitectureNodes(modules, edges, layers);
+      const result = await layoutArchitectureNodes(modules, edges);
       if (active) {
         setPositions(result);
         setLayoutReady(true);

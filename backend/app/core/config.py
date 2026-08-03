@@ -1,9 +1,14 @@
-import os
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
-from pydantic import Field, model_validator
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+    )
     APP_NAME: str = Field(default="CodeGraph", description="Application name")
     APP_VERSION: str = Field(default="1.0.0-rc.1", description="Application version")
     HOST: str = Field(default="127.0.0.1", description="Server host")
@@ -26,11 +31,5 @@ class Settings(BaseSettings):
         default=True,
         description="When true, HTTP 500 responses may include exception text (dev only)",
     )
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-
 
 settings = Settings()

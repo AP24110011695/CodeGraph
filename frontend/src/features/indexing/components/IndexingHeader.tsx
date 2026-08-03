@@ -15,7 +15,7 @@ export function IndexingHeader({
   status,
 }: IndexingHeaderProps) {
   const badgeVariant =
-    status === 'success' ? 'success' : status === 'error' ? 'danger' : status === 'processing' ? 'accent' : 'secondary';
+    status === 'success' ? 'success' : status === 'error' ? 'danger' : status === 'processing' ? 'accent' : 'default';
 
   return (
     <div className="rounded-2xl border border-border-base bg-[#181614] p-6 shadow-xl space-y-4">
@@ -55,4 +55,3 @@ export function IndexingHeader({
     </div>
   );
 }
-
