@@ -54,7 +54,7 @@ function formatAnalysisError(error: unknown): { title: string; description: stri
       title: 'Backend unavailable',
       description:
         error.message ||
-        'Could not reach the CodeGraph API. Confirm the backend is running on port 8000 and VITE_API_URL is correct.',
+        'Could not reach the CodeGraph API. Confirm VITE_API_URL is configured correctly.',
     };
   }
 

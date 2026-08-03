@@ -1,8 +1,15 @@
 # Railway Deployment Guide
 
+## Current Deployment Status
+
+The backend is already deployed on Railway at:
+```
+https://codegraph-production-d523.up.railway.app
+```
+
 ## Required Railway Environment Variables
 
-Set these in your Railway service environment variables:
+The following are configured in `railway.json` and `nixpacks.toml`:
 
 ### Core Configuration
 ```
@@ -31,47 +38,60 @@ GROQ_API_KEY=your_key_here
 EXPOSE_ERROR_DETAILS=false
 ```
 
-## Railway Deployment Steps
+## Railway Configuration Files
 
-### 1. Create Railway Service
-1. Go to Railway dashboard
-2. Create new project
-3. Select "Deploy from GitHub repo"
-4. Choose the CodeGraph repository
-
-### 2. Configure Environment Variables
-Add the environment variables listed above in Railway's service settings.
-
-### 3. Add Persistent Volume
-1. Go to your Railway service
-2. Add a volume named `data`
-3. Mount path: `/data`
-4. This ensures database and uploads persist across deployments
-
-### 4. Deploy
-Railway will automatically deploy using the Procfile:
-```
-cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
-### 5. Get Railway URL
-After deployment, Railway will provide a URL like:
-```
-https://codegraph-backend.railway.app
+### railway.json
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "variables": {
+    "APP_ENV": "production",
+    "FRONTEND_URL": "https://code-graph-alpha.vercel.app"
+  }
+}
 ```
 
-### 6. Update Vercel Environment Variables
-In Vercel project settings, set:
+### nixpacks.toml
+```toml
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.build]
+cmds = [
+  "cd backend",
+  "python -m venv .venv",
+  ".venv/bin/pip install --upgrade pip",
+  ".venv/bin/pip install -r requirements.txt"
+]
+
+[start]
+cmd = "cd backend && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+[variables]
+APP_ENV = "production"
+FRONTEND_URL = "https://code-graph-alpha.vercel.app"
 ```
-VITE_API_URL=https://codegraph-backend.railway.app
+
+### Procfile
+```
+web: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 ## Verification
 
 ### Check Backend Health
-Once deployed, test the health endpoint:
+Test the health endpoint:
 ```bash
-curl https://codegraph-backend.railway.app/health
+curl https://codegraph-production-d523.up.railway.app/health
 ```
 
 Expected response:
@@ -89,12 +109,18 @@ Test that CORS is properly configured:
 curl -H "Origin: https://code-graph-alpha.vercel.app" \
      -H "Access-Control-Request-Method: POST" \
      -X OPTIONS \
-     https://codegraph-backend.railway.app/upload
+     https://codegraph-production-d523.up.railway.app/upload
 ```
 
 Should return CORS headers allowing the Vercel domain.
 
 ## Troubleshooting
+
+### Environment Shows "development"
+- Ensure `APP_ENV=production` is set in Railway environment variables
+- Check railway.json variables section
+- Verify nixpacks.toml variables section
+- Redeploy Railway service after changes
 
 ### 404 Errors
 - Verify Railway service is running
