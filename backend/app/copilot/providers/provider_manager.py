@@ -12,7 +12,6 @@ from app.ai.llm_client import (
     AnthropicProvider,
     GeminiProvider,
     GroqProvider,
-    LLMClient,
     LLMError,
     LLMProvider,
     OpenAIProvider,
@@ -42,13 +41,9 @@ class ProviderManager:
         self._provider = provider
         # Auto-detect preferred provider if not specified
         self._preferred = preferred if preferred is not None else self._auto_detect_preferred()
-        self._client: Optional[LLMClient] = None
 
     def _auto_detect_preferred(self) -> str:
-        """Auto-detect the best available provider.
-        
-        Priority: Groq > OpenAI > Claude > Gemini > Local
-        """
+        """Auto-detect the best available provider, preferring Groq."""
         # Try Groq first, then other providers, then local fallback
         providers_to_try = ["groq", "openai", "claude", "anthropic", "gemini"]
         
@@ -67,35 +62,6 @@ class ProviderManager:
         
         # Fallback to local
         logger.info("ProviderManager: No cloud provider configured, using local fallback")
-        return "local"
-        
-        # Auto-detect preferred provider if not specified
-        if self._preferred is None:
-            self._preferred = self._auto_detect_preferred()
-            logger.info("ProviderManager: Auto-detected preferred provider", extra={
-                "preferred_provider": self._preferred
-            })
-
-    def _auto_detect_preferred(self) -> str:
-        """Auto-detect the best available provider."""
-        # Try Groq first, then other providers, then local fallback
-        providers_to_try = ["groq", "openai", "claude", "anthropic", "gemini"]
-        
-        for provider_name in providers_to_try:
-            provider_cls = self.PROVIDERS.get(provider_name)
-            if provider_cls is not None:
-                try:
-                    provider = provider_cls()
-                    if provider.validate_config():
-                        logger.debug("ProviderManager: Provider configured", extra={
-                            "provider": provider_name
-                        })
-                        return provider_name
-                except Exception:  # noqa: BLE001
-                    continue
-        
-        # Fallback to local
-        logger.debug("ProviderManager: No cloud provider configured, using local")
         return "local"
 
     def register(self, name: str, provider_cls: type) -> None:
@@ -121,10 +87,7 @@ class ProviderManager:
         
         provider = cls()
         if not provider.validate_config() and key not in ("local", "mock"):
-            logger.warning("ProviderManager: Provider configuration invalid, falling back to local", extra={
-                "requested_provider": key
-            })
-            return LocalHeuristicProvider()
+            raise LLMError(f"{key} is selected but is not configured. Check its API key and restart the backend.")
         
         logger.info("ProviderManager: Selected provider", extra={
             "provider": provider.__class__.__name__,
@@ -161,7 +124,12 @@ class ProviderManager:
         except Exception as exc:  # noqa: BLE001
             logger.info("PROVIDER_DEBUG: Generation failed with %s.generate() - error: %s", 
                       selected.__class__.__name__, exc)
-            logger.debug("ProviderManager: generation failed (%s); using local fallback", exc)
+            if not isinstance(selected, LocalHeuristicProvider):
+                raise LLMError(
+                    f"{selected.__class__.__name__} failed; refusing to return an unrelated local fallback: {exc}"
+                ) from exc
+
+            logger.debug("ProviderManager: local generation failed: %s", exc)
             logger.info("PROVIDER_DEBUG: Falling back to LocalHeuristicProvider")
             fallback = LocalHeuristicProvider()
             logger.info("PROVIDER_DEBUG: Calling LocalHeuristicProvider.generate()...")

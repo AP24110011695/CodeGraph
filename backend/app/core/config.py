@@ -1,10 +1,12 @@
-from pydantic import ConfigDict, Field
-from pydantic_settings import BaseSettings
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(
-        env_file=".env",
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[2] / ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
@@ -25,6 +27,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = Field(default=None, description="Anthropic API key")
     GEMINI_API_KEY: str | None = Field(default=None, description="Google Gemini API key")
     GROQ_API_KEY: str | None = Field(default=None, description="Groq API key")
+    GROQ_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Groq chat model")
 
     # Safety defaults for RC-1
     EXPOSE_ERROR_DETAILS: bool = Field(

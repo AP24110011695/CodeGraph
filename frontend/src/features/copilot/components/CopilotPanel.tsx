@@ -92,7 +92,6 @@ export function CopilotPanel({ repoId }: CopilotPanelProps) {
           repository_id: repoId,
           query,
           conversation_id: conversationId,
-          provider: 'local',
         });
 
         const backendConversationId = response.conversation_id || conversationId;

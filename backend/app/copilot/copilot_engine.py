@@ -205,7 +205,7 @@ class CopilotEngine:
             generation = self.provider_manager.generate(
                 prompts["user"],
                 system=prompts["system"],
-                provider=provider or "local",
+                provider=provider,
             )
             logger.info("RAW_LLM_RESPONSE: %s", generation.get("text", "")[:500])
             answer = generation.get("text") or self.prompt_builder.build_fallback_answer(

@@ -36,7 +36,7 @@ class CopilotChatRequest(BaseModel):
         description="Existing conversation id for follow-ups",
     )
     provider: Optional[str] = Field(
-        default="local",
+        default=None,
         description="LLM provider key (openai|claude|gemini|groq|ollama|azure|local)",
     )
 
@@ -47,7 +47,7 @@ class CopilotExecuteRequest(BaseModel):
     repository_id: str
     query: str
     conversation_id: Optional[str] = None
-    provider: Optional[str] = "local"
+    provider: Optional[str] = None
     tools: List[str] = Field(
         default_factory=list,
         description="Optional tool ids to force (e.g. timeline, impact_analysis, engineering_reports)",

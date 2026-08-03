@@ -192,7 +192,7 @@ class AnthropicProvider(LLMProvider):
 class GroqProvider(LLMProvider):
     """Groq API provider implementation."""
 
-    def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile"):
+    def __init__(self, api_key: str | None = None, model: str | None = None):
         """Initialize Groq provider.
 
         Args:
@@ -200,7 +200,7 @@ class GroqProvider(LLMProvider):
             model: Model name to use
         """
         self.api_key = api_key or os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", None)
-        self.model = model
+        self.model = model or settings.GROQ_MODEL
         self._client = None
         self.timeout = 30.0  # Default timeout in seconds
 
@@ -338,6 +338,7 @@ class LLMClient:
         """Auto-detect and configure the best available provider."""
         # Try providers in order of preference
         providers = [
+            GroqProvider(),
             OpenAIProvider(),
             GeminiProvider(),
             AnthropicProvider(),
@@ -350,7 +351,7 @@ class LLMClient:
 
         # If no provider is configured, raise error
         raise LLMError(
-            "No LLM provider configured. Please set OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY."
+            "No LLM provider configured. Please set GROQ_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY."
         )
 
     def generate(self, prompt: str, **kwargs: Any) -> str:
@@ -381,6 +382,7 @@ class LLMClient:
         if self._provider is None:
             # Try to auto-detect a provider without raising an error
             providers = [
+                GroqProvider(),
                 OpenAIProvider(),
                 GeminiProvider(),
                 AnthropicProvider(),
