@@ -4,6 +4,7 @@ class TransitionValidator:
     VALID_TRANSITIONS = {
         RepositoryStateEnum.UPLOADED: {
             RepositoryStateEnum.QUEUED,
+            RepositoryStateEnum.SCANNING,  # Allow direct transition to SCANNING for auto-indexer
             RepositoryStateEnum.FAILED
         },
         RepositoryStateEnum.QUEUED: {
@@ -13,16 +14,20 @@ class TransitionValidator:
         },
         RepositoryStateEnum.SCANNING: {
             RepositoryStateEnum.PARSING,
+            RepositoryStateEnum.INDEXING,  # Allow direct transition to INDEXING
+            RepositoryStateEnum.READY,  # Allow direct transition to READY for simple repositories
             RepositoryStateEnum.CANCELLED,
             RepositoryStateEnum.FAILED
         },
         RepositoryStateEnum.PARSING: {
             RepositoryStateEnum.INDEXING,
+            RepositoryStateEnum.READY,  # Allow direct transition to READY
             RepositoryStateEnum.CANCELLED,
             RepositoryStateEnum.FAILED
         },
         RepositoryStateEnum.INDEXING: {
             RepositoryStateEnum.EMBEDDING,
+            RepositoryStateEnum.READY,  # Allow direct transition to READY
             RepositoryStateEnum.CANCELLED,
             RepositoryStateEnum.FAILED
         },

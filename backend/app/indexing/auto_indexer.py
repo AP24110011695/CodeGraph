@@ -7,6 +7,8 @@ from pathlib import Path
 from app.events.event import Event
 from app.events.event_types import EventType
 from app.indexing.index_manager import get_shared_index_manager
+from app.repository_state.state_machine import RepositoryStateMachine
+from app.schemas.repository_state import RepositoryStateEnum
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,20 @@ class AutoIndexer:
                 logger.warning("AUTO_INDEXER: Indexing already in progress for %s", repository_id)
                 return
             
+            # Check if repository is already indexed
+            existing_index = self.index_manager.get_index(repository_id)
+            if existing_index and existing_index.status == "READY":
+                logger.info("AUTO_INDEXER: Repository %s is already indexed, skipping", repository_id)
+                # Ensure state is set to READY
+                try:
+                    state_machine = RepositoryStateMachine(repository_id)
+                    if state_machine.current_state.state != RepositoryStateEnum.READY:
+                        state_machine.transition_to(RepositoryStateEnum.READY, progress=100, current_stage="Already indexed")
+                        logger.info("AUTO_INDEXER: Updated state to READY for already-indexed repository %s", repository_id)
+                except Exception as e:
+                    logger.warning("AUTO_INDEXER: Failed to update state for already-indexed repository %s: %s", repository_id, e)
+                return
+            
             logger.info("AUTO_INDEXER: Starting auto-index for %s (%s) at %s", 
                        repository_name, repository_id, project_path)
             
@@ -47,17 +63,58 @@ class AutoIndexer:
             
             # Start indexing in background thread to avoid blocking
             def index_repository():
+                state_machine = None
                 try:
                     logger.info("AUTO_INDEXER: Background thread started for %s", repository_id)
+                    
+                    # Initialize state machine and follow proper transition sequence
+                    state_machine = RepositoryStateMachine(repository_id)
+                    
+                    # Follow proper state transitions: UPLOADED -> SCANNING -> PARSING -> INDEXING -> EMBEDDING -> READY
+                    try:
+                        state_machine.transition_to(RepositoryStateEnum.SCANNING, progress=10, current_stage="Scanning")
+                    except ValueError as e:
+                        logger.debug("AUTO_INDEXER: Could not transition to SCANNING: %s", e)
+                    
+                    try:
+                        state_machine.transition_to(RepositoryStateEnum.PARSING, progress=20, current_stage="Parsing")
+                    except ValueError as e:
+                        logger.debug("AUTO_INDEXER: Could not transition to PARSING: %s", e)
+                    
+                    try:
+                        state_machine.transition_to(RepositoryStateEnum.INDEXING, progress=40, current_stage="Indexing")
+                    except ValueError as e:
+                        logger.debug("AUTO_INDEXER: Could not transition to INDEXING: %s", e)
+                    
+                    try:
+                        state_machine.transition_to(RepositoryStateEnum.EMBEDDING, progress=70, current_stage="Embedding")
+                    except ValueError as e:
+                        logger.debug("AUTO_INDEXER: Could not transition to EMBEDDING: %s", e)
+                    
                     logger.info("AUTO_INDEXER: Calling create_index for %s", repository_id)
                     # Trigger indexing
                     index = self.index_manager.create_index(project_path, repository_id, force=False)
                     
                     logger.info("AUTO_INDEXER: Successfully indexed %s - chunks: %d, embeddings: %d",
                                repository_id, index.total_chunks, index.total_embeddings)
+                    
+                    # Transition to READY
+                    try:
+                        state_machine.transition_to(RepositoryStateEnum.READY, progress=100, current_stage="Complete")
+                        logger.info("AUTO_INDEXER: State transitioned to READY for %s", repository_id)
+                    except ValueError as e:
+                        logger.debug("AUTO_INDEXER: Could not transition to READY: %s", e)
+                    
                 except Exception as e:
                     logger.error("AUTO_INDEXER: Failed to auto-index repository %s: %s", 
                                 repository_id, e, exc_info=True)
+                    # Transition to FAILED on error
+                    if state_machine:
+                        try:
+                            state_machine.transition_to(RepositoryStateEnum.FAILED, failure_reason=str(e))
+                            logger.info("AUTO_INDEXER: State transitioned to FAILED for %s", repository_id)
+                        except Exception as e2:
+                            logger.error("AUTO_INDEXER: Failed to transition to FAILED for %s: %s", repository_id, e2)
                 finally:
                     # Clean up thread reference
                     self._indexing_threads.pop(repository_id, None)
