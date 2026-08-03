@@ -115,6 +115,7 @@ export function useIndexingOrchestrator(uploadId: string) {
 
     if (status === 'INDEXING' || startMutation.isPending || startMutation.isSuccess) {
       startedRef.current = true;
+      setEvents((prev) => pushEvent(prev, 'Indexing already running in background', 'info'));
       return;
     }
 
@@ -127,9 +128,10 @@ export function useIndexingOrchestrator(uploadId: string) {
       },
       onError: (error) => {
         const message = isAPIError(error) ? error.message : 'Failed to start indexing';
-        // 409 = already exists / in progress — keep polling.
+        // 409 = already exists / in progress — treat as normal, keep polling.
         if (isAPIError(error) && error.status === 409) {
-          setEvents((prev) => pushEvent(prev, message, 'warning'));
+          setEvents((prev) => pushEvent(prev, 'Indexing already running in background', 'info'));
+          // Don't set error status - 409 is expected when auto-indexer is running
           return;
         }
         setEvents((prev) => pushEvent(prev, message, 'error'));

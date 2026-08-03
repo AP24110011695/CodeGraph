@@ -117,11 +117,8 @@ export function ReportsPanel({ repoId, reportId }: ReportsPanelProps) {
             Back to list
           </Button>
         }
-        className="overflow-hidden"
       >
-        <div className="-m-6">
-          <ReportViewer report={selected} />
-        </div>
+        <ReportViewer report={selected} />
       </AnalysisPageShell>
     );
   }

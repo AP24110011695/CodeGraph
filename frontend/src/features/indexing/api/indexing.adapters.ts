@@ -130,8 +130,15 @@ export function adaptIndexingSnapshot(params: {
   const failed =
     Boolean(createErrorMessage) ||
     index?.status === 'FAILED' ||
-    repositoryState?.state === 'FAILED';
+    repositoryState?.state === 'FAILED' ||
+    repositoryState?.state === 'CANCELLED';
   const isReady = index?.status === 'READY' || repositoryState?.state === 'READY';
+  
+  // Determine if actually processing (vs just loading initial state)
+  const isProcessing = 
+    createInFlight ||
+    index?.status === 'INDEXING' ||
+    ['SCANNING', 'PARSING', 'INDEXING', 'EMBEDDING', 'ANALYZING'].includes(repositoryState?.state || '');
 
   // Build detailed failure reason
   let failureReason: string | null = null;
@@ -146,6 +153,8 @@ export function adaptIndexingSnapshot(params: {
       failureReason = 'Repository not found - it may have been deleted or the upload failed';
     } else if (repositoryState?.state === 'FAILED') {
       failureReason = `Indexing failed: ${repositoryState.state}`;
+    } else if (repositoryState?.state === 'CANCELLED') {
+      failureReason = 'Indexing was cancelled';
     }
   }
 
@@ -157,7 +166,7 @@ export function adaptIndexingSnapshot(params: {
     events,
     progress: resolveProgress(index, repositoryState, createInFlight),
     currentStage: resolveCurrentStage(index, repositoryState, createInFlight),
-    clientStatus: failed ? 'error' : isReady ? 'success' : 'loading',
+    clientStatus: failed ? 'error' : isReady ? 'success' : isProcessing ? 'processing' : 'loading',
     failureReason,
     isReady,
   };
