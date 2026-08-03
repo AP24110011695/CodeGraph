@@ -170,36 +170,41 @@ class SentenceTransformerProvider(EmbeddingProvider):
             
             try:
                 from sentence_transformers import SentenceTransformer
-                logger.info("Loading SentenceTransformer model: %s", self.model_name)
+                logger.info("EMBEDDING_SERVICE: Loading SentenceTransformer model: %s", self.model_name)
                 model = SentenceTransformer(self.model_name)
                 SentenceTransformerProvider._model_cache[self.model_name] = model
                 self._model = model
-                logger.info("Successfully loaded SentenceTransformer model")
+                logger.info("EMBEDDING_SERVICE: Successfully loaded SentenceTransformer model")
                 return model
             except ImportError:
+                logger.error("EMBEDDING_SERVICE: sentence-transformers package not installed")
                 raise ImportError("sentence-transformers package is required for SentenceTransformerProvider")
             except Exception as e:
-                logger.error("Failed to load SentenceTransformer model: %s", e)
+                logger.error("EMBEDDING_SERVICE: Failed to load SentenceTransformer model: %s", e, exc_info=True)
                 raise
 
     def embed(self, text: str) -> list[float]:
         """Generate embedding for a single text."""
         try:
+            logger.debug("EMBEDDING_SERVICE: Generating single embedding for text length: %d", len(text))
             model = self._get_model()
             embedding = model.encode(text, convert_to_numpy=True)
+            logger.debug("EMBEDDING_SERVICE: Single embedding generated successfully")
             return embedding.tolist()
         except Exception as e:
-            logger.exception("Sentence-transformers embedding error")
+            logger.error("EMBEDDING_SERVICE: Sentence-transformers embedding error", exc_info=True)
             raise EmbeddingError(f"Sentence-transformers embedding error: {str(e)}")
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for multiple texts."""
         try:
+            logger.debug("EMBEDDING_SERVICE: Generating batch embeddings for %d texts", len(texts))
             model = self._get_model()
             embeddings = model.encode(texts, convert_to_numpy=True)
+            logger.debug("EMBEDDING_SERVICE: Batch embeddings generated successfully")
             return embeddings.tolist()
         except Exception as e:
-            logger.exception("Sentence-transformers batch embedding error")
+            logger.error("EMBEDDING_SERVICE: Sentence-transformers batch embedding error", exc_info=True)
             raise EmbeddingError(f"Sentence-transformers batch embedding error: {str(e)}")
 
     def validate_config(self) -> bool:
