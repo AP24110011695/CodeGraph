@@ -19,6 +19,7 @@ class IncrementalResult:
     frameworks: list[str]
     languages: dict[str, int]
     total_files: int
+    total_folders: int
     total_chunks: int
     total_embeddings: int
     added: int
@@ -49,6 +50,14 @@ class IncrementalIndexer:
         logger.info("INCREMENTAL_INDEXER: Starting indexing for %s (force=%s)", upload_id, force)
         
         try:
+            from app.repository_state.state_machine import RepositoryStateMachine
+            from app.schemas.repository_state import RepositoryStateEnum
+            try:
+                state_machine = RepositoryStateMachine(upload_id)
+                state_machine.transition_to(RepositoryStateEnum.SCANNING, progress=18, current_stage="Scanning")
+            except Exception as e:
+                logger.warning("Failed to transition state to SCANNING: %s", e)
+
             logger.info("INCREMENTAL_INDEXER: Step 0 - Clearing analysis cache")
             clear_analysis_cache(project_path)
             
@@ -176,6 +185,7 @@ class IncrementalIndexer:
                 frameworks=frameworks,
                 languages=languages,
                 total_files=scan_result.total_files,
+                total_folders=scan_result.total_folders,
                 total_chunks=total_chunks,
                 total_embeddings=total_embeddings,
                 added=len(added_files),

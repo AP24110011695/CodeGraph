@@ -30,6 +30,8 @@ class RepositoryRow(Base):
     frameworks_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     languages_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     total_files: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_folders: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    zip_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_chunks: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_embeddings: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     added: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

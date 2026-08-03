@@ -105,13 +105,18 @@ class AnalyticsEngine:
         cicd_health = self.metrics_aggregator.aggregate_ci_cd_health(repository_analytics)
 
         # Calculate engineering scores
+        def _get_val(v: Any) -> Any:
+            if isinstance(v, dict):
+                return v.get("value")
+            return v
+
         repository_scores = [
             self.engineering_score.calculate_engineering_score(
-                repo.get("architecture_score"),
-                repo.get("health_score"),
-                repo.get("quality_score"),
-                repo.get("risk_score"),
-                repo.get("security_score"),
+                _get_val(repo.get("architecture_score")),
+                _get_val(repo.get("health_score")),
+                _get_val(repo.get("quality_score")),
+                _get_val(repo.get("risk_score")),
+                _get_val(repo.get("security_score")),
             )
             for repo in repository_analytics
         ]
@@ -176,22 +181,48 @@ class AnalyticsEngine:
         Returns:
             Dictionary with repository analytics.
         """
-        # Mock scores based on repository info
-        # In production, these would come from actual analysis results
-        architecture_score = repo_info.architecture_score if repo_info.architecture_score else 50
-        health_score = repo_info.health_score if repo_info.health_score else 50
-        quality_score = architecture_score  # Simplified
-        risk_score = 100 - health_score  # Simplified inverse relationship
-        security_score = 70  # Mock security score
+        # Determine if analysis has run based on whether repo_info actually has non-default real scores
+        # In this codebase, 50 is often the default/placeholder in registry.
+        # We will assume if it's strictly the default, it might not be analyzed yet.
+        # Let's check if the real scores exist.
+        def get_score_or_unavailable(score_val: Any) -> Any:
+            # If the score is valid and not a default fake, return it
+            # But the requirement is to use real scores if they exist.
+            # Assuming real scores will be populated correctly by the analysis engine.
+            if score_val is not None:
+                return score_val
+            return {
+                "status": "unavailable",
+                "value": None,
+                "reason": "Analysis not completed yet"
+            }
+
+        architecture_score = repo_info.architecture_score if getattr(repo_info, 'architecture_score', None) is not None else None
+        health_score = repo_info.health_score if getattr(repo_info, 'health_score', None) is not None else None
+        
+        # If they are exactly the default '50', treat as unanalyzed unless proven otherwise.
+        if architecture_score == 50 and health_score == 50:
+            architecture_score = None
+            health_score = None
+            
+        quality_score = architecture_score
+        risk_score = 100 - health_score if health_score is not None else None
+        security_score = None  # We don't have real security scores in repo_info yet
+
+        architecture_out = get_score_or_unavailable(architecture_score)
+        health_out = get_score_or_unavailable(health_score)
+        quality_out = get_score_or_unavailable(quality_score)
+        risk_out = get_score_or_unavailable(risk_score)
+        security_out = get_score_or_unavailable(security_score)
 
         return {
             "repository_name": repo_info.repository_name,
             "upload_id": repo_info.upload_id,
-            "architecture_score": architecture_score,
-            "health_score": health_score,
-            "quality_score": quality_score,
-            "risk_score": risk_score,
-            "security_score": security_score,
+            "architecture_score": architecture_out,
+            "health_score": health_out,
+            "quality_score": quality_out,
+            "risk_score": risk_out,
+            "security_score": security_out,
             "languages": repo_info.languages if repo_info.languages else [],
             "frameworks": repo_info.frameworks if repo_info.frameworks else [],
             "has_pipeline": True,  # Mock
@@ -215,7 +246,12 @@ class AnalyticsEngine:
         if not repository_analytics:
             return 0
 
-        health_scores = [repo.get("health_score", 50) for repo in repository_analytics]
+        health_scores = [
+            repo.get("health_score") for repo in repository_analytics 
+            if isinstance(repo.get("health_score"), (int, float))
+        ]
+        if not health_scores:
+            return 0
         return int(sum(health_scores) / len(health_scores))
 
     def _generate_repository_rankings(

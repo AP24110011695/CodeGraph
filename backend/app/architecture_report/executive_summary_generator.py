@@ -91,7 +91,8 @@ class ExecutiveSummaryGenerator:
             analysis_results.get('microservice_score', 50),
         ]
 
-        return int(sum(scores) / len(scores)) if scores else 50
+        valid_scores = [s for s in scores if isinstance(s, (int, float))]
+        return int(sum(valid_scores) / len(valid_scores)) if valid_scores else 0
 
     def _determine_engineering_maturity(self, overall_score: int) -> str:
         """Determine engineering maturity level.
@@ -154,19 +155,19 @@ The codebase exhibits {len(analysis_results.get('design_patterns', {}).get('patt
         """
         strengths = []
 
-        if analysis_results.get('architecture_score', 0) >= 80:
+        if (analysis_results.get('architecture_score') or 0) >= 80:
             strengths.append("Strong architecture with clear layer separation")
 
-        if analysis_results.get('solid_score', 0) >= 80:
+        if (analysis_results.get('solid_score') or 0) >= 80:
             strengths.append("Good adherence to SOLID principles")
 
-        if analysis_results.get('dependency_health_score', 0) >= 80:
+        if (analysis_results.get('dependency_health_score') or 0) >= 80:
             strengths.append("Healthy dependency structure")
 
-        if analysis_results.get('security_score', 0) >= 80:
+        if (analysis_results.get('security_score') or 0) >= 80:
             strengths.append("Strong security practices")
 
-        if analysis_results.get('quality_score', 0) >= 80:
+        if (analysis_results.get('quality_score') or 0) >= 80:
             strengths.append("High code quality")
 
         if len(analysis_results.get('design_patterns', {}).get('patterns', [])) > 0:
@@ -185,19 +186,19 @@ The codebase exhibits {len(analysis_results.get('design_patterns', {}).get('patt
         """
         weaknesses = []
 
-        if analysis_results.get('architecture_score', 0) < 60:
+        if (analysis_results.get('architecture_score') or 100) < 60:
             weaknesses.append("Architecture needs improvement")
 
-        if analysis_results.get('solid_score', 0) < 60:
+        if (analysis_results.get('solid_score') or 100) < 60:
             weaknesses.append("SOLID principles not consistently followed")
 
-        if analysis_results.get('dependency_health_score', 0) < 60:
+        if (analysis_results.get('dependency_health_score') or 100) < 60:
             weaknesses.append("Dependency structure needs attention")
 
-        if analysis_results.get('security_score', 0) < 60:
+        if (analysis_results.get('security_score') or 100) < 60:
             weaknesses.append("Security practices need improvement")
 
-        if analysis_results.get('quality_score', 0) < 60:
+        if (analysis_results.get('quality_score') or 100) < 60:
             weaknesses.append("Code quality needs improvement")
 
         if len(analysis_results.get('design_patterns', {}).get('anti_patterns', [])) > 0:
@@ -221,24 +222,24 @@ The codebase exhibits {len(analysis_results.get('design_patterns', {}).get('patt
         }
 
         # High priority improvements
-        if analysis_results.get('security_score', 0) < 60:
+        if (analysis_results.get('security_score') or 100) < 60:
             improvements['high'].append("Address security vulnerabilities")
 
-        if analysis_results.get('risk_score', 0) > 60:
+        if (analysis_results.get('risk_score') or 0) > 60:
             improvements['high'].append("Mitigate high-risk areas")
 
         # Medium priority improvements
-        if analysis_results.get('quality_score', 0) < 80:
+        if (analysis_results.get('quality_score') or 100) < 80:
             improvements['medium'].append("Improve code quality")
 
-        if analysis_results.get('solid_score', 0) < 80:
+        if (analysis_results.get('solid_score') or 100) < 80:
             improvements['medium'].append("Improve SOLID principle adherence")
 
         # Long-term improvements
-        if analysis_results.get('microservice_score', 0) > 70:
+        if (analysis_results.get('microservice_score') or 0) > 70:
             improvements['long'].append("Consider microservice architecture")
 
-        if analysis_results.get('architecture_score', 0) < 80:
+        if (analysis_results.get('architecture_score') or 100) < 80:
             improvements['long'].append("Refactor architecture for better scalability")
 
         return improvements

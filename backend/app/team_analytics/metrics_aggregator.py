@@ -42,7 +42,7 @@ class MetricsAggregator:
         quality_scores = [
             repo.get("quality_score", 0)
             for repo in repository_metrics
-            if repo.get("quality_score") is not None
+            if isinstance(repo.get("quality_score"), (int, float))
         ]
 
         if not quality_scores:
@@ -94,7 +94,7 @@ class MetricsAggregator:
         risk_scores = [
             repo.get("risk_score", 0)
             for repo in repository_metrics
-            if repo.get("risk_score") is not None
+            if isinstance(repo.get("risk_score"), (int, float))
         ]
 
         if not risk_scores:
@@ -149,7 +149,7 @@ class MetricsAggregator:
         security_scores = [
             repo.get("security_score", 0)
             for repo in repository_metrics
-            if repo.get("security_score") is not None
+            if isinstance(repo.get("security_score"), (int, float))
         ]
 
         if not security_scores:
@@ -258,7 +258,7 @@ class MetricsAggregator:
         ci_health_scores = [
             repo.get("pipeline_health", 0)
             for repo in repository_metrics
-            if repo.get("pipeline_health") is not None
+            if isinstance(repo.get("pipeline_health"), (int, float))
         ]
 
         if not ci_health_scores:

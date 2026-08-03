@@ -65,12 +65,7 @@ class LocalHeuristicProvider(LLMProvider):
                     return self.formatter.format(response, question)
             
             # Fallback to generic response
-            if question:
-                return (
-                    f"Engineering assessment for: {question}. "
-                    "Based on assembled CodeGraph intelligence (planning, memory, tools)."
-                )
-            return "Engineering assessment based on assembled CodeGraph intelligence."
+            return "I could not find enough analyzed repository information to answer this question."
             
         except Exception as exc:
             logger.error("LocalHeuristicProvider generation failed: %s", exc)

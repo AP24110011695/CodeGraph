@@ -36,6 +36,8 @@ class RepositoryIndex:
     frameworks: list[str] = field(default_factory=list)
     languages: dict[str, int] = field(default_factory=dict)
     total_files: int = 0
+    total_folders: int = 0
+    zip_size_bytes: int = 0
     total_chunks: int = 0
     total_embeddings: int = 0
     added: int = 0

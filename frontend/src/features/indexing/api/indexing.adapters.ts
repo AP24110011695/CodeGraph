@@ -95,12 +95,12 @@ export function resolveProgress(
   createInFlight: boolean
 ): number {
   if (index?.status === 'READY' || repositoryState?.state === 'READY') return 100;
-  if (typeof repositoryState?.progress === 'number' && repositoryState.progress > 0) {
+  if (repositoryState && typeof repositoryState.progress === 'number') {
     return repositoryState.progress;
   }
-  if (createInFlight || index?.status === 'INDEXING') return 55;
-  if (index?.status === 'NOT_INDEXED') return 10;
-  return repositoryState?.progress ?? 0;
+  if (createInFlight || index?.status === 'INDEXING') return 10;
+  if (index?.status === 'NOT_INDEXED') return 0;
+  return 0;
 }
 
 export function resolveCurrentStage(

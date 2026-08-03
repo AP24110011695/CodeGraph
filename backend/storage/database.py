@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import settings
@@ -77,12 +77,28 @@ def get_session_factory(db_path: Path | str | None = None) -> sessionmaker[Sessi
     return _SessionLocal
 
 
+def _add_column_if_missing(engine: Engine, table: str, column: str, column_def: str) -> None:
+    """Helper to add a column if it does not exist in the table."""
+    with engine.connect() as conn:
+        result = conn.execute(text(f"PRAGMA table_info({table})"))
+        columns = [row[1] for row in result]
+        if column not in columns:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {column_def}"))
+            conn.commit()
+
+
 def init_db(db_path: Path | str | None = None) -> Engine:
-    """Create tables if they do not exist."""
+    """Create tables if they do not exist, and run inline column migrations."""
     from storage.models import Base
 
     engine = get_engine(db_path)
     Base.metadata.create_all(bind=engine)
+
+    # Inline migration: add new columns to existing databases that pre-date them.
+    # SQLite does not support IF NOT EXISTS on ALTER TABLE, so we check PRAGMA first.
+    _add_column_if_missing(engine, "repositories", "total_folders", "INTEGER NOT NULL DEFAULT 0")
+    _add_column_if_missing(engine, "repositories", "zip_size_bytes", "INTEGER NOT NULL DEFAULT 0")
+
     return engine
 
 

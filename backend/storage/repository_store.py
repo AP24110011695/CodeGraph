@@ -44,6 +44,7 @@ class RepositoryStore:
         repository_id: str | None = None,
         status: str = "UPLOADED",
         name: str | None = None,
+        zip_size_bytes: int = 0,
     ) -> None:
         """Create or update a repository row after upload/extract."""
         path = str(Path(extraction_path))
@@ -63,6 +64,7 @@ class RepositoryStore:
                     status=status,
                     indexing_state=IndexStatus.NOT_INDEXED.value,
                     repository_name=display_name or upload_id,
+                    zip_size_bytes=zip_size_bytes,
                     created_at=_utcnow(),
                     updated_at=_utcnow(),
                 )
@@ -139,6 +141,7 @@ class RepositoryStore:
             row.frameworks_json = json.dumps(list(index.frameworks or []))
             row.languages_json = json.dumps(dict(index.languages or {}))
             row.total_files = int(index.total_files or 0)
+            row.total_folders = int(index.total_folders or 0)
             row.total_chunks = int(index.total_chunks or 0)
             row.total_embeddings = int(index.total_embeddings or 0)
             row.added = int(index.added or 0)
@@ -173,6 +176,8 @@ class RepositoryStore:
                 frameworks=json.loads(row.frameworks_json or "[]"),
                 languages=json.loads(row.languages_json or "{}"),
                 total_files=row.total_files,
+                total_folders=row.total_folders,
+                zip_size_bytes=row.zip_size_bytes,
                 total_chunks=row.total_chunks,
                 total_embeddings=row.total_embeddings,
                 added=row.added,

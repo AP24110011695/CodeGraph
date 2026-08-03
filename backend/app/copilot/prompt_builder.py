@@ -1,4 +1,4 @@
-"""Prompt builder — constructs synthesis prompts from assembled context + tool results.
+"""Prompt builder — constructs intent-aware synthesis prompts for Phase 1.
 
 Does not call LLMs; ProviderManager owns generation.
 """
@@ -8,19 +8,78 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 
-class PromptBuilder:
-    """Builds prompts for the AI Software Architect synthesis step."""
+# ── System role (applied to every intent) ────────────────────────────────────
+_SYSTEM_ROLE = (
+    "You are CodeGraph, an AI software engineering assistant. "
+    "Answer ONLY using repository evidence provided below. "
+    "Rules:\n"
+    "- Cite file paths and function/class names when available.\n"
+    "- Do NOT invent information not present in the evidence.\n"
+    "- If evidence is insufficient, say: "
+    "\"I could not find enough repository evidence to answer this accurately.\"\n"
+    "- Do NOT output generic report sections like 'Analysis Results', 'Key Findings', "
+    "or 'Recommendations' unless the intent specifically calls for them.\n"
+    "- Keep answers grounded, specific, and traceable to the provided repository context."
+)
 
-    SYSTEM_ROLE = (
-        "You are CodeGraph Copilot, an AI Software Architect. "
-        "Answer the user's EXACT question using ONLY the provided tool execution results. "
-        "Do NOT generate generic repository summaries. "
-        "Use the actual data from tool outputs to provide specific, factual answers. "
-        "For metrics questions, return actual numbers. "
-        "For architecture questions, use dependency/module data. "
-        "For security questions, use security analyzer findings. "
-        "For RAG questions, use retrieved chunks and cite sources."
-    )
+# ── Per-intent output format instructions ─────────────────────────────────────
+_INTENT_FORMAT: Dict[str, str] = {
+    "file_lookup": (
+        "Respond in this format:\n"
+        "**Location**: <file path>\n"
+        "**Symbol**: <function or class name if applicable>\n"
+        "**Purpose**: <one sentence what it does>\n"
+        "**Evidence**: <relevant code or description from the context>\n\n"
+        "If there are multiple matches, list all of them."
+    ),
+    "code_explanation": (
+        "Respond in this format:\n"
+        "**Purpose**: <what this code does>\n"
+        "**Walkthrough**: <step-by-step explanation of the logic>\n"
+        "**Notes**: <edge cases, guards, or important details found in the code>\n\n"
+        "Stay anchored to the actual code provided. Do not speculate."
+    ),
+    "workflow": (
+        "Respond in this format:\n"
+        "**Overview**: <one paragraph summary of the workflow>\n"
+        "**Execution Flow**:\n"
+        "1. <Step 1 — file/function>\n"
+        "2. <Step 2 — file/function>\n"
+        "...\n"
+        "**Files Involved**: <list of files referenced in the flow>\n\n"
+        "Trace the actual code path from entry point to completion. Cite files and functions."
+    ),
+    "architecture": (
+        "Respond in this format:\n"
+        "**Components**: <list of major components/modules with brief descriptions>\n"
+        "**Relationships**: <how components interact with each other>\n"
+        "**Data Flow**: <how data moves through the system>\n\n"
+        "Base every statement on the provided repository context. Cite files/modules."
+    ),
+    "bug_analysis": (
+        "Respond in this format:\n"
+        "**Issues Found**:\n"
+        "- <Issue 1: file/function — description and why it's a problem>\n"
+        "- <Issue 2: ...>\n"
+        "**Suggested Fixes**: <concrete remediation steps for each issue>\n\n"
+        "Only report issues evidenced by the provided code. Do not invent problems."
+    ),
+    "general_query": (
+        "Answer the question directly using the provided repository context. "
+        "Cite file paths and function names where relevant."
+    ),
+}
+
+# Fallback for any intent not in the map
+_DEFAULT_FORMAT = _INTENT_FORMAT["general_query"]
+
+
+class PromptBuilder:
+    """Builds intent-aware prompts for the AI Software Architect synthesis step."""
+
+    @property
+    def SYSTEM_ROLE(self) -> str:
+        return _SYSTEM_ROLE
 
     def build(
         self,
@@ -29,68 +88,83 @@ class PromptBuilder:
         tool_results: Optional[List[Dict[str, Any]]] = None,
         agent_summary: Optional[str] = None,
     ) -> Dict[str, str]:
-        """Return system + user prompt pair."""
+        """Return system + user prompt pair, intent-aware."""
+        intent = (context.get("plan") or {}).get("intent", "general_query")
         sections: List[str] = []
 
-        plan = context.get("plan") or {}
-        if plan:
-            sections.append(
-                "Planning Intent: {intent}\nRequired Modules: {mods}\n"
-                "Retrieval: {ret}\nReasoning: {reas}".format(
-                    intent=plan.get("intent", "general_query"),
-                    mods=", ".join(plan.get("required_modules") or plan.get("execution_order") or []),
-                    ret=plan.get("retrieval_strategy", "n/a"),
-                    reas=plan.get("reasoning_strategy", "n/a"),
-                )
+        # ── Repository Context section ────────────────────────────────────────
+        repo_context_parts: List[str] = []
+
+        # Architecture summary from memory (broad intents only)
+        if context.get("architecture_summary"):
+            repo_context_parts.append(
+                f"[ARCHITECTURE SUMMARY]\n{context['architecture_summary']}"
             )
 
-        if context.get("architecture_summary"):
-            sections.append(f"Architecture Summary:\n{context['architecture_summary']}")
-
+        # Memory summary (top-level overview when available)
         mem = context.get("memory_summary")
         if mem:
             if isinstance(mem, dict):
                 overview = mem.get("architecture_summary") or mem.get("overview") or str(mem)[:800]
             else:
                 overview = str(mem)[:800]
-            sections.append(f"Repository Memory:\n{overview}")
+            if overview:
+                repo_context_parts.append(f"[REPOSITORY MEMORY]\n{overview}")
 
+        # RAG context — already structured as FILE/SYMBOL/REASON/CODE blocks
         if context.get("rag_context"):
-            sections.append(f"RAG Context:\n{context['rag_context'][:2500]}")
+            repo_context_parts.append(
+                f"[RETRIEVED CODE CONTEXT]\n{context['rag_context'][:3000]}"
+            )
 
-        turns = context.get("conversation_turns") or []
-        if turns:
-            hist = "\n".join(f"{t.get('role', '?')}: {t.get('content', '')}" for t in turns[-6:])
-            sections.append(f"Conversation History:\n{hist}")
-
+        # Tool execution results
         if tool_results:
-            tool_bits = []
+            tool_parts: List[str] = []
             for tr in tool_results:
+                if tr.get("status") != "ok":
+                    continue
                 name = tr.get("tool", "tool")
-                result = tr.get("result")
                 summary = tr.get("summary", "")
-                
-                # Include full result data for specific answers
+                result = tr.get("result")
                 if result:
-                    tool_bits.append(f"[{name}]")
-                    tool_bits.append(f"Summary: {summary}")
-                    tool_bits.append(f"Data: {str(result)[:2000]}")  # Increased from 600 to 2000
-                else:
-                    tool_bits.append(f"[{name}] {summary}")
-            sections.append("Tool Execution Results:\n" + "\n".join(tool_bits))
+                    tool_parts.append(
+                        f"[TOOL: {name}]\nSummary: {summary}\nData: {str(result)[:2000]}"
+                    )
+                elif summary:
+                    tool_parts.append(f"[TOOL: {name}]\n{summary}")
+            if tool_parts:
+                repo_context_parts.append("\n\n".join(tool_parts))
 
         if agent_summary:
-            sections.append(f"Agent Collaboration Summary:\n{agent_summary}")
+            repo_context_parts.append(f"[AGENT SUMMARY]\n{agent_summary}")
 
+        if repo_context_parts:
+            sections.append("REPOSITORY CONTEXT:\n" + "\n\n".join(repo_context_parts))
+        else:
+            sections.append(
+                "REPOSITORY CONTEXT:\nNo repository evidence was retrieved for this query."
+            )
+
+        # ── Conversation history ──────────────────────────────────────────────
+        turns = context.get("conversation_turns") or []
+        if turns:
+            hist = "\n".join(
+                f"{t.get('role', '?')}: {t.get('content', '')}" for t in turns[-6:]
+            )
+            sections.append(f"CONVERSATION HISTORY:\n{hist}")
+
+        # ── Intent format instruction ─────────────────────────────────────────
+        format_instruction = _INTENT_FORMAT.get(intent, _DEFAULT_FORMAT)
+
+        # ── Assemble final user prompt ────────────────────────────────────────
         user_prompt = (
-            "Engineering Context:\n"
-            + "\n\n".join(sections)
-            + f"\n\nUser Question:\n{query}\n\n"
-            "Answer the user's EXACT question using the tool results above. "
-            "Provide specific, factual answers based on the data. "
-            "Do not generate generic summaries."
+            "\n\n".join(sections)
+            + f"\n\nUSER QUESTION:\n{query}\n\n"
+            "ANSWER RULES:\n"
+            + format_instruction
         )
-        return {"system": self.SYSTEM_ROLE, "user": user_prompt}
+
+        return {"system": _SYSTEM_ROLE, "user": user_prompt}
 
     def build_fallback_answer(
         self,
@@ -102,29 +176,43 @@ class PromptBuilder:
         """Deterministic synthesis when no LLM provider is configured."""
         parts: List[str] = []
         intent = (context.get("plan") or {}).get("intent", "general_query")
-        parts.append(f"As CodeGraph Copilot (intent={intent}), here is the engineering assessment for: {query}")
+
+        has_context = bool(
+            context.get("rag_context")
+            or context.get("architecture_summary")
+            or context.get("memory_summary")
+        )
+        has_tool_output = bool(
+            tool_results and any(t.get("status") == "ok" for t in (tool_results or []))
+        )
+
+        if not has_context and not has_tool_output:
+            return (
+                "I could not find enough repository evidence to answer this accurately. "
+                "Please ensure the repository has been indexed before asking questions."
+            )
 
         if context.get("architecture_summary"):
             parts.append(f"Architecture: {context['architecture_summary']}")
 
         mem = context.get("memory_summary")
         if isinstance(mem, dict) and mem.get("architecture_summary"):
-            parts.append(f"Memory: {mem['architecture_summary']}")
+            parts.append(f"Repository Memory: {mem['architecture_summary']}")
 
         if tool_results:
             for tr in tool_results:
-                if tr.get("summary"):
+                if tr.get("summary") and tr.get("status") == "ok":
                     parts.append(f"{tr.get('tool')}: {tr['summary']}")
 
         if agent_summary:
             parts.append(f"Agents: {agent_summary}")
 
-        if len(parts) == 1:
-            parts.append(
-                "Limited repository intelligence is available yet. "
-                "Index the repository or ask a more specific architecture/impact/timeline question."
+        if not parts:
+            return (
+                "I could not find enough repository evidence to answer this accurately."
             )
-        return " ".join(parts)
+
+        return "\n\n".join(parts)
 
 
 prompt_builder = PromptBuilder()

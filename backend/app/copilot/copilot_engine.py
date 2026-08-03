@@ -26,16 +26,32 @@ from app.workspace.repository_registry import RepositoryRegistry, repository_reg
 
 logger = logging.getLogger(__name__)
 
+_PHASE1_INTENTS = frozenset(
+    ["file_lookup", "code_explanation", "workflow", "architecture", "bug_analysis", "general_query"]
+)
+
 
 def normalize_orchestration_intent(query: str, capability_intent: str) -> str:
-    """Map capability-registry intents to planning-era names for chat/execute APIs."""
+    """Map capability-registry intents to canonical Phase 1 names.
+
+    Phase 1 intents are passed through unchanged.
+    Legacy intents are remapped where applicable.
+    """
+    # Phase 1 intents are canonical — do not remap
+    if capability_intent in _PHASE1_INTENTS:
+        return capability_intent
+
     query_lower = query.lower()
 
-    if capability_intent == "architecture_health" and "explain" in query_lower:
-        return "architecture_explanation"
+    # Legacy remapping to Phase 1 equivalents
+    if capability_intent == "architecture_health":
+        return "architecture"
+
+    if capability_intent in ("bug_localization", "security_analysis", "risk_analysis"):
+        return "bug_analysis"
 
     if capability_intent == "general_query" and "explain" in query_lower:
-        return "concept_explanation"
+        return "code_explanation"
 
     return capability_intent
 
@@ -165,11 +181,11 @@ class CopilotEngine:
             session = self.conversations.start(repository_id, conversation_id)
             self.conversations.add_user_message(session.conversation_id, query)
 
-            # 1. Intent routing (CapabilityRegistry) — not the generic PlanningClassifier path
+            # 1. Intent routing (CapabilityRegistry) — deterministic Phase 1 classifier
             plan = self.intent_router.build_execution_plan(query, repository_id=repository_id)
             plan["intent"] = normalize_orchestration_intent(query, str(plan.get("intent") or "general_query"))
 
-            # 2. Assemble context (Memory + RAG + conversation — no duplicate retrieval logic)
+            # 2. Assemble context (Memory + RAG + conversation)
             turns = self.conversations.get_recent_turns(session.conversation_id, limit=10)
             context = self.context_builder.build(
                 repository_id=repository_id,
@@ -301,14 +317,14 @@ class CopilotEngine:
         return {
             "upload_id": repo_info.upload_id,
             "repository_name": repo_info.repository_name,
-            "architecture_score": repo_info.architecture_score if repo_info.architecture_score else 50,
-            "health_score": repo_info.health_score if repo_info.health_score else 50,
-            "quality_score": repo_info.architecture_score if repo_info.architecture_score else 50,
-            "security_score": 70,
-            "risk_score": 100 - (repo_info.health_score if repo_info.health_score else 50),
+            "architecture_score": repo_info.architecture_score if repo_info.architecture_score else None,
+            "health_score": repo_info.health_score if repo_info.health_score else None,
+            "quality_score": repo_info.architecture_score if repo_info.architecture_score else None,
+            "security_score": None,
+            "risk_score": None,
             "languages": repo_info.languages if repo_info.languages else [],
             "frameworks": repo_info.frameworks if repo_info.frameworks else [],
-            "total_files": 100,
+            "total_files": getattr(repo_info, "total_files", None),
             "status": repo_info.status if repo_info.status else "UNKNOWN",
         }
 

@@ -10,12 +10,12 @@ class RepositorySummary(BaseModel):
 
     repository_name: str = Field(..., description="Repository name")
     upload_id: str = Field(..., description="Upload ID")
-    architecture_score: int = Field(..., description="Architecture score")
-    health_score: int = Field(..., description="Health score")
-    quality_score: int = Field(..., description="Quality score")
-    risk_score: int = Field(..., description="Risk score")
-    security_score: int = Field(..., description="Security score")
-    engineering_score: int | None = Field(None, description="Engineering score")
+    architecture_score: Any = Field(..., description="Architecture score")
+    health_score: Any = Field(..., description="Health score")
+    quality_score: Any = Field(..., description="Quality score")
+    risk_score: Any = Field(..., description="Risk score")
+    security_score: Any = Field(..., description="Security score")
+    engineering_score: Any | None = Field(None, description="Engineering score")
 
 
 class RepositoryRanking(BaseModel):

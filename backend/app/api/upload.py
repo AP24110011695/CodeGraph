@@ -15,6 +15,11 @@ router = APIRouter(prefix="/upload", tags=["upload"])
 @router.post("", response_model=UploadResponse, status_code=201)
 async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
     upload_id, filename = await upload_service.save_upload(file)
+    
+    # Initialize state machine and update progress
+    state_machine = RepositoryStateMachine(upload_id)
+    state_machine.update_progress(progress=12, current_stage="Extracting ZIP")
+    
     project_path = extraction_service.extract(upload_id, filename)
 
     display_name = Path(file.filename or "repository").stem or upload_id
@@ -25,6 +30,7 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
         project_path,
         repository_id=upload_id,
         name=display_name,
+        zip_size_bytes=int(file.size or 0),
     )
     
     # Log repository registration

@@ -22,7 +22,7 @@ class WidgetBuilder:
     def build_score_card(
         self,
         title: str,
-        value: int,
+        value: Any,
         category: str,
         trend: str | None = None,
     ) -> dict[str, Any]:
@@ -72,11 +72,11 @@ class WidgetBuilder:
     def build_repository_card(
         self,
         repository_name: str,
-        architecture_score: int,
-        health_score: int,
-        quality_score: int,
-        security_score: int,
-        risk_score: int,
+        architecture_score: Any,
+        health_score: Any,
+        quality_score: Any,
+        security_score: Any,
+        risk_score: Any,
     ) -> dict[str, Any]:
         """Build a repository card widget.
 
@@ -151,7 +151,7 @@ class WidgetBuilder:
             "data": data,
         }
 
-    def _get_score_level(self, score: int) -> str:
+    def _get_score_level(self, score: Any) -> str:
         """Get score level label.
 
         Args:
@@ -160,6 +160,9 @@ class WidgetBuilder:
         Returns:
             Level label.
         """
+        if not isinstance(score, (int, float)):
+            return "unknown"
+            
         if score >= 90:
             return "excellent"
         elif score >= 75:
@@ -173,12 +176,12 @@ class WidgetBuilder:
 
     def _calculate_overall_score(
         self,
-        architecture_score: int,
-        health_score: int,
-        quality_score: int,
-        security_score: int,
-        risk_score: int,
-    ) -> int:
+        architecture_score: Any,
+        health_score: Any,
+        quality_score: Any,
+        security_score: Any,
+        risk_score: Any,
+    ) -> Any:
         """Calculate overall repository score.
 
         Args:
@@ -191,6 +194,14 @@ class WidgetBuilder:
         Returns:
             Overall score.
         """
+        scores = [architecture_score, health_score, quality_score, security_score, risk_score]
+        if any(not isinstance(s, (int, float)) for s in scores):
+            return {
+                "status": "unavailable",
+                "value": None,
+                "reason": "Missing component scores"
+            }
+
         # Invert risk score (lower is better)
         inverted_risk = 100 - risk_score
 

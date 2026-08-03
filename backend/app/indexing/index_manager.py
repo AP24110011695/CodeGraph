@@ -90,6 +90,7 @@ class IndexManager:
             index.frameworks = list(result.frameworks)
             index.languages = dict(result.languages)
             index.total_files = int(result.total_files)
+            index.total_folders = int(result.total_folders)
 
             if force:
                 index.total_chunks = int(result.total_chunks)

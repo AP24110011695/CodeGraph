@@ -192,70 +192,66 @@ class ArchitectureReportEngine:
         results['database'] = self._detect_database(project_path)
 
         # Architecture analysis
-        results['architecture_score'] = 75  # Default score
-        results['architecture_type'] = 'layered'
-        results['layers'] = ['api', 'service', 'repository', 'model']
+        results['architecture_score'] = None
+        results['architecture_type'] = "Unavailable"
+        results['layers'] = []
 
         # Dependency analysis
-        results['dependency_health_score'] = 70
-        results['circular_dependencies'] = 0
+        results['dependency_health_score'] = None
+        results['circular_dependencies'] = None
 
         # Database schema
-        results['schema_score'] = 80
-        results['entities'] = 5
-        results['relationships'] = 3
+        results['schema_score'] = None
+        results['entities'] = None
+        results['relationships'] = None
 
         # API flow
-        results['flow_score'] = 75
-        results['endpoints'] = 10
-        results['controllers'] = 3
+        results['flow_score'] = None
+        results['endpoints'] = None
+        results['controllers'] = None
 
         # Security
-        results['security_score'] = 70
-        results['vulnerabilities'] = 2
+        results['security_score'] = None
+        results['vulnerabilities'] = None
         results['security_issues'] = []
 
         # Quality
-        results['quality_score'] = 75
-        results['code_smells'] = 5
-        results['maintainability_index'] = 75
+        results['quality_score'] = None
+        results['code_smells'] = None
+        results['maintainability_index'] = None
 
         # Risk
-        results['risk_score'] = 30
+        results['risk_score'] = None
         results['high_risk_areas'] = []
         results['risk_factors'] = []
 
         # Design patterns
         results['design_patterns'] = {
-            'patterns': ['Repository', 'Singleton'],
+            'patterns': [],
             'anti_patterns': []
         }
 
         # SOLID
-        results['solid_score'] = 75
-        results['srp_score'] = 78
-        results['ocp_score'] = 85
-        results['lsp_score'] = 90
-        results['isp_score'] = 72
-        results['dip_score'] = 70
+        results['solid_score'] = None
+        results['srp_score'] = None
+        results['ocp_score'] = None
+        results['lsp_score'] = None
+        results['isp_score'] = None
+        results['dip_score'] = None
 
         # Microservices
-        results['microservice_score'] = 65
-        results['service_candidates'] = 2
-        results['recommended_services'] = 1
+        results['microservice_score'] = None
+        results['service_candidates'] = None
+        results['recommended_services'] = None
 
         # Code smells
         results['code_smells'] = {
-            'smells': ['Long Method', 'Magic Numbers'],
+            'smells': [],
             'high_severity': []
         }
 
         # Recommendations
-        results['recommendations'] = [
-            "Improve error handling",
-            "Add unit tests",
-            "Document API endpoints"
-        ]
+        results['recommendations'] = []
 
         return results
 

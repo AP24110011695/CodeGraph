@@ -125,16 +125,28 @@ class IndexingPipeline:
             subset_scan = copy.copy(original_scan)
             subset_scan.files = files_to_index
             
+            from app.repository_state.state_machine import RepositoryStateMachine
+            from app.schemas.repository_state import RepositoryStateEnum
+            sm = RepositoryStateMachine(upload_id)
+
             logger.info("INDEXING_PIPELINE: Step 1 - Detecting frameworks")
             detection = self.detector.detect(project_path, original_scan)
             logger.info("INDEXING_PIPELINE: Step 1 complete - Frameworks detected")
             
             logger.info("INDEXING_PIPELINE: Step 2 - Parsing %d files", len(files_to_index))
+            try:
+                sm.transition_to(RepositoryStateEnum.PARSING, progress=37, current_stage="Parsing")
+            except Exception as e:
+                logger.warning("Failed to transition state to PARSING: %s", e)
             parsing = ParserEngine.parse_project(project_path, subset_scan)
             parsed_by_path = {result.path: result for result in parsing.files}
             logger.info("INDEXING_PIPELINE: Step 2 complete - Parsed %d files", len(parsed_by_path))
             
             logger.info("INDEXING_PIPELINE: Step 3 - Chunking files")
+            try:
+                sm.transition_to(RepositoryStateEnum.INDEXING, progress=52, current_stage="Building dependency graph")
+            except Exception as e:
+                logger.warning("Failed to transition state to INDEXING: %s", e)
             chunks: list[Chunk] = []
             seen_chunk_ids: set[str] = set()
             indexed_files = 0
@@ -173,11 +185,19 @@ class IndexingPipeline:
                 }
 
             logger.info("INDEXING_PIPELINE: Step 4 - Generating embeddings for %d chunks", len(chunks))
+            try:
+                sm.transition_to(RepositoryStateEnum.EMBEDDING, progress=71, current_stage="Generating embeddings")
+            except Exception as e:
+                logger.warning("Failed to transition state to EMBEDDING: %s", e)
             documents = self._embed_documents(chunks)
             logger.info("INDEXING_PIPELINE: Step 4 complete - Generated %d embeddings from %d chunks", len(documents), len(chunks))
             
             if documents:
                 logger.info("INDEXING_PIPELINE: Step 5 - Storing %d vectors in vector store", len(documents))
+                try:
+                    sm.transition_to(RepositoryStateEnum.ANALYZING, progress=90, current_stage="Saving vector index")
+                except Exception as e:
+                    logger.warning("Failed to transition state to ANALYZING: %s", e)
                 self.vector_store.add(documents)
                 logger.info("INDEXING_PIPELINE: Step 5 complete - Vectors stored")
                 

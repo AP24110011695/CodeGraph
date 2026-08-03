@@ -153,8 +153,6 @@ class MarkdownFormatter(ResponseFormatter):
         if arch_data.coupled_modules:
             report.append(f"The presence of **{len(arch_data.coupled_modules)} highly coupled modules** suggests opportunities for architectural refinement. ")
         
-        report.append("Overall, the codebase demonstrates good modularity with room for improvement in dependency management.")
-        
         return "\n".join(report)
     
     def _format_security(self, sec_data: Optional[SecurityData], recommendations: List[str]) -> str:
@@ -248,16 +246,12 @@ class MarkdownFormatter(ResponseFormatter):
         report.append("## Overall Risk\n")
         if sec_data.total_issues == 0:
             report.append("**Risk Level: Low**")
-            report.append("The repository demonstrates good security practices with no detected vulnerabilities.")
         elif sec_data.total_issues <= 5:
             report.append("**Risk Level: Medium**")
-            report.append("The repository has a manageable number of security issues that should be addressed promptly.")
         elif sec_data.total_issues <= 15:
             report.append("**Risk Level: High**")
-            report.append("The repository has significant security concerns requiring immediate attention.")
         else:
             report.append("**Risk Level: Critical**")
-            report.append("The repository has numerous security issues requiring urgent remediation.")
         
         return "\n".join(report)
     
@@ -456,15 +450,6 @@ class MarkdownFormatter(ResponseFormatter):
         report.append("## Overall Score\n")
         report.append(f"**{health_data.overall_score:.1f}/10**")
         
-        if health_data.overall_score >= 8:
-            report.append("The repository is in excellent health with strong practices across all dimensions.")
-        elif health_data.overall_score >= 6:
-            report.append("The repository is in good health with room for improvement in specific areas.")
-        elif health_data.overall_score >= 4:
-            report.append("The repository requires attention in several areas to improve overall health.")
-        else:
-            report.append("The repository needs significant improvement across multiple dimensions.")
-        
         return "\n".join(report)
     
     def _format_authentication(self, auth_data: Optional[AuthenticationData], recommendations: List[str]) -> str:
@@ -532,5 +517,8 @@ class MarkdownFormatter(ResponseFormatter):
             report.append("## Recommendations\n")
             for rec in response.recommendations:
                 report.append(f"- {rec}")
+        
+        if not all_summaries and not response.recommendations:
+            report.append("I could not find enough analyzed repository information to answer this question.\n")
         
         return "\n".join(report)

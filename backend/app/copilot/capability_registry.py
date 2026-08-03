@@ -38,240 +38,85 @@ class CapabilityRegistry:
 
         Order matters: more specific phrases / capabilities first.
         """
-        # Language / metrics (before generic "repository" and short tokens like "pr")
+        # File Lookup
         self.register_capability(
-            "language_analysis",
+            "file_lookup",
             [
-                "programming language",
-                "programming languages",
-                "what language",
-                "which language",
-                "languages used",
-                "language used",
-                "languages",
-                "language",
-                "tech stack",
-                "frameworks",
-                "framework",
+                "where is",
+                "find file",
+                "find function",
+                "where do we",
+                "location of",
+                "which file",
             ],
-            "metrics",
+            "rag",
         )
+
+        # Code Explanation
         self.register_capability(
-            "repository_overview",
+            "code_explanation",
             [
-                "how many files",
-                "number of files",
-                "file count",
-                "files in the repository",
-                "files in repository",
-                "total files",
-                "how many folders",
+                "explain this function",
+                "explain this code",
+                "what does this do",
+                "how does this work",
+                "explain",
+                "walk me through",
             ],
-            "metrics",
+            "rag",
+        )
+
+        # Workflow
+        self.register_capability(
+            "workflow",
+            [
+                "upload flow",
+                "workflow",
+                "flow",
+                "lifecycle",
+                "process",
+                "pipeline",
+                "step by step",
+            ],
+            "rag",
         )
 
         # Architecture
         self.register_capability(
-            "architecture_health",
-            ["architecture", "architectural", "structure", "design", "summarize architecture"],
-            "architecture_report",
-        )
-        self.register_capability(
-            "architecture_recommendation",
-            ["recommendation", "improvement", "suggestion"],
-            "architecture_recommendation",
-        )
-        self.register_capability(
-            "architecture_drift",
-            ["drift", "evolution"],
-            "architecture_drift",
-        )
-        self.register_capability(
-            "repository_timeline",
+            "architecture",
             [
-                "timeline",
-                "what changed",
-                "hotspot",
-                "unstable",
-                "ownership",
-                "evolve together",
-                "tightly coupled",
-                "repository history",
+                "architecture",
+                "architectural",
+                "structure",
+                "design",
+                "components",
+                "relationships",
+                "data flow",
             ],
-            "timeline",
+            "rag",
         )
+
+        # Bug Analysis
         self.register_capability(
-            "impact_analysis",
+            "bug_analysis",
             [
-                "impact",
-                "what breaks",
-                "blast radius",
-                "propagation",
-                "depend on this",
-                "change risk",
-                "if i modify",
+                "bug",
+                "issue",
+                "problem",
+                "error",
+                "vulnerability",
+                "wrong",
+                "fail",
+                "fix",
             ],
-            "impact_analysis",
-        )
-        self.register_capability(
-            "engineering_reports",
-            [
-                "engineering report",
-                "executive report",
-                "health report",
-                "technical debt report",
-                "repository health",
-            ],
-            "engineering_reports",
+            "rag",
         )
 
-        # Quality
+        # General Query (Fallback)
         self.register_capability(
-            "quality_analysis",
-            ["quality", "code quality", "maintainability"],
-            "quality_analyzer",
-        )
-        self.register_capability(
-            "code_smells",
-            ["smell", "code smell", "anti-pattern"],
-            "code_generation",
-        )
-
-        # Security (before generic "risk")
-        self.register_capability(
-            "security_analysis",
-            ["security", "vulnerability", "vulnerabilities", "threat", "cve", "exploit"],
-            "security",
-        )
-
-        # Risk
-        self.register_capability(
-            "risk_analysis",
-            ["risks", "risk", "technical debt", "danger"],
-            "risk",
-        )
-
-        # Dependency
-        self.register_capability(
-            "dependency_health",
-            ["package", "library", "dependency health"],
-            "dependency_health",
-        )
-        self.register_capability(
-            "dependency_graph",
-            ["dependency graph", "dependency map", "connections", "dependencies"],
-            "dependency_graph",
-        )
-
-        # Bug localization
-        self.register_capability(
-            "bug_localization",
-            ["bug", "error", "issue", "debug"],
-            "bug_localization",
-        )
-
-        # Metrics (generic)
-        self.register_capability(
-            "metrics",
-            ["metric", "measurement", "statistics", "stats"],
-            "metrics",
-        )
-
-        # Design patterns / SOLID / microservices / schema / API
-        self.register_capability(
-            "design_patterns",
-            ["design pattern", "patterns", "pattern", "implementation"],
-            "design_patterns",
-        )
-        self.register_capability(
-            "solid_principles",
-            ["solid", "oop", "principle"],
-            "solid",
-        )
-        self.register_capability(
-            "microservices",
-            ["microservice", "service boundary"],
-            "microservices",
-        )
-        self.register_capability(
-            "database_schema",
-            ["database", "schema", "sql", "table"],
-            "database_schema",
-        )
-        self.register_capability(
-            "api_flow",
-            ["api", "endpoint", "route", "rest"],
-            "api_flow",
-        )
-
-        # Documentation
-        self.register_capability(
-            "documentation",
-            ["readme", "docs", "documentation"],
-            "readme",
-        )
-        self.register_capability(
-            "api_documentation",
-            ["api docs", "swagger", "openapi"],
-            "apidocs",
-        )
-
-        # UML / knowledge graph
-        self.register_capability(
-            "uml_diagrams",
-            ["uml", "diagram", "class diagram", "sequence"],
-            "uml",
-        )
-        self.register_capability(
-            "knowledge_graph",
-            ["knowledge graph", "entity", "relationship"],
-            "knowledge_graph",
-        )
-
-        # Repository comparison / release notes / dashboard / team
-        self.register_capability(
-            "repository_comparison",
-            ["compare", "difference", "versus", "against"],
-            "repository_comparison",
-        )
-        self.register_capability(
-            "release_notes",
-            ["release", "changelog", "version"],
-            "release_notes",
-        )
-        self.register_capability(
-            "dashboard",
-            ["dashboard", "executive summary"],
-            "dashboard",
-        )
-        self.register_capability(
-            "team_analytics",
-            ["team", "analytics", "workspace"],
-            "team_analytics",
-        )
-
-        # CI/CD / GitHub / Jira — avoid short ambiguous tokens like bare "pr"
-        self.register_capability(
-            "cicd",
-            ["cicd", "ci/cd", "pipeline", "build", "deploy"],
-            "cicd",
-        )
-        self.register_capability(
-            "github",
-            ["github", "commit", "pull request", "pull-request"],
-            "github",
-        )
-        self.register_capability(
-            "jira",
-            ["jira", "ticket"],
-            "jira",
-        )
-
-        # Generic repository info (last among repository phrases)
-        self.register_capability(
-            "repository_info",
-            ["repository info", "repo info", "overview"],
-            "scanner",
+            "general_query",
+            ["repository info", "overview"],
+            "rag",
         )
 
     def register_capability(
@@ -322,7 +167,7 @@ class CapabilityRegistry:
                 "matched_keyword": keyword,
             }
 
-        # Default: general RAG explanation (not scanner/memory)
+        # Default: general RAG explanation
         return {
             "capability": "general_query",
             "module": "rag",
@@ -332,86 +177,111 @@ class CapabilityRegistry:
     def _apply_deterministic_rules(self, query_lower: str) -> dict[str, Any] | None:
         """Apply deterministic intent rules before keyword matching.
 
-        These rules capture specific query patterns that should map to intents
-        regardless of keyword ordering or partial matches.
+        Maps specific query patterns to Phase 1 intents:
+        file_lookup, code_explanation, workflow, architecture, bug_analysis.
         """
-        # Repository overview: file/folder counts (before language metrics)
-        file_count_patterns = [
-            "how many files",
-            "number of files",
-            "file count",
-            "files in the repository",
-            "files in repository",
-            "total files",
-            "how many folders",
-            "repository size",
+        # File Lookup: "where is X", "find X", "which file", "location of"
+        file_lookup_patterns = [
+            "where is",
+            "where are",
+            "find file",
+            "find function",
+            "find class",
+            "where do we",
+            "location of",
+            "which file",
+            "which module",
+            "what file",
+            "implemented in",
         ]
-        for pattern in file_count_patterns:
+        for pattern in file_lookup_patterns:
             if pattern in query_lower:
                 return {
-                    "capability": "repository_overview",
-                    "module": "metrics",
+                    "capability": "file_lookup",
+                    "module": "rag",
                     "matched_keyword": pattern,
                 }
 
-        # Language / tech stack metrics
-        language_patterns = [
-            "programming language",
-            "programming languages",
-            "what language",
-            "which language",
-            "languages used",
-            "language used",
-            "tech stack",
-            "frameworks",
-            "framework",
+        # Workflow: step-by-step trace of a request/operation flow
+        workflow_patterns = [
+            "upload flow",
+            "indexing flow",
+            "how does upload",
+            "how does indexing",
+            "step by step",
+            "end to end",
+            "end-to-end",
+            "explain the flow",
+            "trace the flow",
+            "explain the process",
+            "how does the",
         ]
-        for pattern in language_patterns:
+        for pattern in workflow_patterns:
             if pattern in query_lower:
                 return {
-                    "capability": "language_analysis",
-                    "module": "metrics",
+                    "capability": "workflow",
+                    "module": "rag",
                     "matched_keyword": pattern,
                 }
 
-        # Architecture intent: modules, dependencies, coupling, structure
+        # Bug Analysis: bugs, problems, issues, vulnerabilities
+        bug_patterns = [
+            "find bugs",
+            "find issues",
+            "possible issues",
+            "possible bugs",
+            "what is wrong",
+            "what could go wrong",
+            "security vulnerability",
+            "security issue",
+            "vulnerability",
+            "vulnerabilities",
+        ]
+        for pattern in bug_patterns:
+            if pattern in query_lower:
+                return {
+                    "capability": "bug_analysis",
+                    "module": "rag",
+                    "matched_keyword": pattern,
+                }
+
+        # Architecture: high-level structure and design
         architecture_patterns = [
-            "architecture",
-            "modules",
-            "dependencies",
-            "coupling",
-            "coupled",
-            "structure",
-            "design",
+            "explain the architecture",
+            "explain architecture",
+            "system architecture",
+            "project architecture",
+            "codebase architecture",
+            "overall architecture",
+            "high level",
+            "high-level",
             "module structure",
-            "dependency graph",
-            "module dependency",
+            "component structure",
         ]
         for pattern in architecture_patterns:
             if pattern in query_lower:
                 return {
-                    "capability": "architecture_health",
-                    "module": "architecture_report",
+                    "capability": "architecture",
+                    "module": "rag",
                     "matched_keyword": pattern,
                 }
 
-        # Security intent: security, vulnerabilities, risks, issues
-        security_patterns = [
-            "security",
-            "vulnerability",
-            "vulnerabilities",
-            "security risk",
-            "security risks",
-            "threat",
-            "cve",
-            "exploit",
-            "security issue",
+        # Code Explanation: explain a function/class/module
+        code_explanation_patterns = [
+            "explain this function",
+            "explain this class",
+            "explain this code",
+            "what does this function",
+            "what does this class",
+            "what does this do",
+            "how does this work",
+            "walk me through",
         ]
-        for pattern in security_patterns:
+        for pattern in code_explanation_patterns:
             if pattern in query_lower:
                 return {
-                    "capability": "security_analysis",
-                    "module": "security",
+                    "capability": "code_explanation",
+                    "module": "rag",
                     "matched_keyword": pattern,
                 }
 

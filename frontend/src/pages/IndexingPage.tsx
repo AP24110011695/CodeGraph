@@ -8,6 +8,13 @@ import { useRepositoryStore } from '@/core/store/repository.store';
 import { useIndexingOrchestrator } from '@/features/indexing/api/indexing.queries';
 import { beginUploadFlow, clearFlowSession } from '@/core/navigation/flow-session';
 
+function formatBytes(bytes: number): string {
+  if (bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 const HISTORY_BACK = '__history_back__';
 
 export default function IndexingPage() {
@@ -26,11 +33,8 @@ export default function IndexingPage() {
 
   useEffect(() => {
     if (!isReady || !repoId) return;
-    const timer = window.setTimeout(() => {
-      clearFlowSession();
-      navigate(`/dashboard/${repoId}`, { replace: false });
-    }, 3000);
-    return () => window.clearTimeout(timer);
+    clearFlowSession();
+    navigate(`/dashboard/${repoId}`, { replace: false });
   }, [isReady, navigate, repoId]);
 
   if (!repoId) {
@@ -115,6 +119,28 @@ export default function IndexingPage() {
           repositoryName={name}
           progress={snapshot.progress}
           currentStage={snapshot.currentStage}
+          languages={
+            snapshot.index?.statistics.languages?.length
+              ? snapshot.index.statistics.languages
+              : snapshot.index?.statistics.frameworks?.length
+                ? snapshot.index.statistics.frameworks
+                : undefined
+          }
+          fileCount={
+            snapshot.index?.statistics.files != null
+              ? snapshot.index.statistics.files
+              : undefined
+          }
+          folderCount={
+            snapshot.index?.statistics.folders != null
+              ? snapshot.index.statistics.folders
+              : undefined
+          }
+          size={
+            snapshot.index?.statistics.zip_size_bytes
+              ? formatBytes(snapshot.index.statistics.zip_size_bytes)
+              : undefined
+          }
         />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">

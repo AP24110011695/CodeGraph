@@ -4,6 +4,10 @@ export type IndexStatus = 'NOT_INDEXED' | 'INDEXING' | 'READY' | 'FAILED';
 
 export interface IndexStatistics {
   files: number;
+  folders: number;
+  zip_size_bytes: number;
+  languages: string[];
+  frameworks: string[];
   chunks: number;
   embeddings: number;
   added: number;

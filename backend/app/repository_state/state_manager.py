@@ -143,6 +143,14 @@ class StateManager:
             if current_stage is not None:
                 current.current_stage = current_stage
             
-            return current.model_copy()
+            snapshot = current.model_copy()
+            try:
+                from storage.repository_store import repository_store
+                repository_store.save_workflow_state(
+                    repository_id, snapshot.model_dump(mode="json")
+                )
+            except Exception:
+                logger.debug("Failed to persist updated workflow state for %s", repository_id, exc_info=True)
+            return snapshot
 
 state_manager = StateManager()

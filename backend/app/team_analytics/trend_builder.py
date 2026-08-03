@@ -44,7 +44,17 @@ class TrendBuilder:
         quality_scores = [
             repo.get("quality_score", 50)
             for repo in repository_metrics
+            if isinstance(repo.get("quality_score"), (int, float))
         ]
+
+        if not quality_scores:
+            return {
+                "trend": "unknown",
+                "improvement_rate": 0,
+                "declining_repos": 0,
+                "improving_repos": 0,
+                "stable_repos": 0,
+            }
 
         average_quality = sum(quality_scores) / len(quality_scores)
 
@@ -96,7 +106,17 @@ class TrendBuilder:
         risk_scores = [
             repo.get("risk_score", 50)
             for repo in repository_metrics
+            if isinstance(repo.get("risk_score"), (int, float))
         ]
+
+        if not risk_scores:
+            return {
+                "trend": "unknown",
+                "risk_increase_rate": 0,
+                "high_risk_repos": 0,
+                "low_risk_repos": 0,
+                "stable_repos": 0,
+            }
 
         average_risk = sum(risk_scores) / len(risk_scores)
 
@@ -148,7 +168,17 @@ class TrendBuilder:
         security_scores = [
             repo.get("security_score", 50)
             for repo in repository_metrics
+            if isinstance(repo.get("security_score"), (int, float))
         ]
+
+        if not security_scores:
+            return {
+                "trend": "unknown",
+                "security_improvement_rate": 0,
+                "vulnerable_repos": 0,
+                "secure_repos": 0,
+                "stable_repos": 0,
+            }
 
         average_security = sum(security_scores) / len(security_scores)
 
@@ -199,7 +229,16 @@ class TrendBuilder:
         engineering_scores = [
             repo.get("engineering_score", 50)
             for repo in repository_metrics
+            if isinstance(repo.get("engineering_score"), (int, float))
         ]
+
+        if not engineering_scores:
+            return {
+                "trend": "unknown",
+                "overall_direction": 0,
+                "improving_count": 0,
+                "declining_count": 0,
+            }
 
         average_score = sum(engineering_scores) / len(engineering_scores)
 

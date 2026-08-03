@@ -10,10 +10,10 @@ class ScoreCard(BaseModel):
 
     type: str = Field(..., description="Widget type")
     title: str = Field(..., description="Widget title")
-    value: int = Field(..., description="Score value")
+    value: Any = Field(..., description="Score value")
     category: str = Field(..., description="Score category")
     trend: str | None = Field(None, description="Trend direction")
-    level: str = Field(..., description="Score level")
+    level: Any = Field(..., description="Score level")
 
 
 class ListWidget(BaseModel):
@@ -38,12 +38,12 @@ class RepositoryCard(BaseModel):
 
     type: str = Field(..., description="Widget type")
     repository_name: str = Field(..., description="Repository name")
-    architecture_score: int = Field(..., description="Architecture score")
-    health_score: int = Field(..., description="Health score")
-    quality_score: int = Field(..., description="Quality score")
-    security_score: int = Field(..., description="Security score")
-    risk_score: int = Field(..., description="Risk score")
-    overall_score: int = Field(..., description="Overall score")
+    architecture_score: Any = Field(..., description="Architecture score")
+    health_score: Any = Field(..., description="Health score")
+    quality_score: Any = Field(..., description="Quality score")
+    security_score: Any = Field(..., description="Security score")
+    risk_score: Any = Field(..., description="Risk score")
+    overall_score: Any = Field(..., description="Overall score")
 
 
 class DashboardWidgets(BaseModel):

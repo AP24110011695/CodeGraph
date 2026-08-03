@@ -15,11 +15,11 @@ export function RepositoryHeader({
   repositoryName,
   progress,
   currentStage,
-  languages = ['Python', 'React', 'TypeScript'],
-  fileCount = 78,
-  folderCount = 12,
-  size = '2.4 MB',
-  estimatedTime = '2 minutes',
+  languages,
+  fileCount,
+  folderCount,
+  size,
+  estimatedTime,
 }: RepositoryHeaderProps) {
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated p-6">
@@ -33,24 +33,28 @@ export function RepositoryHeader({
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-medium text-text-primary">{repositoryName}</h1>
-            <div className="flex flex-wrap items-center gap-2">
-              {languages.map((lang) => (
-                <Badge key={lang} variant="accent" className="text-xs">
-                  {lang}
-                </Badge>
-              ))}
-            </div>
+            {languages && languages.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {languages.map((lang) => (
+                  <Badge key={lang} variant="accent" className="text-xs">
+                    {lang}
+                  </Badge>
+                ))}
+              </div>
+            )}
             <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
-              <span>{fileCount} files</span>
-              <span>{folderCount} folders</span>
-              <span>{size}</span>
+              {fileCount !== undefined && <span>{fileCount} files</span>}
+              {folderCount !== undefined && <span>{folderCount} folders</span>}
+              {size !== undefined && <span>{size}</span>}
             </div>
           </div>
         </div>
 
         <div className="text-right">
           <div className="text-3xl font-medium text-accent-default">{progress}%</div>
-          <div className="text-sm text-text-secondary">{estimatedTime} remaining</div>
+          {estimatedTime && (
+            <div className="text-sm text-text-secondary">{estimatedTime} remaining</div>
+          )}
         </div>
       </div>
 

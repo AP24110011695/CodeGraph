@@ -124,13 +124,14 @@ class ReportBuilder:
 
     def _build_architecture_overview(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build architecture overview section."""
-        architecture_score = analysis_results.get('architecture_score', 0)
+        architecture_score = analysis_results.get('architecture_score')
+        score_display = f"{architecture_score}/100" if architecture_score is not None else "Unavailable"
         content = f"""
 ## Architecture Overview
 
-**Architecture Score:** {architecture_score}/100
+**Architecture Score:** {score_display}
 
-**Architecture Type:** {analysis_results.get('architecture_type', 'Unknown')}
+**Architecture Type:** {analysis_results.get('architecture_type') or 'Unknown'}
 
 **Layers Detected:** {len(analysis_results.get('layers', []))}
 """
@@ -150,55 +151,66 @@ class ReportBuilder:
 
     def _build_dependency_analysis(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build dependency analysis section."""
-        dependency_health = analysis_results.get('dependency_health_score', 0)
+        dependency_health = analysis_results.get('dependency_health_score')
+        score_display = f"{dependency_health}/100" if dependency_health is not None else "Unavailable"
+        circ_deps = analysis_results.get('circular_dependencies')
+        circ_display = str(circ_deps) if circ_deps is not None else "Unavailable"
         content = f"""
 ## Dependency Analysis
 
-**Dependency Health Score:** {dependency_health}/100
+**Dependency Health Score:** {score_display}
 
 **Total Dependencies:** {len(analysis_results.get('dependencies', []))}
 
-**Circular Dependencies:** {analysis_results.get('circular_dependencies', 0)}
+**Circular Dependencies:** {circ_display}
 """
         return ReportSection(title="Dependency Analysis", content=content.strip(), score=dependency_health)
 
     def _build_database_schema_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build database schema summary section."""
-        schema_score = analysis_results.get('schema_score', 0)
+        schema_score = analysis_results.get('schema_score')
+        score_display = f"{schema_score}/100" if schema_score is not None else "Unavailable"
+        entities = analysis_results.get('entities')
+        relationships = analysis_results.get('relationships')
         content = f"""
 ## Database Schema Summary
 
-**Schema Score:** {schema_score}/100
+**Schema Score:** {score_display}
 
-**Entities Detected:** {analysis_results.get('entities', 0)}
+**Entities Detected:** {str(entities) if entities is not None else 'Unavailable'}
 
-**Relationships Detected:** {analysis_results.get('relationships', 0)}
+**Relationships Detected:** {str(relationships) if relationships is not None else 'Unavailable'}
 """
         return ReportSection(title="Database Schema Summary", content=content.strip(), score=schema_score)
 
     def _build_api_flow_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build API flow summary section."""
-        flow_score = analysis_results.get('flow_score', 0)
+        flow_score = analysis_results.get('flow_score')
+        score_display = f"{flow_score}/100" if flow_score is not None else "Unavailable"
+        endpoints = analysis_results.get('endpoints')
+        controllers = analysis_results.get('controllers')
         content = f"""
 ## API Flow Summary
 
-**API Flow Score:** {flow_score}/100
+**API Flow Score:** {score_display}
 
-**Endpoints Detected:** {analysis_results.get('endpoints', 0)}
+**Endpoints Detected:** {str(endpoints) if endpoints is not None else 'Unavailable'}
 
-**Controllers Detected:** {analysis_results.get('controllers', 0)}
+**Controllers Detected:** {str(controllers) if controllers is not None else 'Unavailable'}
 """
         return ReportSection(title="API Flow Summary", content=content.strip(), score=flow_score)
 
     def _build_security_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build security summary section."""
-        security_score = analysis_results.get('security_score', 0)
+        security_score = analysis_results.get('security_score')
+        score_display = f"{security_score}/100" if security_score is not None else "Unavailable"
+        vulns = analysis_results.get('vulnerabilities')
         content = f"""
 ## Security Summary
 
-**Security Score:** {security_score}/100
+**Security Score:** {score_display}
 
-**Vulnerabilities Found:** {analysis_results.get('vulnerabilities', 0)}
+**Vulnerabilities Found:** {str(vulns) if vulns is not None else 'Unavailable'}
 
 **Security Issues:** {len(analysis_results.get('security_issues', []))}
 """
@@ -206,25 +218,29 @@ class ReportBuilder:
 
     def _build_quality_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build quality summary section."""
-        quality_score = analysis_results.get('quality_score', 0)
+        quality_score = analysis_results.get('quality_score')
+        score_display = f"{quality_score}/100" if quality_score is not None else "Unavailable"
+        smells = analysis_results.get('code_smells')
+        maint = analysis_results.get('maintainability_index')
         content = f"""
 ## Quality Summary
 
-**Quality Score:** {quality_score}/100
+**Quality Score:** {score_display}
 
-**Code Smells:** {analysis_results.get('code_smells', 0)}
+**Code Smells:** {str(smells) if isinstance(smells, int) else 'Unavailable'}
 
-**Maintainability Index:** {analysis_results.get('maintainability_index', 'N/A')}
+**Maintainability Index:** {str(maint) if maint is not None else 'Unavailable'}
 """
         return ReportSection(title="Quality Summary", content=content.strip(), score=quality_score)
 
     def _build_risk_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build risk summary section."""
-        risk_score = analysis_results.get('risk_score', 0)
+        risk_score = analysis_results.get('risk_score')
+        score_display = f"{risk_score}/100" if risk_score is not None else "Unavailable"
         content = f"""
 ## Risk Summary
 
-**Risk Score:** {risk_score}/100
+**Risk Score:** {score_display}
 
 **High Risk Areas:** {len(analysis_results.get('high_risk_areas', []))}
 
@@ -246,35 +262,39 @@ class ReportBuilder:
 
     def _build_solid_summary(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build SOLID summary section."""
-        solid_score = analysis_results.get('solid_score', 0)
+        solid_score = analysis_results.get('solid_score')
+        score_display = f"{solid_score}/100" if solid_score is not None else "Unavailable"
         content = f"""
 ## SOLID Principles Summary
 
-**Overall SOLID Score:** {solid_score}/100
+**Overall SOLID Score:** {score_display}
 
-**SRP Score:** {analysis_results.get('srp_score', 'N/A')}
+**SRP Score:** {analysis_results.get('srp_score') or 'Unavailable'}
 
-**OCP Score:** {analysis_results.get('ocp_score', 'N/A')}
+**OCP Score:** {analysis_results.get('ocp_score') or 'Unavailable'}
 
-**LSP Score:** {analysis_results.get('lsp_score', 'N/A')}
+**LSP Score:** {analysis_results.get('lsp_score') or 'Unavailable'}
 
-**ISP Score:** {analysis_results.get('isp_score', 'N/A')}
+**ISP Score:** {analysis_results.get('isp_score') or 'Unavailable'}
 
-**DIP Score:** {analysis_results.get('dip_score', 'N/A')}
+**DIP Score:** {analysis_results.get('dip_score') or 'Unavailable'}
 """
         return ReportSection(title="SOLID Principles Summary", content=content.strip(), score=solid_score)
 
     def _build_microservice_readiness(self, analysis_results: dict[str, Any]) -> ReportSection:
         """Build microservice readiness section."""
-        microservice_score = analysis_results.get('microservice_score', 0)
+        microservice_score = analysis_results.get('microservice_score')
+        score_display = f"{microservice_score}/100" if microservice_score is not None else "Unavailable"
+        cands = analysis_results.get('service_candidates')
+        recs = analysis_results.get('recommended_services')
         content = f"""
 ## Microservice Readiness
 
-**Microservice Score:** {microservice_score}/100
+**Microservice Score:** {score_display}
 
-**Service Candidates:** {analysis_results.get('service_candidates', 0)}
+**Service Candidates:** {str(cands) if cands is not None else 'Unavailable'}
 
-**Recommended Services:** {analysis_results.get('recommended_services', 0)}
+**Recommended Services:** {str(recs) if recs is not None else 'Unavailable'}
 """
         return ReportSection(title="Microservice Readiness", content=content.strip(), score=microservice_score)
 

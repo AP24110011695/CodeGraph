@@ -13,18 +13,27 @@ from app.copilot.capability_registry import CapabilityRegistry, capability_regis
 
 logger = logging.getLogger(__name__)
 
-# Capability → ToolExecutor module names (display names in MODULE_ALIASES).
+# Phase 1 intent → ToolExecutor module names.
+# All Phase 1 intents route through RAG Engine only.
 _CAPABILITY_MODULES: dict[str, list[str]] = {
+    # Phase 1 intents (RAG-only)
+    "file_lookup": ["RAG Engine"],
+    "code_explanation": ["RAG Engine"],
+    "workflow": ["RAG Engine"],
+    "architecture": ["RAG Engine"],
+    "bug_analysis": ["RAG Engine"],
+    "general_query": ["RAG Engine"],
+    # Legacy intents — preserved so existing tests/tools don't break
     "language_analysis": ["Metrics Engine", "Language Analyzer"],
     "repository_overview": ["Repository Overview", "Metrics Engine"],
     "repository_info": ["Repository Overview", "Metrics Engine"],
     "metrics": ["Metrics Engine", "Language Analyzer"],
-    "architecture_health": ["Architecture Analyzer", "Dependency Graph"],
+    "architecture_health": ["RAG Engine"],
     "architecture_recommendation": ["Architecture Analyzer", "Dependency Graph"],
     "architecture_drift": ["Architecture Analyzer", "Dependency Graph"],
     "dependency_graph": ["Dependency Graph", "Architecture Analyzer"],
     "dependency_health": ["Dependency Graph", "Metrics Engine"],
-    "security_analysis": ["Security Analyzer"],
+    "security_analysis": ["RAG Engine"],
     "quality_analysis": ["Engineering Reports"],
     "code_smells": ["Engineering Reports"],
     "risk_analysis": ["Engineering Reports", "Security Analyzer"],
@@ -32,11 +41,10 @@ _CAPABILITY_MODULES: dict[str, list[str]] = {
     "repository_timeline": ["Timeline Intelligence Engine", "Repository Memory"],
     "engineering_reports": ["Engineering Reports"],
     "knowledge_graph": ["Knowledge Graph", "RAG Engine"],
-    "bug_localization": ["Semantic Engine", "RAG Engine"],
+    "bug_localization": ["RAG Engine"],
     "documentation": ["RAG Engine"],
     "api_documentation": ["RAG Engine"],
-    "api_flow": ["Architecture Analyzer", "RAG Engine"],
-    "general_query": ["RAG Engine"],
+    "api_flow": ["RAG Engine"],
     "unknown": ["RAG Engine"],
 }
 
