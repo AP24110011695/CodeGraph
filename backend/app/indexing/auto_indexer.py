@@ -72,16 +72,11 @@ class AutoIndexer:
                     # Let the actual indexing process handle state transitions
                     state_machine = RepositoryStateMachine(repository_id)
                     
-                    logger.info("AUTO_INDEXER: Calling create_index for %s", repository_id)
                     # Trigger indexing - let the indexing process handle state transitions
                     index = self.index_manager.create_index(project_path, repository_id, force=False)
                     
                     logger.info("AUTO_INDEXER: Successfully indexed %s - chunks: %d, embeddings: %d",
                                repository_id, index.total_chunks, index.total_embeddings)
-                    
-                    # Note: Memory building is triggered by REPOSITORY_INDEXED event
-                    # which is published by StateManager.transition_state() during INDEXING transition
-                    # No need to manually trigger memory building here
                     
                 except Exception as e:
                     logger.error("AUTO_INDEXER: Failed to auto-index repository %s: %s", 

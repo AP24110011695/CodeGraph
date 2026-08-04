@@ -54,30 +54,7 @@ def _to_chat_response(result: dict) -> CopilotChatResponse:
 @router.post("/chat", response_model=CopilotChatResponse)
 async def copilot_chat(request: CopilotChatRequest) -> CopilotChatResponse:
     """Answer an engineering question by orchestrating existing intelligence."""
-    # Log the incoming request details
-    logger.info("=" * 80)
-    logger.info("FRONTEND COPILOT CHAT REQUEST")
-    logger.info("=" * 80)
-    logger.info("Repository ID from frontend: %s", request.repository_id)
-    logger.info("Query from frontend: %s", request.query)
-    logger.info("Conversation ID: %s", request.conversation_id)
-    logger.info("Provider: %s", request.provider)
-    
-    # Check memory before processing
-    from app.repository_memory.memory_engine import memory_engine
-    logger.info("Checking memory before processing...")
-    logger.info("MemoryEngine instance ID: %s", id(memory_engine))
-    logger.info("MemoryStore instance ID: %s", id(memory_engine._store))
-    logger.info("MemoryStore.contains(%s): %s", request.repository_id, memory_engine._store.contains(request.repository_id))
-    
-    memory = memory_engine.get_memory(request.repository_id)
-    if memory:
-        logger.info("Memory found before processing")
-        logger.info("  Symbol count: %d", len(memory.symbol_summaries))
-    else:
-        logger.info("Memory NOT found before processing")
-    
-    logger.info("=" * 80)
+    logger.info("Copilot chat request for repository_id: %s", request.repository_id)
     
     try:
         result = copilot_engine.chat(
