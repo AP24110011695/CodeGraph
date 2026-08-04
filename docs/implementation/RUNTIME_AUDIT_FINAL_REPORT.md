@@ -4,23 +4,26 @@
 
 After comprehensive runtime auditing and instrumentation, the root cause was identified and fixed. The repository memory is now successfully built after indexing completes, and the Copilot can retrieve symbols correctly.
 
+## Design Decision 7: Repository Memory Lifecycle
+
+**RepositoryMemory generation is triggered by REPOSITORY_INDEXED instead of REPOSITORY_READY.**
+
+**Reason:**
+- REPOSITORY_INDEXED represents completion of parsing/indexing data required for memory construction
+- REPOSITORY_READY depends on the entire repository lifecycle and can be delayed by embedding operations
+- Memory building doesn't require READY state - memory only needs the parsing result (available after INDEXING)
+
+**Result:**
+- Memory generation becomes deterministic and available before Copilot queries
+- Single source of truth ensures memory is built exactly once when indexing completes
+
 ## Timeline
 
-**Upload started** - REPOSITORY_UPLOADED event published
+**Upload started** → REPOSITORY_UPLOADED event published
 ↓
-**REPOSITORY_INDEXED fired** - on_repository_indexed() called
+**REPOSITORY_INDEXED fired** → Memory built (92552 symbols) → Memory stored
 ↓
-**Memory built (92555 symbols)** - Memory rebuilt successfully
-↓
-**Memory stored** - Memory verification successful - MemoryStore.contains(repository_id): True
-↓
-**REPOSITORY_READY fired** - on_repository_ready() called (with explicit event publishing fix)
-↓
-**Memory already exists check** - Existing memory symbol count: 92555, skipped
-↓
-**Copilot request** - symbol_tool called
-↓
-**Memory found** - 92555 symbols retrieved
+**Copilot request** → Memory found (92552 symbols)
 
 ## Root Cause
 
@@ -28,51 +31,40 @@ After comprehensive runtime auditing and instrumentation, the root cause was ide
 
 **Function**: `index_repository()` (line 65)
 
-**Line**: 97-99
+**Issue**: The condition `state_machine.current_state.state != RepositoryStateEnum.READY` was not satisfied, so the state transition to READY was skipped, and the REPOSITORY_READY event was never published by StateManager.transition_state(). This meant that auto_memory_builder.on_repository_ready() was never called, and memory was only built via REPOSITORY_INDEXED event during incremental indexing.
 
-**Why the data is lost**: The condition `state_machine.current_state.state != RepositoryStateEnum.READY` was not satisfied, so the state transition to READY was skipped, and the REPOSITORY_READY event was never published by StateManager.transition_state(). This meant that auto_memory_builder.on_repository_ready() was never called, and memory was only built via REPOSITORY_INDEXED event during incremental indexing.
+**Solution**: Changed memory building to be triggered by REPOSITORY_INDEXED event instead of REPOSITORY_READY event, as REPOSITORY_INDEXED is reliably published during the INDEXING state transition by StateManager.transition_state(), while REPOSITORY_READY is unreliable due to the long embedding process.
 
 ## MemoryStore Instance Analysis
 
-**Writer MemoryStore id**: 2626363744736
-**Reader MemoryStore id**: 2626363744736
+**Writer MemoryStore id**: 2453884885888
+**Reader MemoryStore id**: 2453884885888
 
 **They match - MemoryStore is a singleton**
 
-**Repository written**: real-upload-test-4
-**Repository read**: real-upload-test-4
+**Repository written**: real-upload-test-9
+**Repository read**: real-upload-test-9
 
 **They match - Same repository ID**
 
-**MemoryStore.set()**: Repository ID: real-upload-test-4, Symbols: 92555
-**MemoryStore.get()**: Repository ID: real-upload-test-4, Symbols: 92555
+**MemoryStore.set()**: Repository ID: real-upload-test-9, Symbols: 92552
+**MemoryStore.get()**: Repository ID: real-upload-test-9, Symbols: 92552
 
 **Memory successfully stored and retrieved**
 
 ## Fix Applied
 
+**File**: `app/main.py`
+
+**Change**: Registered auto_memory_builder for REPOSITORY_INDEXED event only (removed REPOSITORY_READY registration)
+
+**File**: `app/repository_memory/auto_memory_builder.py`
+
+**Change**: Renamed handler to on_repository_indexed() and updated documentation to reflect that memory building is triggered by REPOSITORY_INDEXED event
+
 **File**: `app/indexing/auto_indexer.py`
 
-**Function**: `index_repository()`
-
-**Lines**: 99-112 (added after line 91)
-
-**Change**: Added explicit REPOSITORY_READY event publishing after successful indexing, independent of the state transition:
-
-```python
-# Explicitly publish REPOSITORY_READY event to trigger memory building
-try:
-    from app.events.event_bus import event_bus
-    from app.events.event_types import EventType
-    event_bus.publish(
-        event_type=EventType.REPOSITORY_READY,
-        repository_id=repository_id,
-        payload={"indexed": True, "chunks": index.total_chunks}
-    )
-    logger.info("AUTO_INDEXER: Published REPOSITORY_READY event for %s", repository_id)
-except Exception as e:
-    logger.warning("AUTO_INDEXER: Failed to publish REPOSITORY_READY event for %s: %s", repository_id, e)
-```
+**Change**: Removed explicit event publishing logic, let StateManager.transition_state() handle REPOSITORY_INDEXED event publishing during INDEXING state transition
 
 ## Files Modified
 
@@ -81,9 +73,9 @@ except Exception as e:
 3. `storage/parsing_store.py` - New parsing result storage
 4. `app/indexing/indexing_pipeline.py` - Save parsing results
 5. `app/repository_memory/memory_builder.py` - Reuse saved parsing results
-6. `app/repository_memory/auto_memory_builder.py` - New auto memory builder
-7. `app/indexing/auto_indexer.py` - Publish REPOSITORY_READY event
-8. `app/main.py` - Register auto memory builder events
+6. `app/repository_memory/auto_memory_builder.py` - New auto memory builder, trigger on REPOSITORY_INDEXED
+7. `app/main.py` - Register auto_memory_builder for REPOSITORY_INDEXED event only
+8. `app/indexing/auto_indexer.py` - Remove explicit event publishing, let StateManager handle it
 9. `app/repository_state/state_manager.py` - Added event publishing logging
 10. `app/repository_memory/memory_store.py` - Added instance ID tracking
 11. `app/repository_memory/memory_engine.py` - Added instance ID tracking
@@ -110,12 +102,12 @@ except Exception as e:
 ## Verification
 
 After the fix:
-- Upload → Index → Parse → Save → Memory Build → Copilot Query
-- Memory built with 92555 symbols
-- symbol_tool successfully retrieves 92555 symbols
+- Upload → Index → Parse → Save → Memory Build (triggered by REPOSITORY_INDEXED) → Copilot Query
+- Memory built with 92552 symbols
+- symbol_tool successfully retrieves 92552 symbols
 - Returns 20 matching symbols for "authentication" query
 - No "not enough analyzed repository information" response
 
 ## Conclusion
 
-The repository intelligence pipeline is now stabilized. The REPOSITORY_READY event is explicitly published after indexing completes, ensuring that auto_memory_builder.on_repository_ready() is triggered and memory is built automatically. MemoryStore is a singleton, and memory is successfully stored and retrieved across the pipeline.
+The repository intelligence pipeline is now stabilized. Memory building is triggered by the reliable REPOSITORY_INDEXED event, which is published during the INDEXING state transition by StateManager.transition_state(). This ensures memory is built deterministically when indexing completes, regardless of whether the READY state transition succeeds. MemoryStore is a singleton, and memory is successfully stored and retrieved across the pipeline.
