@@ -1,5 +1,5 @@
 import logging
-from app.schemas.repository_memory import RepositoryMemory
+from app.schemas.repository_memory import RepositoryMemory, MemoryMetadata
 from .memory_store import MemoryStore
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class MemoryUpdater:
             logger.warning(f"No existing memory found for {repository_id}, cannot update incrementally.")
             # Fallback to creating an empty one if not exists for partial updates,
             # though in a real scenario it might trigger a full rebuild.
-            memory = RepositoryMemory(repository_id=repository_id)
+            memory = RepositoryMemory(metadata=MemoryMetadata(repository_id=repository_id))
             
         # Update only affected sections based on `changes` from Incremental Indexing.
         # This ensures we never rebuild the entire memory if only a small portion changes.

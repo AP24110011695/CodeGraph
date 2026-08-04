@@ -91,17 +91,27 @@ class RAGEngine:
         # 2. Context Selection — intent-driven, not hardcoded
         raw_items: list = []
 
-        # Memory context only for broad/architectural queries
+        # 2a. Broad structural memory (architecture/tech-stack intents only)
         raw_items.extend(self.context_selector.select_memory_context(repository_id, intent))
 
-        # Semantic vector search — always uses the current query
+        # 2b. Structured memory injections — separate from RAG, feed into Context Builder together
+        # Workflow memory: step-by-step traces for workflow/tracing intents
+        raw_items.extend(self.context_selector.select_workflow_context(repository_id, intent, query))
+
+        # Symbol memory: class/function lookup for file-lookup/code-explanation intents
+        raw_items.extend(self.context_selector.select_symbol_context(repository_id, intent, query))
+
+        # API memory: endpoint records for workflow/API intents
+        raw_items.extend(self.context_selector.select_api_context(repository_id, intent, query))
+
+        # 2c. Semantic vector search — always uses the current query
         raw_items.extend(self.context_selector.select_semantic_context(repository_id, query))
 
-        # Graph context for dependency / coupling queries
+        # 2d. Graph context for dependency / coupling queries
         if intent in ("dependency_analysis", "coupling_analysis"):
             raw_items.extend(self.context_selector.select_graph_context(repository_id, analysis["entities"]))
 
-        # Timeline context only when explicitly about history / evolution
+        # 2e. Timeline context only when explicitly about history / evolution
         if intent == "timeline_analysis":
             raw_items.extend(self.context_selector.select_timeline_context(repository_id, query))
 

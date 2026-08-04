@@ -21,9 +21,15 @@
 - [x] Remove hardcoded scores from legacy `_build_repository_data` path
 - [x] All 50 copilot tests pass; all 1,231 backend tests pass
 
-## Phase 2: Repository Memory Refactoring (Future)
-- [ ] Separate monolithic memory into queryable structured stores
-- [ ] Implement deterministic memory extractors
+## Phase 2: Repository Memory Refactoring
+- [x] Separate monolithic memory into queryable structured stores
+- [x] Implement deterministic memory extractors
+  - [x] SymbolTable (functions, classes, constants)
+  - [x] ModuleMemory (structural responsibilities, files, public interfaces)
+  - [x] WorkflowMemory (structural execution paths, steps)
+  - [x] APIMemory (endpoints, methods, handlers)
+- [x] Ensure memory is entirely data-driven (no LLM placeholders during index)
+- [x] Connect memory injection to Copilot ContextBuilder (kept separate from RAG retrieval)
 
 ## Phase 3: Hybrid Retrieval & Context Builder (Future)
 - [ ] Implement Hybrid Search (BM25 + Vector)
