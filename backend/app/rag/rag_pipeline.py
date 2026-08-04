@@ -123,6 +123,8 @@ class RAGPipeline:
         query: str,
         upload_id: str,
         top_k: int = 5,
+        intent: str = "general_explanation",
+        memory_context: list[dict] = None,
     ) -> dict[str, Any]:
         """Retrieve relevant chunks for a query.
 
@@ -130,6 +132,8 @@ class RAGPipeline:
             query: User query
             upload_id: Upload identifier to filter results
             top_k: Number of results to return
+            intent: Intent of the query
+            memory_context: Repository memory context
 
         Returns:
             Dictionary with query and retrieved matches
@@ -148,6 +152,8 @@ class RAGPipeline:
                 query=query,
                 top_k=top_k,
                 filters={"upload_id": upload_id},
+                intent=intent,
+                memory_context=memory_context,
             )
         except RetrievalError as e:
             raise RAGPipelineError(f"Retrieval failed: {str(e)}")

@@ -49,6 +49,7 @@ class ContextBuilder:
         conversation_turns: Optional[List[Dict[str, Any]]] = None,
         plan: Optional[Dict[str, Any]] = None,
         shared_context: Optional[Dict[str, Any]] = None,
+        tool_results: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Assemble context for orchestration and prompt construction."""
         modules = list((plan or {}).get("execution_order") or (plan or {}).get("required_modules") or [])
@@ -114,6 +115,32 @@ class ContextBuilder:
         if rag_context:
             touched.append("Advanced RAG")
 
+        # Phase 4: Format specialized tool results into structured evidence
+        formatted_tool_results: List[Dict[str, Any]] = []
+        if tool_results:
+            for tr in tool_results:
+                if tr.get("status") != "ok":
+                    continue
+                tool_name = tr.get("tool", "unknown_tool")
+                touched.append(tool_name)
+                # Summarize evidence into readable text blocks, not raw JSON
+                evidence_lines = []
+                for ev in (tr.get("evidence") or []):
+                    if isinstance(ev, dict):
+                        for k, v in ev.items():
+                            evidence_lines.append(f"  {k}: {v}")
+                    else:
+                        evidence_lines.append(f"  {ev}")
+                formatted_tool_results.append({
+                    "tool": tool_name,
+                    "summary": tr.get("summary", ""),
+                    "evidence_text": "\n".join(evidence_lines),
+                    "related_files": tr.get("related_files", []),
+                    "confidence": tr.get("confidence", 0.0),
+                    "metadata": tr.get("metadata", {}),
+                    "latency_ms": tr.get("latency_ms", 0),
+                })
+
         return {
             "repository_id": repository_id,
             "query": query,
@@ -124,6 +151,7 @@ class ContextBuilder:
             "architecture_summary": architecture_summary,
             "rag_context": rag_context,
             "rag_citations": rag_citations,
+            "tool_results": formatted_tool_results,
             "modules_touched": touched,
         }
 

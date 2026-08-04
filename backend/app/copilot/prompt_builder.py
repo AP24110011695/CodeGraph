@@ -117,7 +117,27 @@ class PromptBuilder:
                 f"[RETRIEVED CODE CONTEXT]\n{context['rag_context'][:3000]}"
             )
 
-        # Tool execution results
+        # Phase 4: Tool results already formatted by ContextBuilder
+        if context.get("tool_results"):
+            phase4_parts: List[str] = []
+            for tr in context["tool_results"]:
+                name = tr.get("tool", "tool")
+                summary = tr.get("summary", "")
+                evidence_text = tr.get("evidence_text", "")
+                related = ", ".join(tr.get("related_files", [])[:5])
+                confidence = tr.get("confidence", 0.0)
+                block = f"[TOOL ANALYSIS: {name.upper().replace('_', ' ')}]\n"
+                block += f"Summary: {summary}\n"
+                if evidence_text:
+                    block += f"Evidence:\n{evidence_text[:1500]}\n"
+                if related:
+                    block += f"Related Files: {related}\n"
+                block += f"Confidence: {confidence:.0%}"
+                phase4_parts.append(block)
+            if phase4_parts:
+                repo_context_parts.append("\n\n".join(phase4_parts))
+
+        # Legacy tool_results (status/result format from old ToolExecutor)
         if tool_results:
             tool_parts: List[str] = []
             for tr in tool_results:

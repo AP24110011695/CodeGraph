@@ -1,11 +1,14 @@
 """Retriever for top-K similarity search in RAG."""
 
 import logging
-from typing import Any
+from typing import Any, List, Dict
 
 from app.rag.chunker import Chunk
 from app.rag.embedding_service import EmbeddingService, EmbeddingError
 from app.rag.vector_store import VectorStore, VectorDocument, VectorStoreError
+from app.rag.keyword_retriever import KeywordRetriever
+from app.rag.hybrid_ranker import HybridRanker
+from app.rag.query_analyzer import QueryAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,9 @@ class Retriever:
         """
         self.vector_store = vector_store
         self.embedding_service = embedding_service
+        self.keyword_retriever = KeywordRetriever()
+        self.hybrid_ranker = HybridRanker()
+        self.query_analyzer = QueryAnalyzer()
 
     def retrieve(
         self,
@@ -39,6 +45,8 @@ class Retriever:
         upload_id: str | None = None,
         top_k: int = 5,
         filters: dict[str, Any] | None = None,
+        intent: str = "general_explanation",
+        memory_context: List[Dict] = None,
     ) -> list[dict[str, Any]]:
         """Retrieve top-K relevant chunks for a query.
 
@@ -47,6 +55,8 @@ class Retriever:
             upload_id: Optional upload identifier
             top_k: Number of results to return
             filters: Optional metadata filters (e.g., {"upload_id": "xxx"})
+            intent: The parsed intent of the query.
+            memory_context: Optional context from repository memory.
 
         Returns:
             List of retrieved chunks with scores
@@ -61,27 +71,51 @@ class Retriever:
             filters = filters or {}
             filters["upload_id"] = upload_id
 
+        # 1. Expand Query
+        expanded_terms = self.query_analyzer.expand_query(query.lower())
+        expanded_query = query + " " + " ".join(expanded_terms)
+
         try:
             # Generate query embedding
-            query_embedding = self.embedding_service.embed(query)
+            query_embedding = self.embedding_service.embed(expanded_query)
         except EmbeddingError as e:
             logger.exception("Failed to generate query embedding")
             raise RetrievalError(f"Failed to generate query embedding: {str(e)}")
 
         try:
-            # Search vector store
-            results = self.vector_store.search(
+            # Search vector store (fetch more candidates to rank)
+            semantic_results = self.vector_store.search(
                 query_embedding=query_embedding,
-                top_k=top_k,
+                top_k=top_k * 2,
                 filters=filters,
             )
         except VectorStoreError as e:
             logger.exception("Vector store search failed")
             raise RetrievalError(f"Vector store search failed: {str(e)}")
 
+        try:
+            # Search keyword store
+            keyword_results = self.keyword_retriever.search(
+                query=expanded_query,
+                top_k=top_k * 2,
+                filters=filters,
+            )
+        except Exception as e:
+            logger.exception("Keyword store search failed")
+            keyword_results = []
+
+        # Hybrid Ranking
+        ranked_results = self.hybrid_ranker.rank(
+            semantic_results=semantic_results,
+            keyword_results=keyword_results,
+            intent=intent,
+            memory_context=memory_context,
+            top_k=top_k
+        )
+
         # Format results
         formatted_results = []
-        for doc, score in results:
+        for doc, score in ranked_results:
             formatted_results.append({
                 "file": doc.metadata.get("file_path", ""),
                 "language": doc.metadata.get("language", ""),
@@ -90,6 +124,8 @@ class Retriever:
                 "content": doc.metadata.get("content", ""),
                 "start_line": doc.metadata.get("start_line", 0),
                 "end_line": doc.metadata.get("end_line", 0),
+                "role": doc.metadata.get("role", ""),
+                "symbol_kind": doc.metadata.get("symbol_kind", ""),
             })
 
         return formatted_results
@@ -142,11 +178,12 @@ class Retriever:
         # Add to vector store
         try:
             self.vector_store.add(documents)
+            self.keyword_retriever.add(documents)
         except VectorStoreError as e:
             logger.exception("Failed to add documents to vector store")
             raise RetrievalError(f"Failed to add documents: {str(e)}")
 
-        logger.info(f"Added {len(documents)} chunks to vector store")
+        logger.info(f"Added {len(documents)} chunks to vector store and keyword index")
 
     def delete_by_upload_id(self, upload_id: str) -> None:
         """Delete all chunks for a specific upload.
@@ -157,6 +194,5 @@ class Retriever:
         Raises:
             RetrievalError: If deletion fails
         """
-        # This is a simplified implementation
-        # In a real vector store, you'd use metadata filters for deletion
         logger.warning(f"Deletion by upload_id not fully implemented for {upload_id}")
+        self.keyword_retriever.clear()  # Since it's in-memory, clearing is simple if single upload, but should ideally filter by upload_id.

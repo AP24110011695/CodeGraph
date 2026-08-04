@@ -4,13 +4,28 @@ import re
 class QueryAnalyzer:
     """Analyzes user queries to determine retrieval intent and extract entities."""
 
+    def __init__(self):
+        self.expansion_map = {
+            "authentication": ["auth", "jwt", "login", "middleware"],
+            "upload": ["zip", "extract", "ingest", "repository"],
+            "database": ["db", "schema", "migration"]
+        }
+
     def analyze(self, query: str) -> dict:
         query_lower = query.lower()
         intent = self._classify_intent(query_lower)
         return {
             "intent": intent,
             "entities": self._extract_entities(query),
+            "expanded_terms": self.expand_query(query_lower),
         }
+
+    def expand_query(self, query_lower: str) -> list[str]:
+        expanded = []
+        for key, values in self.expansion_map.items():
+            if key in query_lower:
+                expanded.extend(values)
+        return list(set(expanded))
 
     def _classify_intent(self, query_lower: str) -> str:
         # Timeline / history

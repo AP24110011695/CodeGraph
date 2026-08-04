@@ -31,13 +31,30 @@
 - [x] Ensure memory is entirely data-driven (no LLM placeholders during index)
 - [x] Connect memory injection to Copilot ContextBuilder (kept separate from RAG retrieval)
 
-## Phase 3: Hybrid Retrieval & Context Builder (Future)
-- [ ] Implement Hybrid Search (BM25 + Vector)
-- [ ] Implement Context Builder with attribution rules
+## Phase 3: Hybrid Retrieval & Context Builder
+- [x] Implement deterministic Query Expansion
+- [x] Implement lightweight Keyword Retrieval (TF-IDF)
+- [x] Implement configurable Hybrid Ranker (Vector + Keyword + Metadata + Memory)
+- [x] Implement Context Deduplication and Compression
+- [x] Create retrieval evaluation tests and evaluate performance
 
-## Phase 4: Prompt Builder & Output Verification (Future)
-- [ ] Implement strict per-intent Prompt Builder
-- [ ] Implement closed-loop Answer Verification with retry
+## Phase 4: Tool Calling & Specialized Analysis
+- [x] Audit existing analyzers (QualityAnalyzer, SecurityAnalyzer, ArchitectureBuilder, RepositoryMemory)
+- [x] Define standardized ToolResult schema (`tool`, `summary`, `evidence`, `related_files`, `confidence`, `metadata`)
+- [x] Implement ToolRegistry with capability-based lookup
+- [x] Implement ToolRouter with Intent → Capabilities → Tool(s) mapping
+- [x] Implement Architecture Tool (ArchitectureBuilder + DependencyGraph)
+- [x] Implement Workflow Tool (WorkflowMemory)
+- [x] Implement API Tool (APIMemory)
+- [x] Implement Symbol Tool (SymbolTable)
+- [x] Implement Quality Tool (QualityAnalyzer)
+- [x] Implement Security Tool (SecurityAnalyzer)
+- [x] Implement multi-tool orchestration (complex query keyword overrides)
+- [x] Extend ToolExecutor.execute_plan() — specialized first, RAG fallback
+- [x] Extend ContextBuilder to merge tool_results as structured evidence
+- [x] Extend PromptBuilder to render tool evidence as explainable blocks
+- [x] 18 Phase 4 tests pass (registry, router, schema, executor, context builder)
+- [x] Create TOOL_ROUTING.md documentation
 
 ## References
 - [Main Documentation](../README.md)

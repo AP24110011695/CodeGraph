@@ -1,16 +1,25 @@
 """Tool executor — calls existing engines as named tools.
 
 New tools register here; Copilot does not grow analyzer logic.
+Phase 4: execute_plan now first attempts specialized tools via ToolRouter
+before falling back to the module-based execution path.
 """
 
 from __future__ import annotations
 
 import logging
 import re
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+# Eagerly import tools package so all tools self-register in tool_registry
+try:
+    import app.copilot.tools  # noqa: F401
+except Exception as _e:
+    logger.debug("Phase 4 tools import skipped: %s", _e)
 
 ToolHandler = Callable[[str, str, Dict[str, Any]], Dict[str, Any]]
 
@@ -54,6 +63,63 @@ class ToolExecutor:
     def list_tools(self) -> List[str]:
         return sorted(self._tools.keys())
 
+    def execute_specialized_tools(
+        self,
+        repository_id: str,
+        query: str,
+        intent: str,
+    ) -> List[Dict[str, Any]]:
+        """Phase 4: Run specialized tools via ToolRouter -> ToolRegistry pipeline.
+
+        Returns standardized ToolResult entries or an empty list if no tool applies.
+        Fallback to the existing module-based execute_plan is done by the caller.
+        """
+        try:
+            from app.copilot.tool_router import tool_router
+            from app.copilot.tool_registry import tool_registry
+        except Exception as exc:
+            logger.debug("Phase 4 tool router unavailable: %s", exc)
+            return []
+
+        tool_defs = tool_router.resolve_tools(intent, query)
+        if not tool_defs:
+            logger.info("PHASE4: No specialized tools for intent=%s, falling back to RAG.", intent)
+            return []
+
+        logger.info("PHASE4 TOOLS: %s", [t.name for t in tool_defs])
+        results: List[Dict[str, Any]] = []
+        for tool_def in tool_defs:
+            handler = tool_registry.get_tool(tool_def.name)
+            if not handler:
+                continue
+            t0 = time.perf_counter()
+            try:
+                tool_result = handler(repository_id, query, {})
+                elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                results.append({
+                    "tool": tool_result.tool,
+                    "summary": tool_result.summary,
+                    "evidence": tool_result.evidence,
+                    "related_files": tool_result.related_files,
+                    "confidence": tool_result.confidence,
+                    "metadata": tool_result.metadata,
+                    "status": "ok",
+                    "latency_ms": elapsed_ms,
+                })
+            except Exception as exc:
+                logger.debug("PHASE4 tool %s failed: %s", tool_def.name, exc)
+                results.append({
+                    "tool": tool_def.name,
+                    "summary": str(exc),
+                    "evidence": [],
+                    "related_files": [],
+                    "confidence": 0.0,
+                    "metadata": {},
+                    "status": "error",
+                    "latency_ms": 0,
+                })
+        return results
+
     def execute_plan(
         self,
         repository_id: str,
@@ -61,9 +127,22 @@ class ToolExecutor:
         plan: Dict[str, Any],
         options: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """Run tools for modules listed in the planning response."""
+        """Run tools for modules listed in the planning response.
+
+        Phase 4: First attempts specialized tools via ToolRouter.
+        Falls back to the existing module-based execution if no specialized tool applies.
+        """
         options = options or {}
         intent = plan.get("intent", "general_query")
+
+        # --- Phase 4: Specialized tool execution ---
+        specialized = self.execute_specialized_tools(repository_id, query, intent)
+        if specialized:
+            ok = [r for r in specialized if r.get("status") == "ok"]
+            logger.info("PHASE4 SPECIALIZED OK: %s", [r["tool"] for r in ok])
+            return specialized
+        # -------------------------------------------
+
         modules = list(plan.get("execution_order") or plan.get("required_modules") or [])
 
         if "Repository Memory" not in modules and intent in _MEMORY_ALWAYS_INTENTS:
