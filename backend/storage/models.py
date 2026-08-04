@@ -50,3 +50,5 @@ class RepositoryRow(Base):
     architecture_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     metrics_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     workflow_state_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parsing_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parsed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

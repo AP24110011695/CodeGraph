@@ -21,6 +21,13 @@ class ParserEngine:
     @classmethod
     def parse_project(cls, project_path: Path, scan_result: ScanResult) -> ProjectParsingResult:
         """Parses a scanned project and returns the AST metadata."""
+        logger.info("=" * 80)
+        logger.info("PARSER_ENGINE: parse_project called")
+        logger.info("=" * 80)
+        logger.info("Project path: %s", project_path)
+        logger.info("Scan result files: %d", len(scan_result.files))
+        logger.info("Scan result languages: %s", dict(scan_result.languages))
+        
         project_result = ProjectParsingResult(
             project={
                 "name": scan_result.project_name,
@@ -29,17 +36,26 @@ class ParserEngine:
             }
         )
 
+        supported_count = 0
+        skipped_count = 0
+        parsed_count = 0
+        
         for file_info in scan_result.files:
             if file_info.language not in SUPPORTED_LANGUAGES:
+                skipped_count += 1
                 continue
                 
             if any(file_info.name.endswith(ext) for ext in UNSUPPORTED_EXTENSIONS):
+                skipped_count += 1
                 continue
                 
             # Skip common generated files or lock files
             name_lower = file_info.name.lower()
             if "lock" in name_lower or "generated" in name_lower:
+                skipped_count += 1
                 continue
+            
+            supported_count += 1
 
             file_path = project_path / file_info.path
             
@@ -47,8 +63,17 @@ class ParserEngine:
                 parsed_file = cls.parse_file(file_path, file_info.path, file_info.language)
                 if parsed_file:
                     project_result.files.append(parsed_file)
+                    parsed_count += 1
             except Exception as e:
                 logger.warning(f"Error parsing file {file_path}: {e}")
+        
+        logger.info("PARSER_ENGINE: Parsing complete")
+        logger.info("  Supported language files: %d", supported_count)
+        logger.info("  Skipped files: %d", skipped_count)
+        logger.info("  Successfully parsed files: %d", parsed_count)
+        logger.info("  Total classes: %d", sum(len(f.classes) for f in project_result.files))
+        logger.info("  Total functions: %d", sum(len(f.functions) for f in project_result.files))
+        logger.info("=" * 80)
                 
         return project_result
 

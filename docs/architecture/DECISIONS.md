@@ -41,3 +41,9 @@ TODO: Document future architectural decisions here.
 - **Rationale**: Intent-specific templates enforce answer format discipline at the system-prompt level, eliminating generic headers without requiring LLM post-processing. Structured context attribution allows the model to cite sources rather than generating unsupported claims.
 - **Reference**: [COPILOT_REBUILD_PLAN.md §4](COPILOT_REBUILD_PLAN.md), [PROMPT_PIPELINE.md](PROMPT_PIPELINE.md)
 - [System Architecture](SYSTEM_ARCHITECTURE.md)
+
+### Decision 6: Deterministic Query Planning with Structured Execution Plans (Phase 5)
+- **Context**: The system knew available tools but did not intelligently decide what information was required, which tools were necessary, which memory should be retrieved, or whether retrieval should happen. All queries flowed through the same RAG pipeline regardless of intent specificity.
+- **Decision**: Introduce a Query Planner between Intent Router and Tool Router that creates structured execution plans specifying required tools, required memory, retrieval strategy, reasoning steps, and expected output type. Use deterministic rule-based planning instead of LLM-based planning.
+- **Rationale**: Deterministic rules provide predictable behavior, low latency (< 5ms), zero LLM costs, and easy debuggability. The planner intelligently decomposes multi-step questions and selects appropriate tools/memory/retrieval strategies per intent, while always providing a safe RAG fallback to never block the user.
+- **Reference**: [QUERY_PLANNING.md](../copilot/QUERY_PLANNING.md), [System Architecture](SYSTEM_ARCHITECTURE.md)

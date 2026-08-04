@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.events.event_bus import event_bus
 from app.events.event_types import EventType
 from app.indexing.auto_indexer import auto_indexer
+from app.repository_memory.auto_memory_builder import auto_memory_builder
 from app.api.upload import router as upload_router
 from app.api.repositories import router as repositories_router
 from app.api.scanner import router as scanner_router
@@ -85,6 +86,9 @@ async def lifespan(app: FastAPI):
     
     # Register auto-indexer for repository uploads
     event_bus.subscribe(EventType.REPOSITORY_UPLOADED, auto_indexer.on_repository_uploaded)
+    
+    # Register auto-memory-builder for repository indexed event
+    event_bus.subscribe(EventType.REPOSITORY_INDEXED, auto_memory_builder.on_repository_indexed)
     
     yield
     worker_pool.stop()

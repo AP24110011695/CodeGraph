@@ -51,6 +51,14 @@ class IndexingPipeline:
         parsed_by_path = {result.path: result for result in parsing.files}
 
         logger.info("INDEXING_PIPELINE: Parsed %d files successfully", len(parsed_by_path))
+        
+        # Phase 5.5: Save parsing result for reuse by memory builder
+        try:
+            from storage.parsing_store import parsing_store
+            parsing_store.save(upload_id, parsing)
+            logger.info("INDEXING_PIPELINE: Saved parsing result for %s", upload_id)
+        except Exception as e:
+            logger.warning("INDEXING_PIPELINE: Failed to save parsing result for %s: %s", upload_id, e)
 
         chunks: list[Chunk] = []
         seen_chunk_ids: set[str] = set()
@@ -142,6 +150,14 @@ class IndexingPipeline:
             parsed_by_path = {result.path: result for result in parsing.files}
             logger.info("INDEXING_PIPELINE: Step 2 complete - Parsed %d files", len(parsed_by_path))
             
+            # Phase 5.5: Save parsing result for reuse by memory builder
+            try:
+                from storage.parsing_store import parsing_store
+                parsing_store.save(upload_id, parsing)
+                logger.info("INDEXING_PIPELINE: Saved parsing result for %s", upload_id)
+            except Exception as e:
+                logger.warning("INDEXING_PIPELINE: Failed to save parsing result for %s: %s", upload_id, e)
+            
             logger.info("INDEXING_PIPELINE: Step 3 - Chunking files")
             try:
                 sm.transition_to(RepositoryStateEnum.INDEXING, progress=52, current_stage="Building dependency graph")
@@ -206,6 +222,13 @@ class IndexingPipeline:
                     logger.info("INDEXING_PIPELINE: Step 6 - Saving vector store")
                     self.vector_store.save()
                     logger.info("INDEXING_PIPELINE: Step 6 complete - Vector store saved")
+
+            # Transition to READY state to indicate indexing is complete
+            try:
+                sm.transition_to(RepositoryStateEnum.READY, progress=100, current_stage="Complete")
+                logger.info("INDEXING_PIPELINE: State transitioned to READY for %s", upload_id)
+            except Exception as e:
+                logger.warning("INDEXING_PIPELINE: Failed to transition state to READY: %s", e)
 
             frameworks = [match.name for match in detection.frameworks + detection.backend]
             result = {

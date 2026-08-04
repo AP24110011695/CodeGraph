@@ -56,6 +56,24 @@
 - [x] 18 Phase 4 tests pass (registry, router, schema, executor, context builder)
 - [x] Create TOOL_ROUTING.md documentation
 
+## Phase 5: Reasoning & Query Planning
+- [x] Audit current copilot orchestration flow (copilot_engine.py, intent_router.py, tool_router.py, context_builder.py)
+- [x] Create QueryPlan schema (query_plan_models.py) with typed fields for tools, memory, retrieval, reasoning steps
+- [x] Implement QueryPlanner with deterministic query decomposition logic
+- [x] Implement intent-to-tool mapping with keyword-based multi-tool overrides
+- [x] Implement intent-to-memory mapping with keyword-based enrichment
+- [x] Implement retrieval strategy selection (symbol_table_lookup, hybrid_semantic, graph_traversal, schema_lookup)
+- [x] Implement multi-step question detection and decomposition
+- [x] Implement confidence calculation based on intent clarity and tool availability
+- [x] Implement fallback handling for low-confidence plans (safe RAG fallback, never block user)
+- [x] Connect QueryPlanner to CopilotEngine pipeline (between Intent Router and Tool Router)
+- [x] Extend ToolExecutor to use required_tools from query plan
+- [x] Extend ContextBuilder to use retrieval_required, required_memory, reasoning_steps from query plan
+- [x] Add get_tool_definition method to ToolRegistry for query planner integration
+- [x] Create 23 Phase 5 tests (schema, planner, integration, specification tests)
+- [x] All 23 Phase 5 tests pass
+- [x] Create QUERY_PLANNING.md documentation
+
 ## References
 - [Main Documentation](../README.md)
 - [Copilot Rebuild Plan](../architecture/COPILOT_REBUILD_PLAN.md)

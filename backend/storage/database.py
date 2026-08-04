@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, text, Inspector
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import settings
@@ -98,6 +98,10 @@ def init_db(db_path: Path | str | None = None) -> Engine:
     # SQLite does not support IF NOT EXISTS on ALTER TABLE, so we check PRAGMA first.
     _add_column_if_missing(engine, "repositories", "total_folders", "INTEGER NOT NULL DEFAULT 0")
     _add_column_if_missing(engine, "repositories", "zip_size_bytes", "INTEGER NOT NULL DEFAULT 0")
+    
+    # Phase 5.5: Add parsing result columns
+    _add_column_if_missing(engine, "repositories", "parsing_result_json", "TEXT")
+    _add_column_if_missing(engine, "repositories", "parsed_at", "DATETIME")
 
     return engine
 

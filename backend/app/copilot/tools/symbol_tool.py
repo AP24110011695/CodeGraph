@@ -14,17 +14,44 @@ symbol_tool_def = ToolDefinition(
 
 def symbol_tool_handler(repository_id: str, query: str, context: Dict[str, Any]) -> ToolResult:
     """Execute the symbol tool."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=" * 80)
+    logger.info("SYMBOL_TOOL: symbol_tool_handler called")
+    logger.info("=" * 80)
+    logger.info("Repository ID: %s", repository_id)
+    logger.info("Query: %s", query)
+    
     from app.repository_memory.memory_engine import memory_engine
+
+    logger.info("SYMBOL_TOOL: MemoryEngine instance ID: %s", id(memory_engine))
+    logger.info("SYMBOL_TOOL: MemoryStore instance ID: %s", id(memory_engine._store))
 
     memory = memory_engine.get_memory(repository_id)
     if not memory:
+        logger.warning("SYMBOL_TOOL: No repository memory available")
         return ToolResult(
             tool="symbol_tool",
             summary="No repository memory available. Build index first.",
             confidence=0.0
         )
-
-    symbols = getattr(memory, "symbols", None) or []
+    
+    logger.info("SYMBOL_TOOL: Memory available")
+    logger.info("  Has symbol_summaries attribute: %s", hasattr(memory, "symbol_summaries"))
+    logger.info("  Has symbols attribute: %s", hasattr(memory, "symbols"))
+    
+    if hasattr(memory, "symbol_summaries"):
+        logger.info("  symbol_summaries type: %s", type(memory.symbol_summaries))
+        logger.info("  symbol_summaries count: %d", len(memory.symbol_summaries))
+        symbols = list(memory.symbol_summaries.values())
+    else:
+        symbols = getattr(memory, "symbols", None) or []
+        logger.info("  symbols type: %s", type(symbols))
+        logger.info("  symbols count: %d", len(symbols))
+    
+    logger.info("SYMBOL_TOOL: Total symbols to process: %d", len(symbols))
+    
     q = query.lower()
 
     evidence = []
@@ -53,6 +80,10 @@ def symbol_tool_handler(repository_id: str, query: str, context: Dict[str, Any])
         f"Symbol table contains {len(symbols)} symbol(s). "
         f"Found {len(evidence)} matching symbol(s) for query."
     )
+    
+    logger.info("SYMBOL_TOOL: Evidence found: %d", len(evidence))
+    logger.info("SYMBOL_TOOL: Related files: %d", len(related))
+    logger.info("=" * 80)
 
     return ToolResult(
         tool="symbol_tool",

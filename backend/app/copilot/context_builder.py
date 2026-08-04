@@ -53,10 +53,17 @@ class ContextBuilder:
     ) -> Dict[str, Any]:
         """Assemble context for orchestration and prompt construction."""
         modules = list((plan or {}).get("execution_order") or (plan or {}).get("required_modules") or [])
-        needs_rag = (not modules) or any(
+        
+        # Phase 5: Use query plan's retrieval_required and required_memory if available
+        retrieval_required = (plan or {}).get("retrieval_required", True)
+        required_memory = (plan or {}).get("required_memory", [])
+        
+        needs_rag = retrieval_required or (not modules) or any(
             m in ("RAG Engine", "rag", "Semantic Engine") for m in modules
         )
-        needs_memory = (not modules) or any(
+        
+        # Phase 5: Check if specific memory types are requested
+        needs_memory = required_memory or (not modules) or any(
             m in ("Repository Memory", "repository_memory", "Timeline Intelligence Engine")
             for m in modules
         )
@@ -71,11 +78,17 @@ class ContextBuilder:
                     memory_summary = repo_fragment.get("memory_summary")
                     architecture_summary = repo_fragment.get("architecture_summary")
                 else:
+                    logger.info("=" * 80)
+                    logger.info("CONTEXT_BUILDER: Building memory on-demand")
+                    logger.info("=" * 80)
+                    logger.info("Repository ID: %s", repository_id)
                     summary = self._memory().get_memory_summary(repository_id)
                     if summary is None:
                         try:
+                            logger.info("CONTEXT_BUILDER: Calling build_memory for %s", repository_id)
                             self._memory().build_memory(repository_id)
                             summary = self._memory().get_memory_summary(repository_id)
+                            logger.info("CONTEXT_BUILDER: Memory built successfully for %s", repository_id)
                         except Exception as exc:  # noqa: BLE001
                             logger.debug("ContextBuilder: memory build skipped: %s", exc)
                     if summary is not None:
@@ -153,6 +166,11 @@ class ContextBuilder:
             "rag_citations": rag_citations,
             "tool_results": formatted_tool_results,
             "modules_touched": touched,
+            # Phase 5: Include query plan metadata
+            "retrieval_strategy": (plan or {}).get("retrieval_strategy", "hybrid_semantic"),
+            "required_memory": required_memory,
+            "reasoning_steps": (plan or {}).get("reasoning_steps", []),
+            "expected_output_type": (plan or {}).get("expected_output_type", "general"),
         }
 
 

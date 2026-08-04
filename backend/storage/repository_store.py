@@ -107,13 +107,56 @@ class RepositoryStore:
 
     def resolve_path(self, upload_id: str) -> Path | None:
         """Resolve extraction path from DB, then filesystem fallbacks."""
+        logger.info("=" * 80)
+        logger.info("REPOSITORY STORE PATH RESOLUTION")
+        logger.info("=" * 80)
+        logger.info("Upload ID: %s", upload_id)
+        
         with self._sessions()() as session:
             row = session.get(RepositoryRow, upload_id)
-            if row and row.extraction_path:
-                candidate = Path(row.extraction_path)
-                if candidate.is_dir():
-                    return candidate
-        return resolve_repository_path(upload_id)
+            logger.info("Database row found: %s", row is not None)
+            
+            if row:
+                logger.info("Row extraction_path: %s", row.extraction_path)
+                logger.info("Row repository_id: %s", row.repository_id)
+                logger.info("Row repository_name: %s", row.repository_name)
+                logger.info("Row status: %s", row.status)
+                logger.info("Row indexing_state: %s", row.indexing_state)
+                
+                if row.extraction_path:
+                    candidate = Path(row.extraction_path)
+                    logger.info("Candidate path from DB: %s", candidate)
+                    logger.info("Candidate exists: %s", candidate.exists())
+                    logger.info("Candidate is_dir: %s", candidate.is_dir())
+                    
+                    if candidate.is_dir():
+                        logger.info("✓ Using DB path: %s", candidate)
+                        logger.info("=" * 80)
+                        return candidate
+                    else:
+                        logger.warning("DB path exists but is not directory: %s", candidate)
+                else:
+                    logger.warning("Row has no extraction_path")
+            else:
+                logger.warning("No database row found for upload_id: %s", upload_id)
+        
+        # Fallback to filesystem resolution
+        logger.info("Attempting filesystem fallback...")
+        fallback_path = resolve_repository_path(upload_id)
+        logger.info("Fallback path: %s", fallback_path)
+        
+        if fallback_path:
+            logger.info("Fallback exists: %s", fallback_path.exists())
+            logger.info("Fallback is_dir: %s", fallback_path.is_dir())
+            if fallback_path.is_dir():
+                logger.info("✓ Using fallback path: %s", fallback_path)
+            else:
+                logger.warning("Fallback path exists but is not directory")
+        else:
+            logger.warning("Fallback path is None")
+        
+        logger.info("=" * 80)
+        return fallback_path
 
     def save_index(self, index: RepositoryIndex, extraction_path: str | Path | None = None) -> None:
         """Persist index metadata from a RepositoryIndex domain object."""

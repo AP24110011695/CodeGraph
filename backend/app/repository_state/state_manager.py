@@ -114,11 +114,19 @@ class StateManager:
                 RepositoryStateEnum.FAILED: EventType.REPOSITORY_FAILED,
             }
             if new_state in state_to_event:
+                logger.info("=" * 80)
+                logger.info("STATE_MANAGER: Publishing event for state transition")
+                logger.info("=" * 80)
+                logger.info("Repository ID: %s", repository_id)
+                logger.info("New state: %s", new_state)
+                logger.info("Event type: %s", state_to_event[new_state])
                 event_bus.publish(
                     event_type=state_to_event[new_state],
                     repository_id=repository_id,
                     payload={"new_state": new_state, "previous_state": current.previous_state, "job_id": job_id}
                 )
+                logger.info("STATE_MANAGER: Event published successfully")
+                logger.info("=" * 80)
             
             logger.info(f"Repository {repository_id} transitioned to {new_state}")
             snapshot = current.model_copy()

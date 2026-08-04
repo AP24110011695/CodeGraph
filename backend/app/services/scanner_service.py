@@ -137,6 +137,11 @@ class RepositoryScanner:
             NotADirectoryError: If root_path is not a directory.
             PermissionError: If root_path is not readable.
         """
+        logger.info("=" * 80)
+        logger.info("SCANNER_SERVICE: Starting scan")
+        logger.info("=" * 80)
+        logger.info("Root path: %s", root_path)
+        
         root_path = root_path.resolve()
 
         if not root_path.exists():
@@ -153,6 +158,12 @@ class RepositoryScanner:
         self._walk(root_path, root_path, result)
 
         result.total_files = len(result.files)
+        
+        logger.info("SCANNER_SERVICE: Scan complete")
+        logger.info("  Total files: %d", result.total_files)
+        logger.info("  Total folders: %d", result.total_folders)
+        logger.info("  Languages: %s", dict(result.languages))
+        logger.info("=" * 80)
 
         return result
 

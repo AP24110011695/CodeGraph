@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.events.event import Event
 from app.events.event_types import EventType
+from app.events.event_bus import event_bus
 from app.indexing.index_manager import get_shared_index_manager
 from app.repository_state.state_machine import RepositoryStateMachine
 from app.schemas.repository_state import RepositoryStateEnum
@@ -78,13 +79,9 @@ class AutoIndexer:
                     logger.info("AUTO_INDEXER: Successfully indexed %s - chunks: %d, embeddings: %d",
                                repository_id, index.total_chunks, index.total_embeddings)
                     
-                    # Only set final state to READY if it's not already there
-                    try:
-                        if state_machine.current_state.state != RepositoryStateEnum.READY:
-                            state_machine.transition_to(RepositoryStateEnum.READY, progress=100, current_stage="Complete")
-                            logger.info("AUTO_INDEXER: State transitioned to READY for %s", repository_id)
-                    except ValueError as e:
-                        logger.debug("AUTO_INDEXER: Could not transition to READY: %s", e)
+                    # Note: Memory building is triggered by REPOSITORY_INDEXED event
+                    # which is published by StateManager.transition_state() during INDEXING transition
+                    # No need to manually trigger memory building here
                     
                 except Exception as e:
                     logger.error("AUTO_INDEXER: Failed to auto-index repository %s: %s", 

@@ -21,6 +21,7 @@ from app.copilot.tool_executor import ToolExecutor, tool_executor as default_too
 from app.copilot.intent_router import IntentRouter, intent_router as default_intent_router
 from app.copilot.context_assembler import ContextAssembler, context_assembler as default_context_assembler
 from app.copilot.capability_registry import CapabilityRegistry, capability_registry as default_capability_registry
+from app.copilot.query_planner import QueryPlanner, query_planner as default_query_planner
 from app.telemetry.telemetry_manager import telemetry_manager
 from app.workspace.repository_registry import RepositoryRegistry, repository_registry as default_repository_registry
 
@@ -75,6 +76,7 @@ class CopilotEngine:
         response_builder: ResponseBuilder | None = None,
         capability_registry: CapabilityRegistry | None = None,
         repository_registry: RepositoryRegistry | None = None,
+        query_planner: QueryPlanner | None = None,
     ) -> None:
         self.conversations = conversation_mgr or default_conversation_manager
         self.context_builder = ctx_builder or default_context_builder
@@ -90,6 +92,7 @@ class CopilotEngine:
         self.context_assembler = context_assembler or ContextAssembler()
         self.capability_registry = capability_registry or CapabilityRegistry()
         self.repository_registry = repository_registry or RepositoryRegistry()
+        self.query_planner = query_planner or default_query_planner
 
     def _planning_engine(self):
         if self._planning is None:
@@ -182,10 +185,35 @@ class CopilotEngine:
             self.conversations.add_user_message(session.conversation_id, query)
 
             # 1. Intent routing (CapabilityRegistry) — deterministic Phase 1 classifier
-            plan = self.intent_router.build_execution_plan(query, repository_id=repository_id)
-            plan["intent"] = normalize_orchestration_intent(query, str(plan.get("intent") or "general_query"))
+            intent_plan = self.intent_router.build_execution_plan(query, repository_id=repository_id)
+            intent = normalize_orchestration_intent(query, str(intent_plan.get("intent") or "general_query"))
+            logger.info("Intent Router: classified intent=%s, confidence=%.2f", intent, intent_plan.get("confidence_score", 0) / 100.0)
 
-            # 2. Assemble context (Memory + RAG + conversation)
+            # 2. Query planning — create structured execution plan
+            query_plan = self.query_planner.plan_query(
+                query=query,
+                intent=intent,
+                entities=intent_plan.get("entities", []),
+                repository_id=repository_id,
+            )
+            logger.info("Query Planner: tools=%s, memory=%s, retrieval=%s, confidence=%.2f", 
+                       query_plan.required_tools, query_plan.required_memory, 
+                       query_plan.retrieval_strategy, query_plan.confidence)
+
+            # Merge query plan into execution plan for backward compatibility
+            plan = dict(intent_plan)
+            plan.update({
+                "intent": query_plan.intent,
+                "required_tools": query_plan.required_tools,
+                "required_memory": query_plan.required_memory,
+                "retrieval_required": query_plan.retrieval_required,
+                "retrieval_strategy": query_plan.retrieval_strategy,
+                "reasoning_steps": query_plan.reasoning_steps,
+                "expected_output_type": query_plan.expected_output_type,
+                "query_plan": query_plan.model_dump(mode="json"),
+            })
+
+            # 3. Assemble context (Memory + RAG + conversation)
             turns = self.conversations.get_recent_turns(session.conversation_id, limit=10)
             context = self.context_builder.build(
                 repository_id=repository_id,
@@ -195,6 +223,12 @@ class CopilotEngine:
                 shared_context=session.shared_context,
             )
 
+            # Log context assembly summary
+            logger.info("Context Builder: memory_summary=%s, rag_citations=%d, tool_results=%d",
+                       context.get("memory_summary") is not None,
+                       len(context.get("rag_citations", [])),
+                       len(context.get("tool_results", [])))
+
             # 3. Execute tools / agents via pluggable ToolExecutor
             opts = dict(options)
             if mode == "execute" and "use_agents" not in opts:
@@ -202,6 +236,18 @@ class CopilotEngine:
             tool_results = self.tool_executor.execute_plan(
                 repository_id, query, plan, options=opts
             )
+
+            # Log tool execution summary
+            successful_tools = [t.get("tool") for t in tool_results if t.get("status") == "ok"]
+            logger.info("Tool Executor: executed %d tools, %d successful", len(tool_results), len(successful_tools))
+            
+            # Log if any tool returned empty evidence
+            for tr in tool_results:
+                if tr.get("status") == "ok":
+                    evidence_count = len(tr.get("evidence", []))
+                    if evidence_count == 0:
+                        logger.warning("Tool %s returned 0 evidence items - summary: %s", 
+                                      tr.get("tool"), tr.get("summary", "")[:100])
 
             retrieved = [
                 t.get("tool") for t in tool_results if t.get("status") == "ok"
@@ -240,6 +286,17 @@ class CopilotEngine:
                 provider_name=generation.get("provider") or "local",
                 execution_time_ms=exec_ms,
             )
+            
+            # Check if the answer contains the "not enough analyzed repository information" message
+            if "not enough analyzed repository information" in answer.lower():
+                logger.warning("DETECTED: Answer contains 'not enough analyzed repository information' message")
+                logger.warning("This suggests the context was empty or insufficient")
+                logger.warning("Context summary:")
+                logger.warning("  Memory summary available: %s", context.get("memory_summary") is not None)
+                logger.warning("  RAG context available: %s", context.get("rag_context") is not None)
+                logger.warning("  Tool results count: %d", len(tool_results))
+                logger.warning("  Tool results with OK status: %d", len([t for t in tool_results if t.get("status") == "ok"]))
+            
             response = self.response_builder.build_engineering_response(
                 processed, query, session.conversation_id
             )

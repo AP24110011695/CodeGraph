@@ -68,8 +68,12 @@ class ToolExecutor:
         repository_id: str,
         query: str,
         intent: str,
+        required_tools: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         """Phase 4: Run specialized tools via ToolRouter -> ToolRegistry pipeline.
+
+        Phase 5: If required_tools is provided in the query plan, use those directly.
+        Otherwise, fall back to ToolRouter for capability-based resolution.
 
         Returns standardized ToolResult entries or an empty list if no tool applies.
         Fallback to the existing module-based execute_plan is done by the caller.
@@ -81,7 +85,22 @@ class ToolExecutor:
             logger.debug("Phase 4 tool router unavailable: %s", exc)
             return []
 
-        tool_defs = tool_router.resolve_tools(intent, query)
+        # Phase 5: Use required_tools from query plan if available
+        if required_tools:
+            logger.info("PHASE5: Using required_tools from query plan: %s", required_tools)
+            tool_defs = []
+            for tool_name in required_tools:
+                # Get tool definition from registry
+                tool_def = tool_registry.get_tool_definition(tool_name)
+                if tool_def:
+                    tool_defs.append(tool_def)
+                else:
+                    logger.error("PHASE5: Tool %s not found in registry - available tools: %s", 
+                               tool_name, [t.name for t in tool_registry.list_tools()])
+        else:
+            # Phase 4: Use ToolRouter for capability-based resolution
+            tool_defs = tool_router.resolve_tools(intent, query)
+        
         if not tool_defs:
             logger.info("PHASE4: No specialized tools for intent=%s, falling back to RAG.", intent)
             return []
@@ -136,7 +155,11 @@ class ToolExecutor:
         intent = plan.get("intent", "general_query")
 
         # --- Phase 4: Specialized tool execution ---
-        specialized = self.execute_specialized_tools(repository_id, query, intent)
+        # Phase 5: Extract required_tools from query plan if available
+        required_tools = plan.get("required_tools", [])
+        specialized = self.execute_specialized_tools(
+            repository_id, query, intent, required_tools=required_tools
+        )
         if specialized:
             ok = [r for r in specialized if r.get("status") == "ok"]
             logger.info("PHASE4 SPECIALIZED OK: %s", [r["tool"] for r in ok])

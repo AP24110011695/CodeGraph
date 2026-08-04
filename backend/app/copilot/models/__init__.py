@@ -12,6 +12,16 @@ from .response_models import (
     CopilotResponse,
 )
 
+from .query_plan_models import (
+    QueryPlan,
+    QueryStep,
+)
+
+from .tool_models import (
+    ToolDefinition,
+    ToolResult,
+)
+
 __all__ = [
     "IntentType",
     "ArchitectureData",
@@ -22,4 +32,8 @@ __all__ = [
     "AuthenticationData",
     "GenericData",
     "CopilotResponse",
+    "QueryPlan",
+    "QueryStep",
+    "ToolDefinition",
+    "ToolResult",
 ]

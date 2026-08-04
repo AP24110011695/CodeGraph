@@ -42,8 +42,31 @@ def resolve_indexed_project_path(
     store: RepositoryStore | None = None,
 ) -> Path:
     """Resolve extracted project directory for an upload_id."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=" * 80)
+    logger.info("REPOSITORY PATH RESOLUTION")
+    logger.info("=" * 80)
+    logger.info("Upload ID: %s", upload_id)
+    
     active_store = store or repository_store
+    logger.info("Store type: %s", type(active_store).__name__)
+    
     project_path = active_store.resolve_path(upload_id)
-    if project_path is None or not project_path.is_dir():
+    logger.info("Resolved project path: %s", project_path)
+    
+    if project_path is None:
+        logger.error("Project path resolved to None for upload_id: %s", upload_id)
         raise HTTPException(status_code=404, detail=f"Project path not found: {upload_id}")
+    
+    if not project_path.is_dir():
+        logger.error("Project path exists but is not a directory: %s", project_path)
+        raise HTTPException(status_code=404, detail=f"Project path not found: {upload_id}")
+    
+    logger.info("Project path validation successful")
+    logger.info("Project exists: %s", project_path.exists())
+    logger.info("Project is directory: %s", project_path.is_dir())
+    logger.info("=" * 80)
+    
     return project_path

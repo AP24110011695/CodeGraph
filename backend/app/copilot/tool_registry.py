@@ -34,6 +34,10 @@ class ToolRegistry:
         """Get the metadata definition for a tool."""
         return self._definitions.get(name)
 
+    def get_tool_definition(self, name: str) -> Optional[ToolDefinition]:
+        """Alias for get_definition for Phase 5 query planner integration."""
+        return self._definitions.get(name)
+
     def find_tools_by_capabilities(self, capabilities: List[str]) -> List[ToolDefinition]:
         """Find tools that provide ANY of the requested capabilities."""
         matched_tools = []
