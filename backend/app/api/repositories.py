@@ -34,7 +34,7 @@ def _cleanup_repository_files(upload_id: str, extraction_path: str | None) -> No
         if candidate.is_dir():
             shutil.rmtree(candidate, ignore_errors=True)
 
-    for zip_root in (get_upload_dir(), Path("storage/uploads")):
+    for zip_root in (get_upload_dir(),):
         zip_path = zip_root / f"{upload_id}.zip"
         if zip_path.is_file():
             try:

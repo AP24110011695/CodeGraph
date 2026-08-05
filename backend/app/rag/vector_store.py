@@ -242,11 +242,11 @@ class PersistentVectorStore(VectorStore):
         """Initialize persistent vector store.
         
         Args:
-            storage_path: Path to storage directory (defaults to backend/storage/vectors)
+            storage_path: Path to storage directory (defaults to settings.VECTOR_STORAGE_PATH)
             dimension: Embedding dimension (auto-detected if None)
         """
         if storage_path is None:
-            storage_path = Path(settings.VECTOR_STORAGE_PATH) if settings.VECTOR_STORAGE_PATH else Path("storage/vectors")
+            storage_path = Path(settings.VECTOR_STORAGE_PATH) if settings.VECTOR_STORAGE_PATH else Path(settings.STORAGE_DIR) / "vectors"
         
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)

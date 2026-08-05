@@ -5,7 +5,6 @@ Designed for extensibility - new providers can be added easily.
 """
 
 import logging
-import os
 import time
 from abc import ABC, abstractmethod
 from typing import Any
@@ -196,10 +195,10 @@ class GroqProvider(LLMProvider):
         """Initialize Groq provider.
 
         Args:
-            api_key: Groq API key (defaults to environment variable or settings)
+            api_key: Groq API key (defaults to settings)
             model: Model name to use
         """
-        self.api_key = api_key or os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", None)
+        self.api_key = api_key or settings.GROQ_API_KEY
         self.model = model or settings.GROQ_MODEL
         self._client = None
         self.timeout = 30.0  # Default timeout in seconds

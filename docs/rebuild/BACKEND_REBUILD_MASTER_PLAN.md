@@ -503,10 +503,10 @@ python -c "from app.core.config import settings" 2>&1 | grep -i "error\|missing\
 
 ### Exit Criteria
 
-- [ ] All settings have explicit types in `BaseSettings`
-- [ ] Missing required settings produce readable errors at startup
-- [ ] Zero `os.getenv` calls outside `config.py`
-- [ ] Settings object verified correct against `.env.example`
+- [x] All settings have explicit types in `BaseSettings`
+- [x] Missing required settings produce readable errors at startup
+- [x] Zero `os.getenv` calls outside `config.py`
+- [x] Settings object verified correct against `.env.example`
 
 ### Git Commit Suggestion
 
@@ -516,10 +516,61 @@ fix: config — all settings validated via pydantic, no raw os.getenv outside co
 
 ### Completion Checklist
 
-- [ ] All settings typed
-- [ ] Startup validation confirmed
-- [ ] No stray `os.getenv` calls
-- [ ] Secrets excluded from logs
+- [x] All settings typed
+- [x] Startup validation confirmed
+- [x] No stray `os.getenv` calls
+- [x] Secrets excluded from logs
+
+### Phase 2 Audit Record (2026-08-05)
+
+#### Configuration inspection
+
+- **File:** `app/core/config.py`
+- **Result:** PASS - All settings use Pydantic `BaseSettings` with explicit types
+- **Settings class:** Uses `model_config = SettingsConfigDict()` with proper configuration
+- **Settings object:** Singleton pattern (`settings = Settings()`)
+
+#### Environment variables verification
+
+- **File:** `.env.example`
+- **Result:** PASS - All variables documented with descriptions
+- **Coverage:** All settings in config.py have corresponding .env.example entries
+- **Required variables:** None - all have sensible defaults for RC-1
+
+#### os.getenv/os.environ audit
+
+- **Command:** `grep -rn "os.getenv\|os.environ" app/ --include="*.py"`
+- **Issues found:** 1 issue in `app/ai/llm_client.py`
+- **Fix applied:** Removed `os.getenv("GROQ_API_KEY")` fallback, now uses `settings.GROQ_API_KEY` only
+- **Result:** PASS - Zero `os.getenv` calls outside config.py
+
+#### Hardcoded values audit
+
+- **Pattern:** `localhost|127.0.0.1` - Only found in config.py as default (acceptable)
+- **Pattern:** Absolute paths (C:/, /home, /var, /tmp) - None found
+- **Pattern:** Hardcoded relative paths - Fixed 3 issues:
+  1. `app/api/repositories.py` - Removed hardcoded `Path("storage/uploads")` fallback
+  2. `app/workflows/workflow_engine.py` - Changed `Path("storage/workflow_checkpoints")` to use settings
+  3. `app/rag/vector_store.py` - Changed `Path("storage/vectors")` fallback to use settings
+- **Result:** PASS - All paths now use configuration
+
+#### Settings validation test
+
+- **Command:** `python -c "from app.core.config import settings; print(...)"`
+- **Result:** PASS - Settings loaded successfully with correct values
+- **Values verified:**
+  - APP_NAME: CodeGraph
+  - APP_VERSION: 1.0.0-rc.1
+  - HOST: 127.0.0.1
+  - PORT: 8000
+
+#### Issues fixed
+
+1. **Removed os.getenv call in llm_client.py** - Now uses settings.GROQ_API_KEY only
+2. **Removed hardcoded path in repositories.py** - Removed `Path("storage/uploads")` fallback
+3. **Updated workflow_engine.py** - Changed checkpoint dir to use settings.STORAGE_DIR
+4. **Updated vector_store.py** - Changed storage path fallback to use settings.STORAGE_DIR
+5. **Removed unused os import** - Removed `import os` from llm_client.py
 
 ---
 

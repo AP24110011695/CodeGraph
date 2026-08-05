@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from app.core.config import settings
 from app.workflows.workflow_context import WorkflowContext
 from app.workflows.workflow_definition import WorkflowDefinition
 from app.workflows.workflow_registry import workflow_registry
@@ -10,7 +11,7 @@ from app.workflows.workflow_executor import workflow_executor
 
 logger = logging.getLogger(__name__)
 
-_CHECKPOINT_DIR = Path("storage/workflow_checkpoints")
+_CHECKPOINT_DIR = Path(settings.STORAGE_DIR) / "workflow_checkpoints"
 
 
 class WorkflowEngine:
