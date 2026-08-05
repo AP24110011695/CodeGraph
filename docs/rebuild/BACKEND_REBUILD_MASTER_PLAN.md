@@ -2644,7 +2644,7 @@ These rules apply from Phase 0 to Phase 21 without exception.
 
 | Phase | Name                     | Status     | Commit | Date |
 | ----- | ------------------------ | ---------- | ------ | ---- |
-| 0     | Repository Sanity Check  | ✅ Complete | pending commit (`chore: phase 0 complete — repository audit, all gaps documented`) | 2026-08-05 |
+| 0     | Repository Sanity Check  | ✅ Complete | `58ec039` | 2026-08-05 |
 | 1     | FastAPI Startup          | ⬜ Pending | —      | —    |
 | 2     | Configuration            | ⬜ Pending | —      | —    |
 | 3     | Environment Variables    | ⬜ Pending | —      | —    |
