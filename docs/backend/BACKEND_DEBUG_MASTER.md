@@ -52,9 +52,9 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | **Status**                | **ACTIVE**                                                     |
 | **Checkpoint**            | Checkpoint C.5                                                 |
 | **Current Goal**          | Verify Repository Intelligence                                 |
-| **Current Component**     | Repository Memory                                              |
-| **Next Swagger Endpoint** | `GET /repositories/{id}/memory`                                |
-| **Success Condition**     | Repository Memory returns fully populated real repository data |
+| **Current Component**     | Workflow Memory                                                 |
+| **Next Swagger Endpoint** | `GET /repositories/{id}/memory` (workflow_summaries field)     |
+| **Success Condition**     | Workflow Memory contains real execution paths with file references |
 | **Stop Condition**        | Checkpoint C.5 marked VERIFIED                                 |
 
 ---
@@ -74,6 +74,7 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Vector Store      | VERIFIED    | ☑        | Vectors persisted and count confirmed                       |
 | Search            | VERIFIED    | ☑        | Real results with file references returned                  |
 | Repository Memory | VERIFIED    | ☑        | Real symbol summaries, module summaries, no placeholders     |
+| Symbol Table      | VERIFIED    | ☑        | 39 symbols via /memory endpoint, verified against source   |
 | Architecture      | IN PROGRESS | ☐        | Endpoint reachable — data completeness unconfirmed          |
 | Dependency Graph  | IN PROGRESS | ☐        | Nodes present — edges under investigation                   |
 | Quality           | NOT STARTED | ☐        | Blocked on C.5                                              |
@@ -324,6 +325,14 @@ Prove that repository intelligence is fully and correctly populated before any a
 - [ ] Memory injection into RAG pipeline confirmed with non-empty context payload
 - [ ] Downstream query after injection produces response grounded in injected memory
 
+**Checkpoint C.5 Progress**
+
+- [x] Task 1 — Repository Memory Verification
+- [x] Task 2 — Symbol Table Verification
+- [ ] Task 3 — Workflow Memory Verification
+- [ ] Task 4 — API Memory Verification
+- [ ] Task 5 — Memory Injection Verification
+
 **Git Commit After Completion**
 
 ```
@@ -483,6 +492,7 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `GET /repositories/{id}/vectors`         | List vectors     | 200         | YES                | ☑        |       |
 | `POST /repositories/{id}/index`          | Full index       | 201         | YES                | ☑        |       |
 | `GET /repositories/{id}/memory`          | Repo memory      | 200         | YES                | ☑        | 39 symbols, 5 modules, no placeholders |
+| `GET /repositories/{id}/memory` (Symbol Table) | Symbol table   | 200         | YES                | ☑        | 39 symbols, verified against source files |
 | `POST /repositories/{id}/search`         | Semantic search  | 200         | YES                | ☑        |       |
 | `GET /repositories/{id}/architecture`    | Architecture     | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☐        |       |
@@ -516,6 +526,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Result**            | SUCCESS — Fixed Symbol extraction bug in symbol_table_extractor.py |
 | **Evidence**          | POST /repositories/{id}/memory returned 200 with 39 symbols, 5 modules, no placeholders |
 | **Next Action**       | Task 1 complete — stop as instructed |
+
+---
+
+### Session 002 — Task 2 Symbol Table Verification
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Verify Symbol Table pipeline produces real, complete, searchable symbols |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python step1_symbol_investigation.py, python step3_swagger_verification.py |
+| **Result**            | SUCCESS — Symbol Table working correctly via /memory endpoint |
+| **Evidence**          | GET /repositories/{id}/memory returned 200 with 39 symbols, all verified against source files |
+| **Next Action**       | Task 2 complete — proceed to Task 3 |
 
 ---
 
@@ -641,12 +665,12 @@ The project is complete only when every item below is marked **VERIFIED**.
 
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Current Checkpoint**  | Checkpoint C.5 - COMPLETE                                                                                                                                                     |
-| **Current Objective**   | Task 1 Complete - Stopping as instructed                                                                                                                                      |
-| **Last Completed Task** | Task 1 - Repository Memory Verification                                                                                                                                      |
-| **Status**              | STOPPED - Awaiting next session instruction                                                                                                                                  |
-| **Next Checkpoint**     | Checkpoint D - Analysis & Reporting (not started)                                                                                                                            |
-| **Next Git Commit**     | Pending (awaiting instruction)                                                                                                                                               |
+| **Current Checkpoint**  | Checkpoint C.5 - IN PROGRESS                                                                                                                                                  |
+| **Current Objective**   | Task 3 - Workflow Memory Verification                                                                                                                                        |
+| **Last Completed Task** | Task 2 - Symbol Table Verification                                                                                                                                          |
+| **Status**              | PROCEEDING to Task 3                                                                                                                                                         |
+| **Next Checkpoint**     | Checkpoint C.5 (Tasks 3-5 remaining)                                                                                                                                          |
+| **Next Git Commit**     | Pending (after Task 5)                                                                                                                                                      |
 
 ---
 
