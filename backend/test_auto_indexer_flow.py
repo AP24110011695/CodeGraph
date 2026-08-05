@@ -34,7 +34,6 @@ def test_auto_indexer_flow():
     print(f"\nStep 0: Register event subscribers")
     print("-" * 80)
     event_bus.subscribe(EventType.REPOSITORY_UPLOADED, auto_indexer.on_repository_uploaded)
-    event_bus.subscribe(EventType.REPOSITORY_READY, auto_memory_builder.on_repository_ready)
     event_bus.subscribe(EventType.REPOSITORY_INDEXED, auto_memory_builder.on_repository_indexed)
     print(f"Subscribers registered")
     
