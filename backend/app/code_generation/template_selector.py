@@ -204,20 +204,18 @@ async def delete_{resource_name}(id: str):
             framework="fastapi",
             content='''"""Model module for {module_name}."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 
 class {schema_name}(BaseModel):
     """Schema for {resource_name}."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: Optional[str] = Field(None, description="The ID of the {resource_name}")
     name: str = Field(..., description="The name of the {resource_name}")
     # TODO: Add additional fields
-
-    class Config:
-        """Pydantic config."""
-        from_attributes = True
 
 
 class {model_name}:
