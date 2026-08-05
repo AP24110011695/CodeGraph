@@ -37,13 +37,14 @@ class ModuleMemoryExtractor:
 
             for comp in module.components:
                 # Add component names as responsibilities
-                clean_name = comp.name.lower().replace("controller", "").replace("service", "").replace("manager", "")
+                comp_name = comp.name if isinstance(comp.name, str) else str(comp.name)
+                clean_name = comp_name.lower().replace("controller", "").replace("service", "").replace("manager", "")
                 if clean_name:
                     responsibilities.add(clean_name.strip())
                 
                 # If it's a controller/route/api, it's likely a public interface
-                if "controller" in comp.name.lower() or "route" in comp.name.lower() or "api" in comp.name.lower():
-                    public_interfaces.add(comp.name)
+                if "controller" in comp_name.lower() or "route" in comp_name.lower() or "api" in comp_name.lower():
+                    public_interfaces.add(comp_name)
             
             # Clean up responsibilities to be human readable
             cleaned_responsibilities = list(set([r for r in responsibilities if r and len(r) > 2]))

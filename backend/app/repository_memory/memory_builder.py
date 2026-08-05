@@ -105,7 +105,8 @@ class MemoryBuilder:
             module_summaries=module_summaries,
             symbol_summaries=symbol_summaries,
             api_endpoints=list(api_endpoints.values()),
-            workflow_summaries=workflow_summaries
+            workflow_summaries=workflow_summaries,
+            file_summaries={}
         )
         
         return memory
