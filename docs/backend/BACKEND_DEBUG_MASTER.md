@@ -75,8 +75,8 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Search            | VERIFIED    | ☑        | Real results with file references returned                  |
 | Repository Memory | VERIFIED    | ☑        | Real symbol summaries, module summaries, no placeholders     |
 | Symbol Table      | VERIFIED    | ☑        | 39 symbols via /memory endpoint, verified against source   |
-| Workflow Memory   | VERIFIED    | ☑        | Pipeline working correctly, 0 workflows due to 0 API endpoints |
-| API Memory        | VERIFIED    | ☑        | 4 endpoints detected after regex fix, 4 workflows generated    |
+| Workflow Memory   | VERIFIED    | ☑        | 4 workflows generated from 4 API endpoints                |
+| API Memory        | VERIFIED    | ☑        | 4 endpoints detected after regex fix                      |
 | Architecture      | IN PROGRESS | ☐        | Endpoint reachable — data completeness unconfirmed          |
 | Dependency Graph  | IN PROGRESS | ☐        | Nodes present — edges under investigation                   |
 | Quality           | NOT STARTED | ☐        | Blocked on C.5                                              |
@@ -517,8 +517,8 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `POST /repositories/{id}/index`          | Full index       | 201         | YES                | ☑        |       |
 | `GET /repositories/{id}/memory`          | Repo memory      | 200         | YES                | ☑        | 39 symbols, 5 modules, no placeholders |
 | `GET /repositories/{id}/memory` (Symbol Table) | Symbol table   | 200         | YES                | ☑        | 39 symbols, verified against source files |
-| `GET /repositories/{id}/memory` (Workflow Memory) | Workflow memory | 200         | YES                | ☑        | 0 workflows (pipeline correct, 0 API endpoints upstream) |
-| `GET /repositories/{id}/memory` (API Memory) | API memory      | 200         | YES                | ☑        | 4 endpoints after regex fix, 4 workflows generated |
+| `GET /repositories/{id}/memory` (Workflow Memory) | Workflow memory | 200         | YES                | ☑        | 4 workflows generated from 4 API endpoints |
+| `GET /repositories/{id}/memory` (API Memory) | API memory      | 200         | YES                | ☑        | 4 endpoints after regex fix |
 | `POST /repositories/{id}/search`         | Semantic search  | 200         | YES                | ☑        |       |
 | `GET /repositories/{id}/architecture`    | Architecture     | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☐        |       |
