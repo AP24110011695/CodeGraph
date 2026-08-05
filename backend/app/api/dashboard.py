@@ -8,8 +8,11 @@ from fastapi.responses import FileResponse
 
 from app.schemas.dashboard import DashboardResponse
 from app.dashboard.dashboard_engine import DashboardEngine, dashboard_engine
+from app.indexing.index_manager import get_shared_index_manager
+from storage.repository_store import repository_store
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="/repositories", tags=["dashboard"])
+index_manager = get_shared_index_manager()
 
 
 @router.post("/{workspace_id}", response_model=DashboardResponse)
@@ -63,3 +66,140 @@ async def generate_dashboard(
         )
 
     return response
+
+
+@router.get("/{repository_id}/overview")
+async def get_repository_overview(repository_id: str):
+    """Get repository overview with key metrics."""
+    # Check if repository is indexed
+    index = index_manager.get_index(repository_id)
+    if not index or index.status.value != "READY":
+        raise HTTPException(
+            status_code=400,
+            detail="Repository must be indexed to retrieve overview",
+        )
+
+    repository = repository_store.get_repository(repository_id)
+    if not repository:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not found: {repository_id}",
+        )
+
+    return {
+        "repository_id": repository_id,
+        "name": repository.get("name", repository.get("repository_name", "")),
+        "file_count": repository.get("total_files", 0),
+        "language_count": len(repository.get("languages", {})),
+        "primary_language": max(repository.get("languages", {}).items(), key=lambda x: x[1])[0] if repository.get("languages") else "Unknown",
+        "detected_frameworks": repository.get("frameworks", []),
+        "health_score": 72,  # Placeholder - should be computed from quality metrics
+        "risk_level": "medium",  # Placeholder - should be computed from risk analysis
+        "total_size_bytes": repository.get("zip_size_bytes", 0),
+        "indexed_at": repository.get("indexed_at"),
+    }
+
+
+@router.get("/{repository_id}/architecture")
+async def get_repository_architecture(repository_id: str):
+    """Get repository architecture information."""
+    # Check if repository is indexed
+    index = index_manager.get_index(repository_id)
+    if not index or index.status.value != "READY":
+        raise HTTPException(
+            status_code=400,
+            detail="Repository must be indexed to retrieve architecture",
+        )
+
+    repository = repository_store.get_repository(repository_id)
+    if not repository:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not found: {repository_id}",
+        )
+
+    return {
+        "repository_id": repository_id,
+        "frameworks": repository.get("frameworks", []),
+        "languages": repository.get("languages", {}),
+        "total_files": repository.get("total_files", 0),
+        "architecture_type": "monolithic",  # Placeholder - should be computed from dependency analysis
+    }
+
+
+@router.get("/{repository_id}/dependencies")
+async def get_repository_dependencies(repository_id: str):
+    """Get repository dependencies."""
+    # Check if repository is indexed
+    index = index_manager.get_index(repository_id)
+    if not index or index.status.value != "READY":
+        raise HTTPException(
+            status_code=400,
+            detail="Repository must be indexed to retrieve dependencies",
+        )
+
+    repository = repository_store.get_repository(repository_id)
+    if not repository:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not found: {repository_id}",
+        )
+
+    return {
+        "repository_id": repository_id,
+        "dependencies": [],  # Placeholder - should be computed from import analysis
+        "external_packages": [],  # Placeholder - should be computed from package.json/requirements.txt
+    }
+
+
+@router.get("/{repository_id}/risks")
+async def get_repository_risks(repository_id: str):
+    """Get repository risk assessment."""
+    # Check if repository is indexed
+    index = index_manager.get_index(repository_id)
+    if not index or index.status.value != "READY":
+        raise HTTPException(
+            status_code=400,
+            detail="Repository must be indexed to retrieve risk assessment",
+        )
+
+    repository = repository_store.get_repository(repository_id)
+    if not repository:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not found: {repository_id}",
+        )
+
+    return {
+        "repository_id": repository_id,
+        "risk_level": "medium",  # Placeholder - should be computed from risk analysis
+        "risk_factors": [],  # Placeholder - should be computed from security and quality analysis
+        "overall_risk_score": 50,  # Placeholder - should be computed from risk analysis
+    }
+
+
+@router.get("/{repository_id}/health")
+async def get_repository_health(repository_id: str):
+    """Get repository health status."""
+    # Check if repository is indexed
+    index = index_manager.get_index(repository_id)
+    if not index or index.status.value != "READY":
+        raise HTTPException(
+            status_code=400,
+            detail="Repository must be indexed to retrieve health status",
+        )
+
+    repository = repository_store.get_repository(repository_id)
+    if not repository:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not found: {repository_id}",
+        )
+
+    return {
+        "repository_id": repository_id,
+        "status": index.status.value,
+        "health_score": 72,  # Placeholder - should be computed from quality, security, and maintainability metrics
+        "overall_health": "good",  # Placeholder - should be computed from health metrics
+        "last_indexed": repository.get("indexed_at"),
+    }

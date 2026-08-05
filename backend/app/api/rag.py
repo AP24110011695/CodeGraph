@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.rag import RAGQueryRequest, RAGContextResponse
 from app.rag.rag_engine import rag_engine
 
-router = APIRouter(prefix="/rag", tags=["rag"])
+router = APIRouter(prefix="/repositories", tags=["rag"])
 
-@router.post("/query/{repository_id}", response_model=RAGContextResponse)
+@router.post("/{repository_id}/rag/query", response_model=RAGContextResponse)
 async def query_repository(repository_id: str, request: RAGQueryRequest):
     """Generates structured LLM context for a specific user query."""
     try:
@@ -17,7 +17,7 @@ async def query_repository(repository_id: str, request: RAGQueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/context/{repository_id}", response_model=RAGContextResponse)
+@router.get("/{repository_id}/rag/context", response_model=RAGContextResponse)
 async def get_general_context(repository_id: str):
     """Generates general architecture context without a specific query."""
     try:

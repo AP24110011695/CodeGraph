@@ -98,6 +98,14 @@ def init_db(db_path: Path | str | None = None) -> Engine:
     # Phase 5.5: Add parsing result columns
     _add_column_if_missing(engine, "repositories", "parsing_result_json", "TEXT")
     _add_column_if_missing(engine, "repositories", "parsed_at", "DATETIME")
+    
+    # Phase 9: Add scan result columns
+    _add_column_if_missing(engine, "repositories", "scan_result_json", "TEXT")
+    _add_column_if_missing(engine, "repositories", "scanned_at", "DATETIME")
+    
+    # Phase 10: Add parser result columns
+    _add_column_if_missing(engine, "repositories", "symbols_json", "TEXT")
+    _add_column_if_missing(engine, "repositories", "parse_errors_json", "TEXT")
 
     return engine
 

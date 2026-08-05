@@ -7,11 +7,13 @@ from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
 from app.indexing.repository_access import require_ready_index
+from app.indexing.index_manager import get_shared_index_manager
 from app.metrics.metrics_engine import MetricsEngine
 from app.schemas.metrics import MetricsResponse
 from storage.repository_store import repository_store
 
-router = APIRouter(prefix="/metrics", tags=["metrics"])
+router = APIRouter(prefix="/repositories", tags=["metrics"])
+index_manager = get_shared_index_manager()
 
 
 def _to_mapping(value: object) -> dict:
@@ -24,16 +26,16 @@ def _to_mapping(value: object) -> dict:
     return dict(value)  # type: ignore[arg-type]
 
 
-@router.post("/{upload_id}", response_model=MetricsResponse)
+@router.post("/{repository_id}/metrics", response_model=MetricsResponse)
 async def generate_metrics(
-    upload_id: str,
+    repository_id: str,
     download: bool = Query(False, description="If true, return metrics.json file"),
 ) -> MetricsResponse | FileResponse:
     """Generate comprehensive repository metrics."""
-    index_manager, _index, project_path = require_ready_index(upload_id)
+    index_manager, _index, project_path = require_ready_index(repository_id)
 
     metrics_engine_with_index = MetricsEngine(index_manager=index_manager)
-    result = metrics_engine_with_index.generate(project_path, upload_id)
+    result = metrics_engine_with_index.generate(project_path, repository_id)
 
     response = MetricsResponse.model_validate(
         {
@@ -49,7 +51,7 @@ async def generate_metrics(
     )
 
     try:
-        repository_store.save_analysis(upload_id, "metrics", response.model_dump())
+        repository_store.save_analysis(repository_id, "metrics", response.model_dump())
     except Exception:
         # Persistence of analysis artifacts must not break the response.
         pass
@@ -62,7 +64,7 @@ async def generate_metrics(
         return FileResponse(
             metrics_file,
             media_type="application/json",
-            filename=f"{upload_id}_metrics.json",
+            filename=f"{repository_id}_metrics.json",
         )
 
     return response

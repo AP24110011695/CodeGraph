@@ -23,6 +23,70 @@ IGNORED_DIRECTORIES: frozenset[str] = frozenset({
     ".vscode",
 })
 
+BINARY_EXTENSIONS: frozenset[str] = frozenset({
+    ".pyc",
+    ".pyo",
+    ".pyd",
+    ".so",
+    ".dll",
+    ".dylib",
+    ".exe",
+    ".bin",
+    ".class",
+    ".jar",
+    ".war",
+    ".ear",
+    ".o",
+    ".a",
+    ".lib",
+    ".obj",
+    ".pdb",
+    ".ipa",
+    ".apk",
+    ".dmg",
+    ".iso",
+    ".img",
+    ".tar",
+    ".gz",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".bz2",
+    ".xz",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".ico",
+    ".svg",
+    ".webp",
+    ".tiff",
+    ".tif",
+    ".psd",
+    ".ai",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".mp3",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
+    ".flv",
+    ".wav",
+    ".ogg",
+    ".flac",
+    ".m4a",
+    ".m4v",
+    ".mkv",
+    ".webm",
+})
+
 EXTENSION_LANGUAGE_MAP: dict[str, str] = {
     ".py": "Python",
     ".js": "JavaScript",
@@ -72,6 +136,7 @@ class ScanResult:
     root_path: str
     total_files: int = 0
     total_folders: int = 0
+    total_size_bytes: int = 0
     languages: dict[str, int] = field(default_factory=dict)
     files: list[FileInfo] = field(default_factory=list)
 
@@ -83,6 +148,7 @@ class ScanResult:
             "summary": {
                 "files": self.total_files,
                 "folders": self.total_folders,
+                "total_size_bytes": self.total_size_bytes,
             },
             "languages": dict(
                 sorted(self.languages.items(), key=lambda item: item[1], reverse=True)
@@ -206,9 +272,15 @@ class RepositoryScanner:
             logger.warning("Cannot stat file: %s", file_path)
             return
 
+        extension = file_path.suffix.lower()
+        
+        # Skip binary files
+        if extension in BINARY_EXTENSIONS:
+            logger.debug("Skipping binary file: %s", file_path)
+            return
+
         relative = file_path.relative_to(root)
         language = _detect_language(file_path)
-        extension = file_path.suffix.lower()
 
         file_info = FileInfo(
             name=file_path.name,
@@ -220,6 +292,7 @@ class RepositoryScanner:
         )
 
         result.files.append(file_info)
+        result.total_size_bytes += size
 
         if language != "Unknown":
             result.languages[language] = result.languages.get(language, 0) + 1

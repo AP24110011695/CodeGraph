@@ -1,5 +1,6 @@
 """Pydantic schemas for the repository scanner API responses."""
 
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -19,6 +20,7 @@ class ScanSummary(BaseModel):
 
     files: int = Field(ge=0, description="Total number of files found")
     folders: int = Field(ge=0, description="Total number of folders found")
+    total_size_bytes: int = Field(ge=0, description="Total size of all files in bytes")
 
 
 class ScanResponse(BaseModel):
@@ -31,3 +33,15 @@ class ScanResponse(BaseModel):
         description="Language name → file count, sorted by count descending"
     )
     files: list[FileEntry] = Field(description="Per-file metadata entries")
+
+
+class ScanResultResponse(BaseModel):
+    """Response format matching Phase 9 requirements."""
+
+    repository_id: str = Field(description="Repository UUID")
+    status: str = Field(description="Scan status")
+    file_count: int = Field(ge=0, description="Total number of files")
+    directory_count: int = Field(ge=0, description="Total number of directories")
+    languages: dict[str, int] = Field(description="Language distribution")
+    total_size_bytes: int = Field(ge=0, description="Total size in bytes")
+    scanned_at: datetime = Field(description="Timestamp when scan was completed")

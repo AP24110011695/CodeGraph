@@ -242,6 +242,43 @@ class RepositoryStore:
             session.commit()
             return True
 
+    def save_scan_result(self, upload_id: str, scan_result_json: str) -> None:
+        """Save scan result JSON to the repository row."""
+        with self._sessions()() as session:
+            row = session.get(RepositoryRow, upload_id)
+            if row is None:
+                raise ValueError(f"Repository not found: {upload_id}")
+            row.scan_result_json = scan_result_json
+            row.scanned_at = _utcnow()
+            session.commit()
+
+    def load_scan_result(self, upload_id: str) -> str | None:
+        """Load scan result JSON from the repository row."""
+        with self._sessions()() as session:
+            row = session.get(RepositoryRow, upload_id)
+            if row is None:
+                return None
+            return row.scan_result_json
+
+    def save_parse_result(self, upload_id: str, symbols_json: str, parse_errors_json: str) -> None:
+        """Save parse result JSON to the repository row."""
+        with self._sessions()() as session:
+            row = session.get(RepositoryRow, upload_id)
+            if row is None:
+                raise ValueError(f"Repository not found: {upload_id}")
+            row.symbols_json = symbols_json
+            row.parse_errors_json = parse_errors_json
+            row.parsed_at = _utcnow()
+            session.commit()
+
+    def load_parse_result(self, upload_id: str) -> tuple[str | None, str | None]:
+        """Load parse result JSON from the repository row."""
+        with self._sessions()() as session:
+            row = session.get(RepositoryRow, upload_id)
+            if row is None:
+                return None, None
+            return row.symbols_json, row.parse_errors_json
+
     def save_analysis(self, upload_id: str, kind: str, payload: dict[str, Any] | list[Any]) -> None:
         """Persist an analysis payload JSON blob for a repository."""
         column = self._analysis_column(kind)

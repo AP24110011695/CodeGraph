@@ -52,3 +52,7 @@ class RepositoryRow(Base):
     workflow_state_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     parsing_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     parsed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scan_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    scanned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    symbols_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parse_errors_json: Mapped[str | None] = mapped_column(Text, nullable=True)

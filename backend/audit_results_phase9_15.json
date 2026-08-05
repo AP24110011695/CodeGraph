@@ -1,0 +1,182 @@
+[
+  {
+    "method": "POST",
+    "path": "/upload",
+    "description": "Upload new repository",
+    "expected_status": 201,
+    "actual_status": 201,
+    "response_body": "{\"upload_id\":\"467956d8-be8e-468d-9a06-9c9ce9de913b\",\"filename\":\"467956d8-be8e-468d-9a06-9c9ce9de913b.zip\",\"status\":\"extracted\",\"project_path\":\"storage/extracted/467956d8-be8e-468d-9a06-9c9ce9de913b\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories",
+    "description": "List all repositories",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"repositories\":[{\"id\":\"467956d8-be8e-468d-9a06-9c9ce9de913b\",\"name\":\"test\",\"uploaded_at\":\"2026-08-05T20:10:20.764169\",\"status\":\"EMBEDDING\",\"framework\":null,\"language\":null},{\"id\":\"5c06513f-560c-474b-a79b-06ccb40d8940\",\"name\":\"test\",\"uploaded_at\":\"2026-08-05T20:09:55.617359\",\"status\":\"EMBEDDING\",\"framework\":null,\"language\":null},{\"id\":\"dd6af1db-83ea-4fb9-b060-0f2c7802f9d5\",\"name\":\"test\",\"uploaded_at\":\"2026-08-05T20:08:48.496169\",\"status\":\"EMBEDDING\",\"framework\":null,\"language\":null},{\"id\":\"e7727",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b",
+    "description": "Get repository by ID",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\",\"name\":\"audit_test2\",\"uploaded_at\":\"2026-08-05T20:07:50.620988\",\"status\":\"EMBEDDING\",\"framework\":null,\"language\":null}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/00000000-0000-0000-0000-000000000000",
+    "description": "Get non-existent repository",
+    "expected_status": 404,
+    "actual_status": 404,
+    "response_body": "{\"detail\":\"Repository not found: 00000000-0000-0000-0000-000000000000\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/scan",
+    "description": "Scan repository",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"repository_id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\",\"status\":\"scanned\",\"file_count\":4,\"directory_count\":2,\"languages\":{\"Python\":3,\"Markdown\":1},\"total_size_bytes\":53,\"scanned_at\":\"2026-08-05T20:10:29.996365Z\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/scan",
+    "description": "Get scan result",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"repository_id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\",\"status\":\"scanned\",\"file_count\":4,\"directory_count\":2,\"languages\":{\"Python\":3,\"Markdown\":1},\"total_size_bytes\":53,\"scanned_at\":\"2026-08-05T20:10:29.973010Z\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/health",
+    "description": "Health check",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"status\":\"healthy\",\"version\":\"1.0.0-rc.1\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/",
+    "description": "Root endpoint",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"name\":\"CodeGraph\",\"version\":\"1.0.0-rc.1\",\"status\":\"running\",\"release\":\"RC-1\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/parse",
+    "description": "Parse repository",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"repository_id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\",\"status\":\"parsed\",\"symbol_count\":3,\"file_count_parsed\":3,\"parse_errors\":[],\"parsed_at\":\"2026-08-05T20:10:30.070035Z\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/symbols",
+    "description": "Get repository symbols",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"project\":{\"repository_id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\"},\"files\":[{\"path\":\"config/settings.py\",\"language\":\"Python\",\"functions\":[],\"classes\":[],\"methods\":[],\"imports\":[],\"exports\":[],\"interfaces\":[],\"enums\":[],\"variables\":[{\"name\":\"CONFIG\",\"line_number\":1,\"file_path\":\"config/settings.py\",\"signature\":\"CONFIG\"}],\"decorators\":[],\"async_functions\":[],\"arrow_functions\":[],\"parse_error\":null},{\"path\":\"utils/helper.py\",\"language\":\"Python\",\"functions\":[{\"name\":\"helper\",\"line_number\":1,\"file_pa",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/index",
+    "description": "Index repository (409 if already in progress)",
+    "expected_status": 409,
+    "actual_status": 409,
+    "response_body": "{\"detail\":\"Repository indexing is already in progress\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/index/status",
+    "description": "Get index status",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"repository_id\":\"e7727055-af2d-41e0-8c64-dcab2e71f56b\",\"status\":\"INDEXING\",\"progress_percent\":50,\"current_stage\":\"Processing\",\"stages_complete\":[\"scan\",\"parse\"],\"stages_remaining\":[\"chunk\",\"embed\",\"store\"],\"started_at\":null,\"estimated_completion\":null}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/memory",
+    "description": "Add memory entry (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed before building memory\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/memory",
+    "description": "Get memory entries (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed to retrieve memory\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/rag/query",
+    "description": "RAG query",
+    "expected_status": 200,
+    "actual_status": 200,
+    "response_body": "{\"query\":\"What is this repository about?\",\"intent\":\"general_explanation\",\"llm_context\":\"\",\"citations\":[],\"statistics\":{\"total_raw_items_fetched\":0,\"total_optimized_items_used\":0,\"compression_ratio\":1.0,\"sources_used\":{}}}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/quality",
+    "description": "Analyze quality (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed before quality analysis\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/security",
+    "description": "Analyze security (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed before security analysis\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/overview",
+    "description": "Get overview (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed to retrieve overview\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "GET",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/architecture",
+    "description": "Get architecture (requires indexed repo)",
+    "expected_status": 400,
+    "actual_status": 400,
+    "response_body": "{\"detail\":\"Repository must be indexed to retrieve architecture\"}",
+    "status": "PASS"
+  },
+  {
+    "method": "POST",
+    "path": "/repositories/e7727055-af2d-41e0-8c64-dcab2e71f56b/search",
+    "description": "Semantic search (requires indexed repo)",
+    "expected_status": 409,
+    "actual_status": 409,
+    "response_body": "{\"detail\":\"Repository is not indexed.\"}",
+    "status": "PASS"
+  }
+]
