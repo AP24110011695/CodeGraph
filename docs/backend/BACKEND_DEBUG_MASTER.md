@@ -49,13 +49,13 @@ No checkpoint is complete until verified through Swagger with a real repository.
 
 | Field                     | Value                                                          |
 | ------------------------- | -------------------------------------------------------------- |
-| **Status**                | **ACTIVE**                                                     |
+| **Status**                | **BLOCKED**                                                    |
 | **Checkpoint**            | Checkpoint E                                                   |
-| **Current Goal**          | Verify Copilot & End-to-End                                     |
-| **Current Component**     | Copilot Query                                                   |
-| **Next Swagger Endpoint** | `POST /copilot/query`                                           |
-| **Success Condition**     | Copilot query returns repository-specific answers               |
-| **Stop Condition**        | Checkpoint E marked VERIFIED                                   |
+| **Current Goal**          | Fix semantic search 500 error before continuing Copilot verification |
+| **Current Component**     | Semantic Search                                                |
+| **Next Swagger Endpoint** | POST /repositories/{id}/search (blocking)                        |
+| **Success Condition**     | Semantic search returns 200 with real results                   |
+| **Stop Condition**        | BUG-005 resolved                                               |
 
 ---
 
@@ -83,7 +83,9 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Quality           | VERIFIED    | ☑        | Real metrics (13 files, Flask), repo-specific recommendations |
 | Security          | VERIFIED    | ☑        | 3 security issues (medium), real file references          |
 | Dashboard         | VERIFIED    | ☑        | 5 dashboard endpoints (overview, architecture, dependencies, risks, health) provide aggregated repository data |
-| Copilot           | NOT STARTED | ☐        | Blocked on E                                                  |
+| Copilot Query     | FAILED      | ☐        | Semantic search 500 error blocks repository data access       |
+| Copilot Explain   | NOT STARTED | ☐        | Blocked on Task 11                                             |
+| End-to-End        | NOT STARTED | ☐        | Blocked on Task 11                                             |
 
 **Status values:** `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `VERIFIED`
 
@@ -402,6 +404,14 @@ Confirm that architecture analysis, quality analysis, security scanning, and das
 
 **Checkpoint D Status: VERIFIED**
 
+**Checkpoint E Progress**
+
+- [ ] Task 11 — Copilot Query Verification (FAILED - BUG-005)
+- [ ] Task 12 — Copilot Explain Verification (Blocked on Task 11)
+- [ ] Task 13 — End-to-End Verification (Blocked on Task 11)
+
+**Checkpoint E Status: BLOCKED**
+
 **Git Commit After Completion**
 
 ```
@@ -554,6 +564,28 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### BUG-005 — Semantic Search 500 Error Blocking Copilot
+
+| Field                  | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| **Bug ID**             | BUG-005                                              |
+| **Date**               | 2026-08-06                                           |
+| **Component**          | Semantic Search API                                   |
+| **Symptoms**           | POST /repositories/{id}/search returns 500 error, blocking copilot from accessing repository data |
+| **Root Cause**         | Unknown - search_service.search() failing with 500 error, but direct retriever test works correctly |
+| **Evidence**           | POST /repositories/{id}/search returned 500 "Internal server error during repository search". Direct retriever.retrieve() test returned 5 matches successfully for "authentication" query. |
+| **Status**             | `OPEN`                                               |
+| **Priority**           | `CRITICAL`                                           |
+| **Impact**             | Copilot cannot access indexed repository data, returns generic "insufficient repository information" responses for all queries |
+| **Workaround**         | None                                                 |
+| **First Seen**         | 2026-08-06                                           |
+| **Last Verified**      | 2026-08-06                                           |
+| **Fix**                | Not yet implemented                                  |
+| **Resolved In Commit** | Not yet resolved                                     |
+| **Verification**       | Pending fix                                           |
+
+---
+
 ## Swagger Verification Log
 
 > Every endpoint tested in Swagger must be logged here. Never mark VERIFIED without real data.
@@ -595,6 +627,9 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `GET /repositories/{id}/risks`            | Repo risks       | 200         | YES                | ☑        | Risk level placeholder (medium), risk score placeholder (50) |
 | `GET /repositories/{id}/health`          | Repo health      | 200         | YES                | ☑        | Real repository data, computed health score (100)      |
 | `GET /repositories/{id}/dashboard`       | Dashboard        | 404         | NO                 | ☐        | Endpoint does not exist (dashboard provided by 5 separate endpoints) |
+| `POST /repositories/{id}/search`         | Semantic search  | 500         | NO                 | ☐        | Internal server error (BUG-005)                        |
+| `POST /copilot/chat`                    | Copilot query    | 200         | YES                | ☐        | Returns insufficient repository information (BUG-005)  |
+| `POST /copilot/{upload_id}`             | Legacy copilot   | 404         | NO                 | ☐        | Endpoint does not exist                                |
 | `GET /repositories/{id}/dashboard`       | Dashboard        |             |                    | ☐        |       |
 | `POST /copilot/query`                    | Ask question     |             |                    | ☐        |       |
 | `POST /copilot/explain`                  | Explain code     |             |                    | ☐        |       |
@@ -746,6 +781,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Result**            | SUCCESS — Dashboard functionality provided by 5 separate repository-level endpoints |
 | **Evidence**          | GET /repositories/{id}/overview (200, computed health score 100), GET /repositories/{id}/architecture (200, architecture type placeholder), GET /repositories/{id}/dependencies (200, 13 nodes, 5 edges), GET /repositories/{id}/risks (200, risk placeholder), GET /repositories/{id}/health (200, computed health score 100). GET /repositories/{id}/dashboard does not exist (404) - documented as correct architecture |
 | **Next Action**       | Task 10 complete — Checkpoint D VERIFIED — proceed to Checkpoint E (Task 11 Copilot Query) |
+
+---
+
+### Session 011 — Task 11 Copilot Query Verification
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Verify Copilot Query returns repository-specific answers using real indexed data |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python step1_copilot_investigation.py, python test_retriever.py, python step3_swagger_verification.py |
+| **Result**            | FAILED — Semantic search 500 error blocks copilot from accessing repository data |
+| **Evidence**          | POST /repositories/{id}/search returns 500 error (BUG-005). Direct retriever.retrieve() test returns 5 matches successfully, indicating issue is in search_service or API layer, not underlying vector store. POST /copilot/chat returns 200 but with "I could not find enough analyzed repository information" responses for all 4 test questions. |
+| **Next Action**       | Task 11 FAILED — BUG-005 blocks Checkpoint E — fix semantic search 500 error before continuing |
 
 ---
 
@@ -910,12 +959,12 @@ The project is complete only when every item below is marked **VERIFIED**.
 
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Current Checkpoint**  | Checkpoint E - NOT STARTED                                                                                                                                                   |
-| **Current Objective**   | Task 11 - Copilot Query Verification                                                                                                                                        |
-| **Last Completed Task** | Task 10 - Dashboard Verification                                                                                                                                            |
-| **Status**              | PROCEEDING to Task 11                                                                                                                                                        |
-| **Next Checkpoint**     | Checkpoint E (Tasks 11-13)                                                                                                                                                   |
-| **Next Git Commit**     | Pending (after Task 13)                                                                                                                                                     |
+| **Current Checkpoint**  | Checkpoint E - BLOCKED                                                                                                                                                      |
+| **Current Objective**   | BUG-005: Fix semantic search 500 error                                                                                                                                      |
+| **Last Completed Task** | Task 10 - Dashboard Verification (Checkpoint D VERIFIED)                                                                                                                     |
+| **Status**              | BLOCKED on BUG-005                                                                                                                                                          |
+| **Next Checkpoint**     | Checkpoint E (Tasks 11-13 blocked on BUG-005)                                                                                                                                |
+| **Next Git Commit**     | Pending (after BUG-005 resolved)                                                                                                                                             |
 
 ---
 
