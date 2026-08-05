@@ -192,11 +192,11 @@ def test_memory_builds_on_indexing_complete():
     from storage.parsing_store import parsing_store
     parsing_store.save(repository_id, parsing_result)
     
-    # Publish REPOSITORY_INDEXED event (simulating state machine transition)
+    # Publish REPOSITORY_READY event (simulating state machine transition)
     # Note: In actual flow, this happens automatically
     # For testing, we verify the subscriber exists and can be called
     assert auto_memory_builder is not None
-    assert hasattr(auto_memory_builder, 'on_repository_indexed')
+    assert hasattr(auto_memory_builder, 'on_repository_ready')
     
     # Cleanup
     parsing_store.delete(repository_id)

@@ -10,7 +10,14 @@ class MemoryRetriever:
         self._store = store
 
     def retrieve(self, repository_id: str) -> Optional[RepositoryMemory]:
-        return self._store.get(repository_id)
+        logger.info("=" * 80)
+        logger.info("MEMORY_RETRIEVER: retrieve() called")
+        logger.info("=" * 80)
+        logger.info("Repository ID: %s", repository_id)
+        result = self._store.get(repository_id)
+        logger.info("MEMORY_RETRIEVER: Result from store: %s", "found" if result else "not found")
+        logger.info("=" * 80)
+        return result
         
     def retrieve_summary(self, repository_id: str) -> Optional[MemorySummary]:
         memory = self.retrieve(repository_id)
