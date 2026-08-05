@@ -86,15 +86,34 @@ async def get_repository_overview(repository_id: str):
             detail=f"Repository not found: {repository_id}",
         )
 
+    # Compute health score from repository metrics
+    total_files = repository.get("total_files", 0)
+    languages = repository.get("languages", {})
+    frameworks = repository.get("frameworks", [])
+    
+    # Simple health score based on completeness
+    health_score = 50  # Base score
+    if total_files > 0:
+        health_score += 10
+    if len(languages) > 0:
+        health_score += 10
+    if len(frameworks) > 0:
+        health_score += 10
+    if repository.get("indexed_at"):
+        health_score += 20
+    
+    # Compute risk level (placeholder for now)
+    risk_level = "medium"
+
     return {
         "repository_id": repository_id,
         "name": repository.get("name", repository.get("repository_name", "")),
-        "file_count": repository.get("total_files", 0),
-        "language_count": len(repository.get("languages", {})),
-        "primary_language": max(repository.get("languages", {}).items(), key=lambda x: x[1])[0] if repository.get("languages") else "Unknown",
-        "detected_frameworks": repository.get("frameworks", []),
-        "health_score": 72,  # Placeholder - should be computed from quality metrics
-        "risk_level": "medium",  # Placeholder - should be computed from risk analysis
+        "file_count": total_files,
+        "language_count": len(languages),
+        "primary_language": max(languages.items(), key=lambda x: x[1])[0] if languages else "Unknown",
+        "detected_frameworks": frameworks,
+        "health_score": min(health_score, 100),
+        "risk_level": risk_level,
         "total_size_bytes": repository.get("zip_size_bytes", 0),
         "indexed_at": repository.get("indexed_at"),
     }
@@ -118,12 +137,13 @@ async def get_repository_architecture(repository_id: str):
             detail=f"Repository not found: {repository_id}",
         )
 
+    # Return repository-based architecture info
     return {
         "repository_id": repository_id,
         "frameworks": repository.get("frameworks", []),
         "languages": repository.get("languages", {}),
         "total_files": repository.get("total_files", 0),
-        "architecture_type": "monolithic",  # Placeholder - should be computed from dependency analysis
+        "architecture_type": "monolithic",  # Placeholder - would need full architecture analysis
     }
 
 
@@ -209,11 +229,12 @@ async def get_repository_risks(repository_id: str):
             detail=f"Repository not found: {repository_id}",
         )
 
+    # Return repository-based risk info
     return {
         "repository_id": repository_id,
-        "risk_level": "medium",  # Placeholder - should be computed from risk analysis
-        "risk_factors": [],  # Placeholder - should be computed from security and quality analysis
-        "overall_risk_score": 50,  # Placeholder - should be computed from risk analysis
+        "risk_level": "medium",  # Placeholder - would need security analysis
+        "risk_factors": [],  # Placeholder - would need security analysis
+        "overall_risk_score": 50,  # Placeholder - would need security analysis
     }
 
 
@@ -235,10 +256,37 @@ async def get_repository_health(repository_id: str):
             detail=f"Repository not found: {repository_id}",
         )
 
+    # Compute health score from repository metrics
+    total_files = repository.get("total_files", 0)
+    languages = repository.get("languages", {})
+    frameworks = repository.get("frameworks", [])
+    
+    # Simple health score based on completeness
+    health_score = 50  # Base score
+    if total_files > 0:
+        health_score += 10
+    if len(languages) > 0:
+        health_score += 10
+    if len(frameworks) > 0:
+        health_score += 10
+    if repository.get("indexed_at"):
+        health_score += 20
+    
+    # Determine overall health
+    health_score = min(health_score, 100)
+    if health_score >= 80:
+        overall_health = "excellent"
+    elif health_score >= 60:
+        overall_health = "good"
+    elif health_score >= 40:
+        overall_health = "fair"
+    else:
+        overall_health = "poor"
+
     return {
         "repository_id": repository_id,
         "status": index.status.value,
-        "health_score": 72,  # Placeholder - should be computed from quality, security, and maintainability metrics
-        "overall_health": "good",  # Placeholder - should be computed from health metrics
+        "health_score": health_score,
+        "overall_health": overall_health,
         "last_indexed": repository.get("indexed_at"),
     }
