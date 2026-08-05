@@ -52,9 +52,9 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | **Status**                | **ACTIVE**                                                     |
 | **Checkpoint**            | Checkpoint D                                                   |
 | **Current Goal**          | Verify Analysis & Reporting                                     |
-| **Current Component**     | Architecture                                                   |
-| **Next Swagger Endpoint** | `GET /repositories/{id}/architecture`                           |
-| **Success Condition**     | Architecture returns real structural data                      |
+| **Current Component**     | Dependency Graph                                                 |
+| **Next Swagger Endpoint** | `GET /repositories/{id}/dependencies`                           |
+| **Success Condition**     | Dependency graph returns real edges from repository imports     |
 | **Stop Condition**        | Checkpoint D marked VERIFIED                                   |
 
 ---
@@ -78,7 +78,7 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Workflow Memory   | VERIFIED    | ☑        | 4 workflows generated from 4 API endpoints                |
 | API Memory        | VERIFIED    | ☑        | 4 endpoints detected after regex fix                      |
 | Memory Injection  | VERIFIED    | ☑        | Context endpoint returns full memory injection (39 symbols, 5 modules, 4 workflows, 4 APIs) |
-| Architecture      | IN PROGRESS | ☐        | Endpoint reachable — data completeness unconfirmed          |
+| Architecture      | VERIFIED    | ☑        | 5 modules, 2 layers, 11 components, 4 relationships       |
 | Dependency Graph  | IN PROGRESS | ☐        | Nodes present — edges under investigation                   |
 | Quality           | NOT STARTED | ☐        | Blocked on C.5                                              |
 | Security          | NOT STARTED | ☐        | Blocked on C.5                                              |
@@ -347,7 +347,7 @@ git commit -m "checkpoint-C.5: repository intelligence verified — memory, symb
 ### Checkpoint D — Analysis & Reporting
 
 **Objective**
-Confirm that quality analysis, security scanning, and dashboard metrics return accurate, non-mock data derived from the indexed repository.
+Confirm that architecture analysis, quality analysis, security scanning, and dashboard metrics return accurate, non-mock data derived from the indexed repository.
 
 **Prerequisites**
 
@@ -357,6 +357,7 @@ Confirm that quality analysis, security scanning, and dashboard metrics return a
 
 | Method | Endpoint                             | Description              |
 | ------ | ------------------------------------ | ------------------------ |
+| GET    | `/repositories/{id}/architecture`    | Architecture analysis    |
 | POST   | `/repositories/{id}/quality`         | Run quality analysis     |
 | GET    | `/repositories/{id}/quality/report`  | Retrieve quality report  |
 | POST   | `/repositories/{id}/security`        | Run security scan        |
@@ -365,32 +366,44 @@ Confirm that quality analysis, security scanning, and dashboard metrics return a
 
 **Expected Result**
 
+- Architecture report contains real structural data (modules, layers, frameworks) from actual source files
 - Quality report contains real metrics (complexity, duplication, coverage if applicable)
 - Security report identifies real issues (or correctly reports none) from actual source files
 - Dashboard aggregates real data from all prior pipeline stages
 
 **How to Verify Success**
 
-1. Run quality analysis on a repository with known complexity — verify scores are plausible
-2. Run security scan on a repository with at least one known vulnerability pattern — confirm detection
-3. Load dashboard and cross-reference metric numbers against raw data from Checkpoint B/C
+1. Call architecture endpoint — verify modules, layers, and frameworks match actual repository structure
+2. Run quality analysis on a repository with known complexity — verify scores are plausible
+3. Run security scan on a repository with at least one known vulnerability pattern — confirm detection
+4. Load dashboard and cross-reference metric numbers against raw data from Checkpoint B/C
 
 **Common Failure Symptoms**
 
+- Architecture data is generic or doesn't match repository structure
 - Quality scores are identical for every repository (mock data)
 - Security report always returns 0 issues regardless of code
 - Dashboard shows zeros or stale data
 
 **Exit Criteria**
 
+- [ ] Architecture report contains real, repository-specific structural data
 - [ ] Quality report contains real, repository-specific metrics
 - [ ] Security scan detects real issues (or correctly returns clean)
 - [ ] Dashboard reflects live aggregated data
 
+**Checkpoint D Progress**
+
+- [x] Task 6 — Architecture Verification
+- [ ] Task 7 — Dependency Graph Verification
+- [ ] Task 8 — Quality Verification
+- [ ] Task 9 — Security Verification
+- [ ] Task 10 — Dashboard Verification
+
 **Git Commit After Completion**
 
 ```
-git commit -m "checkpoint-D: analysis verified — quality, security, dashboard"
+git commit -m "checkpoint-D: analysis verified — architecture, quality, security, dashboard"
 ```
 
 ---
@@ -490,8 +503,30 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **First Seen**         | 2026-08-06                                           |
 | **Last Verified**      | 2026-08-06                                           |
 | **Fix**                | Added regex pattern to match Blueprint routes: @([a-zA-Z_][a-zA-Z0-9_]*)\.route\([\'"]([^\'"]+)[\'"][^)]*methods=\[([^\]]+)\]. Kept fallback pattern for simple @app.get decorators. Updated extraction logic to parse methods list. |
-| **Resolved In Commit** | Pending                                              |
+| **Resolved In Commit** | task-4: verify api memory pipeline                 |
 | **Verification**       | POST /repositories/{id}/memory returned 200 with 4 API endpoints and 4 workflows |
+
+---
+
+### BUG-003 — Architecture Builder Symbol Type Mismatch
+
+| Field                  | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| **Bug ID**             | BUG-003                                              |
+| **Date**               | 2026-08-06                                           |
+| **Component**          | Architecture Builder                                 |
+| **Symptoms**           | GET /architecture/{upload_id} returned 500 with validation error: "Input should be a valid string [type=string_type, input_value=Symbol(name='create_product'...)]" |
+| **Root Cause**         | architecture_builder.py was passing Symbol objects directly to Component.name (which expects str), instead of extracting the .name attribute |
+| **Evidence**           | Error: "1 validation error for ArchitectureComponent\nname\n  Input should be a valid string [type=string_type, input_value=Symbol(name='create_produ...nature='create_product'), input_type=Symbol]" |
+| **Status**             | `RESOLVED`                                           |
+| **Priority**           | `HIGH`                                               |
+| **Impact**             | Architecture endpoint completely failed, no structural data could be retrieved |
+| **Workaround**         | None                                                 |
+| **First Seen**         | 2026-08-06                                           |
+| **Last Verified**      | 2026-08-06                                           |
+| **Fix**                | Changed architecture_builder.py _detect_components() to extract .name attribute from Symbol objects before passing to Component. |
+| **Resolved In Commit** | task-6: verify architecture pipeline                |
+| **Verification**       | GET /architecture/{upload_id} returned 200 with 5 modules, 2 layers, 11 components, 4 relationships |
 
 ---
 
@@ -521,8 +556,8 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `GET /repositories/{id}/memory` (Workflow Memory) | Workflow memory | 200         | YES                | ☑        | 4 workflows generated from 4 API endpoints |
 | `GET /repositories/{id}/memory` (API Memory) | API memory      | 200         | YES                | ☑        | 4 endpoints after regex fix |
 | `GET /repositories/{id}/memory/context`  | Memory injection | 200         | YES                | ☑        | Full context with 39 symbols, 5 modules, 4 workflows, 4 APIs |
+| `GET /architecture/{upload_id}`          | Architecture     | 200         | YES                | ☑        | 5 modules, 2 layers, 11 components, 4 relationships |
 | `POST /repositories/{id}/search`         | Semantic search  | 200         | YES                | ☑        |       |
-| `GET /repositories/{id}/architecture`    | Architecture     | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/graph`           | Graph data       | 200         | YES                | ☐        |       |
 | `POST /repositories/{id}/quality`        | Run quality      |             |                    | ☐        |       |
@@ -610,6 +645,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Result**            | SUCCESS — Memory injection works via /memory/context endpoint |
 | **Evidence**          | GET /repositories/{id}/memory/context returned 200 with full context (39 symbols, 5 modules, 4 workflows, 4 APIs) |
 | **Next Action**       | Task 5 complete — Checkpoint C.5 VERIFIED, proceed to Checkpoint D |
+
+---
+
+### Session 006 — Task 6 Architecture Verification
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Verify Architecture pipeline returns real structural data |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python step1_architecture_investigation.py, python test_architecture_builder.py, python step3_swagger_verification.py |
+| **Result**            | SUCCESS — Fixed Symbol type mismatch in architecture_builder.py |
+| **Evidence**          | GET /architecture/{upload_id} returned 200 with 5 modules, 2 layers, 11 components, 4 relationships |
+| **Next Action**       | Task 6 complete — proceed to Task 7 (Dependency Graph) |
 
 ---
 
@@ -749,11 +798,11 @@ The project is complete only when every item below is marked **VERIFIED**.
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Current Checkpoint**  | Checkpoint D - IN PROGRESS                                                                                                                                                   |
-| **Current Objective**   | Task 6 - Architecture Verification                                                                                                                                          |
-| **Last Completed Task** | Task 5 - Memory Injection Verification (Checkpoint C.5 VERIFIED)                                                                                                          |
-| **Status**              | PROCEEDING to Checkpoint D                                                                                                                                                   |
-| **Next Checkpoint**     | Checkpoint D (Tasks 6-8)                                                                                                                                                     |
-| **Next Git Commit**     | Pending (after Task 8)                                                                                                                                                      |
+| **Current Objective**   | Task 7 - Dependency Graph Verification                                                                                                                                      |
+| **Last Completed Task** | Task 6 - Architecture Verification                                                                                                                                           |
+| **Status**              | PROCEEDING to Task 7                                                                                                                                                         |
+| **Next Checkpoint**     | Checkpoint D (Tasks 7-10 remaining)                                                                                                                                            |
+| **Next Git Commit**     | Pending (after Task 10)                                                                                                                                                     |
 
 ---
 

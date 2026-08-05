@@ -334,7 +334,8 @@ class ArchitectureBuilder:
                 break
 
         # Add classes as components
-        for class_name in parsed.classes:
+        for class_symbol in parsed.classes:
+            class_name = class_symbol.name if hasattr(class_symbol, 'name') else str(class_symbol)
             components.append(
                 Component(
                     name=class_name,
@@ -346,7 +347,8 @@ class ArchitectureBuilder:
 
         # Add functions as components if no classes found
         if not parsed.classes:
-            for func_name in parsed.functions:
+            for func_symbol in parsed.functions:
+                func_name = func_symbol.name if hasattr(func_symbol, 'name') else str(func_symbol)
                 components.append(
                     Component(
                         name=func_name,
@@ -357,7 +359,8 @@ class ArchitectureBuilder:
                 )
 
         # Add interfaces as components
-        for interface_name in parsed.interfaces:
+        for interface_symbol in parsed.interfaces:
+            interface_name = interface_symbol.name if hasattr(interface_symbol, 'name') else str(interface_symbol)
             components.append(
                 Component(
                     name=interface_name,
