@@ -586,6 +586,28 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### BUG-006 — Copilot Context Assembly Missing Repository Memory
+
+| Field                  | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| **Bug ID**             | BUG-006                                              |
+| **Date**               | 2026-08-06                                           |
+| **Component**          | Copilot Context Assembly                              |
+| **Symptoms**           | Copilot returns "I could not find enough analyzed repository information" despite Semantic Search working |
+| **Root Cause**         | Repository Memory is EMPTY when Copilot is called. Memory must be built via POST /repositories/{id}/memory, which is a separate step from indexing. Copilot RAG context requires BOTH Search AND Memory. When Memory is empty, RAG Engine returns empty context and Copilot falls back to generic response. |
+| **Evidence**           | MemoryStore.contains(repository_id) returns False before POST /repositories/{id}/memory. After memory build, MemoryStore.contains() returns True with 39 symbols. Semantic Search works (5 matches returned). Copilot related_files and related_components remain empty because context_selector methods require Repository Memory. |
+| **Status**             | `NOT A BUG - MISSING PROCESS STEP`                     |
+| **Priority**           | `HIGH` (verification workflow gap)                    |
+| **Impact**             | Copilot cannot answer repository questions without Repository Memory being built first |
+| **Workaround**         | Always call POST /repositories/{id}/memory before Copilot queries |
+| **First Seen**         | 2026-08-06                                           |
+| **Last Verified**      | 2026-08-06                                           |
+| **Fix**                | No code fix required - verification workflow must include memory build step |
+| **Resolved In Commit** | N/A (not a code bug)                                |
+| **Verification**       | After POST /repositories/{id}/memory, Repository Memory contains 39 symbols, 5 modules, 4 workflows, 4 APIs |
+
+---
+
 ## Swagger Verification Log
 
 > Every endpoint tested in Swagger must be logged here. Never mark VERIFIED without real data.
@@ -812,6 +834,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### Session 013 — BUG-006 Investigation (Copilot Context Assembly)
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Investigate why Copilot returns insufficient information despite Search working (BUG-006) |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python bug006_investigation.py, python check_memory_store.py, python check_memory_instances.py |
+| **Result**            | NOT A BUG — Missing process step in verification workflow |
+| **Evidence**          | MemoryStore.contains(repository_id) returns False before POST /repositories/{id}/memory. After memory build, MemoryStore.contains() returns True with 39 symbols. Semantic Search works (5 matches returned). Copilot related_files and related_components remain empty because context_selector methods require Repository Memory. Copilot RAG context requires BOTH Search AND Memory. |
+| **Next Action**       | BUG-006 documented as missing process step — Task 11 must include POST /repositories/{id}/memory before Copilot queries |
+
+---
+
 ## Decisions
 
 > Every significant engineering decision must be recorded here.
@@ -974,9 +1010,9 @@ The project is complete only when every item below is marked **VERIFIED**.
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Current Checkpoint**  | Checkpoint E - NOT STARTED                                                                                                                                                   |
-| **Current Objective**   | Task 11 - Copilot Query Verification (Retry after BUG-005 resolution)                                                                                                     |
-| **Last Completed Task** | BUG-005 - Semantic Search 500 Error (RESOLVED)                                                                                                                              |
-| **Status**              | PROCEEDING to Task 11 (retry)                                                                                                                                                 |
+| **Current Objective**   | Task 11 - Copilot Query Verification (Retry with memory build step)                                                                                                     |
+| **Last Completed Task** | BUG-006 - Copilot Context Assembly (Not a code bug - missing process step)                                                                                                 |
+| **Status**              | PROCEEDING to Task 11 (retry with memory build)                                                                                                                            |
 | **Next Checkpoint**     | Checkpoint E (Tasks 11-13)                                                                                                                                                   |
 | **Next Git Commit**     | Pending (after Task 13)                                                                                                                                                     |
 
