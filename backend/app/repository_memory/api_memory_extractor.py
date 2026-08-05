@@ -15,7 +15,11 @@ class APIMemoryExtractor:
         # Common FastAPI/Flask decorator patterns
         # e.g. @router.post("/upload", response_model=UploadResponse)
         # e.g. @app.get("/health")
-        route_pattern = re.compile(r'@(?:router|app)\.(get|post|put|delete|patch|options)\([\'"]([^\'"]+)[\'"]')
+        # e.g. @product_bp.route("/", methods=['POST'])
+        route_pattern = re.compile(r'@([a-zA-Z_][a-zA-Z0-9_]*)\.route\([\'"]([^\'"]+)[\'"][^)]*methods=\[([^\]]+)\]')
+        
+        # Fallback pattern for simple @app.get or @router.post
+        simple_route_pattern = re.compile(r'@(?:router|app)\.(get|post|put|delete|patch|options)\([\'"]([^\'"]+)[\'"]')
         
         # Regex to find function definition right after decorator
         func_pattern = re.compile(r'def\s+([a-zA-Z0-9_]+)\s*\(')
@@ -39,10 +43,16 @@ class APIMemoryExtractor:
             # Find all routes in the file
             lines = content.split('\n')
             for i, line in enumerate(lines):
+                # Try Blueprint route pattern first
                 match = route_pattern.search(line)
                 if match:
-                    method = match.group(1).upper()
+                    blueprint_name = match.group(1)
                     path = match.group(2)
+                    methods_str = match.group(3)
+                    # Parse methods list
+                    methods = []
+                    if methods_str:
+                        methods = [m.strip().strip('\'"') for m in methods_str.split(',')]
                     
                     handler = "Unknown"
                     # Look ahead a few lines for the handler function
@@ -52,27 +62,51 @@ class APIMemoryExtractor:
                             handler = func_match.group(1)
                             break
                     
-                    # Basic extraction for models if present in the decorator line
-                    response_model = None
-                    if "response_model=" in line:
-                        resp_match = re.search(r'response_model=([a-zA-Z0-9_]+)', line)
-                        if resp_match:
-                            response_model = resp_match.group(1)
-
-                    endpoint_id = f"{method} {path}"
-                    
-                    endpoints[endpoint_id] = APIEndpointMemory(
-                        metadata=MemoryMetadata(
-                            repository_id=repository_id,
-                            evidence_sources=[file_info.path]
-                        ),
-                        endpoint_path=path,
-                        http_method=method,
-                        handler=handler,
-                        response_model=response_model,
-                        related_files=[file_info.path],
-                        purpose=f"Handles {method} requests to {path}"
-                    )
+                    # Create endpoint for each method
+                    for method in methods:
+                        endpoint_id = f"{method} {path}"
+                        
+                        endpoints[endpoint_id] = APIEndpointMemory(
+                            metadata=MemoryMetadata(
+                                repository_id=repository_id,
+                                evidence_sources=[file_info.path]
+                            ),
+                            endpoint_path=path,
+                            http_method=method.upper(),
+                            handler=handler,
+                            response_model=None,
+                            related_files=[file_info.path],
+                            purpose=f"Handles {method.upper()} requests to {path}"
+                        )
+                else:
+                    # Try simple route pattern as fallback
+                    simple_match = simple_route_pattern.search(line)
+                    if simple_match:
+                        method = simple_match.group(1).upper()
+                        path = simple_match.group(2)
+                        
+                        handler = "Unknown"
+                        # Look ahead a few lines for the handler function
+                        for j in range(i+1, min(i+5, len(lines))):
+                            func_match = func_pattern.search(lines[j])
+                            if func_match:
+                                handler = func_match.group(1)
+                                break
+                        
+                        endpoint_id = f"{method} {path}"
+                        
+                        endpoints[endpoint_id] = APIEndpointMemory(
+                            metadata=MemoryMetadata(
+                                repository_id=repository_id,
+                                evidence_sources=[file_info.path]
+                            ),
+                            endpoint_path=path,
+                            http_method=method,
+                            handler=handler,
+                            response_model=None,
+                            related_files=[file_info.path],
+                            purpose=f"Handles {method} requests to {path}"
+                        )
 
         return endpoints
 

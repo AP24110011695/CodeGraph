@@ -52,9 +52,9 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | **Status**                | **ACTIVE**                                                     |
 | **Checkpoint**            | Checkpoint C.5                                                 |
 | **Current Goal**          | Verify Repository Intelligence                                 |
-| **Current Component**     | API Memory                                                     |
-| **Next Swagger Endpoint** | `GET /repositories/{id}/memory` (api_endpoints field)         |
-| **Success Condition**     | API Memory lists real endpoints from source code                |
+| **Current Component**     | Memory Injection                                                 |
+| **Next Swagger Endpoint** | `POST /repositories/{id}/memory/inject`                        |
+| **Success Condition**     | Memory injection returns non-empty context with real data      |
 | **Stop Condition**        | Checkpoint C.5 marked VERIFIED                                 |
 
 ---
@@ -76,6 +76,7 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Repository Memory | VERIFIED    | ☑        | Real symbol summaries, module summaries, no placeholders     |
 | Symbol Table      | VERIFIED    | ☑        | 39 symbols via /memory endpoint, verified against source   |
 | Workflow Memory   | VERIFIED    | ☑        | Pipeline working correctly, 0 workflows due to 0 API endpoints |
+| API Memory        | VERIFIED    | ☑        | 4 endpoints detected after regex fix, 4 workflows generated    |
 | Architecture      | IN PROGRESS | ☐        | Endpoint reachable — data completeness unconfirmed          |
 | Dependency Graph  | IN PROGRESS | ☐        | Nodes present — edges under investigation                   |
 | Quality           | NOT STARTED | ☐        | Blocked on C.5                                              |
@@ -331,7 +332,7 @@ Prove that repository intelligence is fully and correctly populated before any a
 - [x] Task 1 — Repository Memory Verification
 - [x] Task 2 — Symbol Table Verification
 - [x] Task 3 — Workflow Memory Verification
-- [ ] Task 4 — API Memory Verification
+- [x] Task 4 — API Memory Verification
 - [ ] Task 5 — Memory Injection Verification
 
 **Git Commit After Completion**
@@ -471,6 +472,28 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### BUG-002 — API Memory Regex Pattern Mismatch
+
+| Field                  | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| **Bug ID**             | BUG-002                                              |
+| **Date**               | 2026-08-06                                           |
+| **Component**          | API Memory Extractor                                 |
+| **Symptoms**           | API Memory returned 0 endpoints despite repository containing Flask Blueprint routes |
+| **Root Cause**         | api_memory_extractor.py regex pattern only matched @app.get or @router.post patterns, not Blueprint routes like @product_bp.route("/", methods=['POST']) |
+| **Evidence**           | Investigation showed 3 API files with route decorators but 0 endpoints extracted. Test regex confirmed pattern did not match Blueprint syntax. |
+| **Status**             | `RESOLVED`                                           |
+| **Priority**           | `HIGH`                                               |
+| **Impact**             | API Memory empty, causing Workflow Memory to also be empty (depends on API endpoints) |
+| **Workaround**         | None                                                 |
+| **First Seen**         | 2026-08-06                                           |
+| **Last Verified**      | 2026-08-06                                           |
+| **Fix**                | Added regex pattern to match Blueprint routes: @([a-zA-Z_][a-zA-Z0-9_]*)\.route\([\'"]([^\'"]+)[\'"][^)]*methods=\[([^\]]+)\]. Kept fallback pattern for simple @app.get decorators. Updated extraction logic to parse methods list. |
+| **Resolved In Commit** | Pending                                              |
+| **Verification**       | POST /repositories/{id}/memory returned 200 with 4 API endpoints and 4 workflows |
+
+---
+
 ## Swagger Verification Log
 
 > Every endpoint tested in Swagger must be logged here. Never mark VERIFIED without real data.
@@ -495,6 +518,7 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `GET /repositories/{id}/memory`          | Repo memory      | 200         | YES                | ☑        | 39 symbols, 5 modules, no placeholders |
 | `GET /repositories/{id}/memory` (Symbol Table) | Symbol table   | 200         | YES                | ☑        | 39 symbols, verified against source files |
 | `GET /repositories/{id}/memory` (Workflow Memory) | Workflow memory | 200         | YES                | ☑        | 0 workflows (pipeline correct, 0 API endpoints upstream) |
+| `GET /repositories/{id}/memory` (API Memory) | API memory      | 200         | YES                | ☑        | 4 endpoints after regex fix, 4 workflows generated |
 | `POST /repositories/{id}/search`         | Semantic search  | 200         | YES                | ☑        |       |
 | `GET /repositories/{id}/architecture`    | Architecture     | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☐        |       |
@@ -556,6 +580,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Result**            | SUCCESS — Workflow Memory pipeline working correctly |
 | **Evidence**          | GET /repositories/{id}/memory returned 200 with 0 workflows (due to 0 API endpoints detected upstream). Pipeline logic verified as correct. |
 | **Next Action**       | Task 3 complete — proceed to Task 4 (API Memory) |
+
+---
+
+### Session 004 — Task 4 API Memory Verification
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Verify API Memory pipeline detects and extracts real endpoints |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python step1_api_investigation.py, python test_api_extractor.py, python step3_swagger_verification.py |
+| **Result**            | SUCCESS — Fixed regex pattern to match Blueprint routes |
+| **Evidence**          | GET /repositories/{id}/memory returned 200 with 4 API endpoints and 4 workflows |
+| **Next Action**       | Task 4 complete — proceed to Task 5 (Memory Injection) |
 
 ---
 
@@ -682,10 +720,10 @@ The project is complete only when every item below is marked **VERIFIED**.
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Current Checkpoint**  | Checkpoint C.5 - IN PROGRESS                                                                                                                                                  |
-| **Current Objective**   | Task 4 - API Memory Verification                                                                                                                                            |
-| **Last Completed Task** | Task 3 - Workflow Memory Verification                                                                                                                                      |
-| **Status**              | PROCEEDING to Task 4                                                                                                                                                         |
-| **Next Checkpoint**     | Checkpoint C.5 (Tasks 4-5 remaining)                                                                                                                                          |
+| **Current Objective**   | Task 5 - Memory Injection Verification                                                                                                                                      |
+| **Last Completed Task** | Task 4 - API Memory Verification                                                                                                                                           |
+| **Status**              | PROCEEDING to Task 5                                                                                                                                                         |
+| **Next Checkpoint**     | Checkpoint C.5 (Task 5 remaining)                                                                                                                                             |
 | **Next Git Commit**     | Pending (after Task 5)                                                                                                                                                      |
 
 ---
