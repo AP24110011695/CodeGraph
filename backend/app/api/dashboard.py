@@ -145,11 +145,50 @@ async def get_repository_dependencies(repository_id: str):
             detail=f"Repository not found: {repository_id}",
         )
 
-    return {
-        "repository_id": repository_id,
-        "dependencies": [],  # Placeholder - should be computed from import analysis
-        "external_packages": [],  # Placeholder - should be computed from package.json/requirements.txt
-    }
+    # Build actual dependency graph
+    from app.services.dependency_graph import graph_builder
+    from app.services.scanner_service import scanner_service
+    
+    project_path = repository_store.resolve_path(repository_id)
+    if not project_path:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Extracted project not found: {repository_id}",
+        )
+
+    try:
+        scan_result = scanner_service.scan(project_path)
+        graph_result = graph_builder.build(project_path, scan_result)
+        
+        # Convert to API response format
+        nodes = [
+            {
+                "id": node.get("id"),
+                "path": node.get("path"),
+                "language": node.get("language")
+            }
+            for node in graph_result.nodes
+        ]
+        
+        edges = [
+            {
+                "from": edge.from_node,
+                "to": edge.to_node,
+                "type": edge.edge_type
+            }
+            for edge in graph_result.edges
+        ]
+        
+        return {
+            "repository_id": repository_id,
+            "nodes": nodes,
+            "edges": edges,
+            "isolated_files": graph_result.isolated_files,
+            "total_nodes": len(nodes),
+            "total_edges": len(edges)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building dependency graph: {str(e)}")
 
 
 @router.get("/{repository_id}/risks")

@@ -52,9 +52,9 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | **Status**                | **ACTIVE**                                                     |
 | **Checkpoint**            | Checkpoint D                                                   |
 | **Current Goal**          | Verify Analysis & Reporting                                     |
-| **Current Component**     | Dependency Graph                                                 |
-| **Next Swagger Endpoint** | `GET /repositories/{id}/dependencies`                           |
-| **Success Condition**     | Dependency graph returns real edges from repository imports     |
+| **Current Component**     | Quality Analysis                                                 |
+| **Next Swagger Endpoint** | `POST /repositories/{id}/quality`                              |
+| **Success Condition**     | Quality analysis returns real metrics from repository         |
 | **Stop Condition**        | Checkpoint D marked VERIFIED                                   |
 
 ---
@@ -79,11 +79,11 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | API Memory        | VERIFIED    | ☑        | 4 endpoints detected after regex fix                      |
 | Memory Injection  | VERIFIED    | ☑        | Context endpoint returns full memory injection (39 symbols, 5 modules, 4 workflows, 4 APIs) |
 | Architecture      | VERIFIED    | ☑        | 5 modules, 2 layers, 11 components, 4 relationships       |
-| Dependency Graph  | IN PROGRESS | ☐        | Nodes present — edges under investigation                   |
-| Quality           | NOT STARTED | ☐        | Blocked on C.5                                              |
-| Security          | NOT STARTED | ☐        | Blocked on C.5                                              |
-| Dashboard         | NOT STARTED | ☐        | Blocked on C.5                                              |
-| Copilot           | NOT STARTED | ☐        | Blocked on C.5                                              |
+| Dependency Graph  | VERIFIED    | ☑        | 13 nodes, 5 edges, real import relationships             |
+| Quality           | NOT STARTED | ☐        | Blocked on D                                                  |
+| Security          | NOT STARTED | ☐        | Blocked on D                                                  |
+| Dashboard         | NOT STARTED | ☐        | Blocked on D                                                  |
+| Copilot           | NOT STARTED | ☐        | Blocked on D                                                  |
 
 **Status values:** `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `VERIFIED`
 
@@ -395,7 +395,7 @@ Confirm that architecture analysis, quality analysis, security scanning, and das
 **Checkpoint D Progress**
 
 - [x] Task 6 — Architecture Verification
-- [ ] Task 7 — Dependency Graph Verification
+- [x] Task 7 — Dependency Graph Verification
 - [ ] Task 8 — Quality Verification
 - [ ] Task 9 — Security Verification
 - [ ] Task 10 — Dashboard Verification
@@ -530,6 +530,28 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### BUG-004 — Dependency Graph Placeholder Implementation
+
+| Field                  | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| **Bug ID**             | BUG-004                                              |
+| **Date**               | 2026-08-06                                           |
+| **Component**          | Dashboard API                                         |
+| **Symptoms**           | GET /repositories/{id}/dependencies returned empty arrays for nodes and edges |
+| **Root Cause**         | dashboard.py get_repository_dependencies() had placeholder implementation returning empty arrays instead of calling actual dependency graph builder |
+| **Evidence**           | API returned {"repository_id": "...", "dependencies": [], "external_packages": []} with no real graph data |
+| **Status**             | `RESOLVED`                                           |
+| **Priority**           | `HIGH`                                               |
+| **Impact**             | Dependency graph completely empty, no import relationships visible |
+| **Workaround**         | None                                                 |
+| **First Seen**         | 2026-08-06                                           |
+| **Last Verified**      | 2026-08-06                                           |
+| **Fix**                | Updated dashboard.py get_repository_dependencies() to call graph_builder.build() and return real nodes and edges from actual repository |
+| **Resolved In Commit** | task-7: verify dependency graph pipeline               |
+| **Verification**       | GET /repositories/{id}/dependencies returned 200 with 13 nodes, 5 edges, real import relationships |
+
+---
+
 ## Swagger Verification Log
 
 > Every endpoint tested in Swagger must be logged here. Never mark VERIFIED without real data.
@@ -557,8 +579,8 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | `GET /repositories/{id}/memory` (API Memory) | API memory      | 200         | YES                | ☑        | 4 endpoints after regex fix |
 | `GET /repositories/{id}/memory/context`  | Memory injection | 200         | YES                | ☑        | Full context with 39 symbols, 5 modules, 4 workflows, 4 APIs |
 | `GET /architecture/{upload_id}`          | Architecture     | 200         | YES                | ☑        | 5 modules, 2 layers, 11 components, 4 relationships |
+| `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☑        | 13 nodes, 5 edges, real import relationships (after fix) |
 | `POST /repositories/{id}/search`         | Semantic search  | 200         | YES                | ☑        |       |
-| `GET /repositories/{id}/dependencies`    | Dep graph        | 200         | YES                | ☐        |       |
 | `GET /repositories/{id}/graph`           | Graph data       | 200         | YES                | ☐        |       |
 | `POST /repositories/{id}/quality`        | Run quality      |             |                    | ☐        |       |
 | `GET /repositories/{id}/quality/report`  | Quality report   |             |                    | ☐        |       |
@@ -659,6 +681,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Result**            | SUCCESS — Fixed Symbol type mismatch in architecture_builder.py |
 | **Evidence**          | GET /architecture/{upload_id} returned 200 with 5 modules, 2 layers, 11 components, 4 relationships |
 | **Next Action**       | Task 6 complete — proceed to Task 7 (Dependency Graph) |
+
+---
+
+### Session 007 — Task 7 Dependency Graph Verification
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Verify Dependency Graph pipeline returns real import relationships |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python step1_dependency_investigation.py, python test_dependency_graph.py, python step3_swagger_verification.py |
+| **Result**            | SUCCESS — Fixed placeholder implementation in dashboard.py |
+| **Evidence**          | GET /repositories/{id}/dependencies returned 200 with 13 nodes, 5 edges, real import relationships |
+| **Next Action**       | Task 7 complete — proceed to Task 8 (Quality Analysis) |
 
 ---
 
@@ -798,10 +834,10 @@ The project is complete only when every item below is marked **VERIFIED**.
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Current Checkpoint**  | Checkpoint D - IN PROGRESS                                                                                                                                                   |
-| **Current Objective**   | Task 7 - Dependency Graph Verification                                                                                                                                      |
-| **Last Completed Task** | Task 6 - Architecture Verification                                                                                                                                           |
-| **Status**              | PROCEEDING to Task 7                                                                                                                                                         |
-| **Next Checkpoint**     | Checkpoint D (Tasks 7-10 remaining)                                                                                                                                            |
+| **Current Objective**   | Task 8 - Quality Analysis Verification                                                                                                                                      |
+| **Last Completed Task** | Task 7 - Dependency Graph Verification                                                                                                                                      |
+| **Status**              | PROCEEDING to Task 8                                                                                                                                                         |
+| **Next Checkpoint**     | Checkpoint D (Tasks 8-10 remaining)                                                                                                                                            |
 | **Next Git Commit**     | Pending (after Task 10)                                                                                                                                                     |
 
 ---
