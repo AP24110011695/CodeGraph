@@ -25,6 +25,7 @@ _SYMBOL_INTENTS = {
     "code_explanation",
     "bug_analysis",
     "general_query",
+    "general_explanation",
 }
 
 # Intents that benefit from API memory
@@ -200,11 +201,17 @@ class ContextSelector:
         """Fetch chunks from the Semantic Engine / Vector Store using the current query."""
         items = []
         try:
-            from app.api.semantic import semantic_engine
-            from app.api.search import _project_path
+            from app.api.search import search_service, _project_path
             path = _project_path(repository_id)
             if path and path.exists():
-                res = semantic_engine.search(repository_id, query, path, mode="semantic", limit=5)
+                # Use search_service directly (simpler, already verified working)
+                res = search_service.search(
+                    upload_id=repository_id,
+                    query=query,
+                    mode="semantic",
+                    project_path=path,
+                    limit=5
+                )
                 for rank_item in res.get("results", []):
                     snippet = rank_item.get("snippet", "").strip()
                     if not snippet:
@@ -213,7 +220,7 @@ class ContextSelector:
                         "source_type": "semantic",
                         "reference": rank_item.get("path", "unknown"),
                         "content": snippet,
-                        "score": rank_item.get("context_score", 0.0),
+                        "score": rank_item.get("score", 0.0),
                     })
         except Exception as exc:
             logger.debug("Semantic context unavailable: %s", exc)
