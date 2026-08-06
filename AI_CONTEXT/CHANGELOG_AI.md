@@ -1,7 +1,7 @@
 # CHANGELOG_AI — AI-Friendly Module Changelog
 
 > Append one section per completed CG module.  
-> **Related:** [LESSONS_LEARNED.md](./LESSONS_LEARNED.md) · [ROADMAP.md](./ROADMAP.md)
+> **Related:** [LESSONS_LEARNED.md](../archive/LESSONS_LEARNED.md) · [ROADMAP.md](./ROADMAP.md)
 
 ---
 

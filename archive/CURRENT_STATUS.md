@@ -7,7 +7,7 @@
 |--|--|
 | Focus | Backend intelligence stack (CG-001…CG-070) |
 | Tests | 1221 passed, 0 failed, 0 skipped |
-| Gaps | Auth, Redis, live VCS, vector DB — see TECH_DEBT.md |
+| Gaps | Auth, Redis, live VCS, vector DB — see TECH_DEBT.md (in archive/) |
 
 Recent work: timeline, impact, reports, Copilot, RC-1 router fixes, docs cleanup for public release.
 

@@ -8,9 +8,9 @@ The public entry point for the repo is still the root [README](../README.md).
 1. [AI_RULES.md](./AI_RULES.md) — engineering constraints  
 2. [ARCHITECTURE.md](./ARCHITECTURE.md) — what is actually built  
 3. [MODULE_INDEX.md](./MODULE_INDEX.md) — package map  
-4. [CURRENT_STATUS.md](./CURRENT_STATUS.md) / [TECH_DEBT.md](./TECH_DEBT.md)  
+4. [CURRENT_STATUS.md](../archive/CURRENT_STATUS.md) / [TECH_DEBT.md](../archive/TECH_DEBT.md)  
 
-Also useful: [CODING_STANDARDS.md](./CODING_STANDARDS.md), [ROADMAP.md](./ROADMAP.md), [LESSONS_LEARNED.md](./LESSONS_LEARNED.md), [CHANGELOG_AI.md](./CHANGELOG_AI.md).
+Also useful: [CODING_STANDARDS.md](./CODING_STANDARDS.md), [ROADMAP.md](./ROADMAP.md), [LESSONS_LEARNED.md](../archive/LESSONS_LEARNED.md), [CHANGELOG_AI.md](./CHANGELOG_AI.md).
 
 ## Layout reminder
 

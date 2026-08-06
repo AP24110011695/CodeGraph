@@ -65,7 +65,7 @@ Each layer **enriches** the previous; it must not replace or fork it.
 
 ## Future direction (directional, not invented modules)
 
-Based on existing stubs and debt (see [TECH_DEBT.md](./TECH_DEBT.md)):
+Based on existing stubs and debt (see [TECH_DEBT.md](../archive/TECH_DEBT.md)):
 
 - Real Git / GitHub / GitLab / Bitbucket history providers
 - Real LLM backends for chat/explain (today partially mocked)

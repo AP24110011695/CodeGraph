@@ -84,7 +84,7 @@ After every CG module:
 1. Run `python -m pytest tests/ -v` from `backend/`.
 2. Start the API (`uvicorn app.main:app`) and hit new endpoints.
 3. Verify related integrations still work (Planning, Agents, Memory, Cache, Telemetry as applicable).
-4. Confirm no **new** regressions. Pre-existing failures must be documented in [TECH_DEBT.md](./TECH_DEBT.md), not ignored silently.
+4. Confirm no **new** regressions. Pre-existing failures must be documented in [TECH_DEBT.md](../archive/TECH_DEBT.md), not ignored silently.
 
 ---
 
@@ -168,9 +168,9 @@ Return exactly:
 
 Also update living docs per [PROMPT_GUIDELINES.md](./PROMPT_GUIDELINES.md):
 
-- `CURRENT_STATUS.md`
+- `../archive/CURRENT_STATUS.md`
 - `ROADMAP.md`
-- `LESSONS_LEARNED.md`
+- `../archive/LESSONS_LEARNED.md`
 - `CHANGELOG_AI.md`
 - `MODULE_INDEX.md`
-- `TECH_DEBT.md` (if debt changed)
+- `../archive/TECH_DEBT.md` (if debt changed)

@@ -347,7 +347,7 @@ POST /impact/analyze/{repository_id}
 
 **Resolved in RC-1:** `quality`, `smells`, and `refactoring` routers are registered in `main.py`.
 
-Remaining consistency work: migrate upload-based analyzers to `app.core.paths.resolve_repository_path` so both `storage/extracted` and `uploads` resolve uniformly. See [TECH_DEBT.md](./TECH_DEBT.md).
+Remaining consistency work: migrate upload-based analyzers to `app.core.paths.resolve_repository_path` so both `storage/extracted` and `uploads` resolve uniformly. See [TECH_DEBT.md](../archive/TECH_DEBT.md).
 
 ---
 

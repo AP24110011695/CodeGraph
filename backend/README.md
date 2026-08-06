@@ -55,4 +55,4 @@ See `.env.example`. Keep `EXPOSE_ERROR_DETAILS=false` unless you are debugging l
 python -m pytest tests/ -q
 ```
 
-Known gaps (auth, Redis, live git, etc.): `../AI_CONTEXT/TECH_DEBT.md`
+Known gaps (auth, Redis, live git, etc.): `../archive/TECH_DEBT.md`

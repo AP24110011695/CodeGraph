@@ -31,4 +31,4 @@ No. Graphs, memory, planning, and impact are real modules; the model (or local f
 One package per capability, facade engines, planning for orchestration, rules against duplicated traversal/indexing.
 
 **What’s missing for production?**  
-Auth, durable stores, Redis, real VCS providers — listed in `AI_CONTEXT/TECH_DEBT.md`.
+Auth, durable stores, Redis, real VCS providers — listed in `archive/TECH_DEBT.md`.

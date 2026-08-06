@@ -49,7 +49,7 @@ Local frontend expects the API via `VITE_API_URL=/api` (Vite proxies to `127.0.0
 
 - Don’t commit secrets (`.env`, API keys).
 - Prefer focused pull requests.
-- Note intentional debt in `AI_CONTEXT/TECH_DEBT.md` when relevant.
+- Note intentional debt in `archive/TECH_DEBT.md` when relevant.
 
 Internal architecture notes live in `AI_CONTEXT/` (for contributors and coding agents). Start with `AI_CONTEXT/README_AI.md` if you are changing engines.
 

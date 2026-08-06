@@ -1,7 +1,7 @@
 # Roadmap — CodeGraph
 
 > **Living document.** Update after every completed CG module.  
-> **Related:** [CURRENT_STATUS.md](./CURRENT_STATUS.md) · [CHANGELOG_AI.md](./CHANGELOG_AI.md) · [MODULE_INDEX.md](./MODULE_INDEX.md)
+> **Related:** [CURRENT_STATUS.md](../archive/CURRENT_STATUS.md) · [CHANGELOG_AI.md](./CHANGELOG_AI.md) · [MODULE_INDEX.md](./MODULE_INDEX.md)
 
 ---
 
@@ -133,6 +133,6 @@ Candidate themes (not committed tickets):
 
 1. Move ticket from upcoming → completed table.  
 2. Adjust **Current phase / module**.  
-3. Sync [CURRENT_STATUS.md](./CURRENT_STATUS.md) and [CHANGELOG_AI.md](./CHANGELOG_AI.md).  
+3. Sync [../archive/CURRENT_STATUS.md](../archive/CURRENT_STATUS.md) and [CHANGELOG_AI.md](./CHANGELOG_AI.md).  
 4. Add module row to [MODULE_INDEX.md](./MODULE_INDEX.md).  
-5. Append [LESSONS_LEARNED.md](./LESSONS_LEARNED.md).
+5. Append [../archive/LESSONS_LEARNED.md](../archive/LESSONS_LEARNED.md).

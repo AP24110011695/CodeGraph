@@ -12,9 +12,9 @@
 2. [AI_RULES.md](./AI_RULES.md)  
 3. [ARCHITECTURE.md](./ARCHITECTURE.md)  
 4. [ROADMAP.md](./ROADMAP.md)  
-5. [CURRENT_STATUS.md](./CURRENT_STATUS.md)  
-6. [TECH_DEBT.md](./TECH_DEBT.md)  
-7. [LESSONS_LEARNED.md](./LESSONS_LEARNED.md)  
+5. [CURRENT_STATUS.md](../archive/CURRENT_STATUS.md)  
+6. [TECH_DEBT.md](../archive/TECH_DEBT.md)  
+7. [LESSONS_LEARNED.md](../archive/LESSONS_LEARNED.md)  
 8. [CHANGELOG_AI.md](./CHANGELOG_AI.md)  
 9. [MODULE_INDEX.md](./MODULE_INDEX.md)  
 10. [CODING_STANDARDS.md](./CODING_STANDARDS.md) (when implementing)  
@@ -89,15 +89,15 @@ Exercise new endpoints; confirm `/health`.
 
 Always:
 
-- [CURRENT_STATUS.md](./CURRENT_STATUS.md)  
+- [CURRENT_STATUS.md](../archive/CURRENT_STATUS.md)  
 - [ROADMAP.md](./ROADMAP.md)  
-- [LESSONS_LEARNED.md](./LESSONS_LEARNED.md)  
+- [LESSONS_LEARNED.md](../archive/LESSONS_LEARNED.md)  
 - [CHANGELOG_AI.md](./CHANGELOG_AI.md)  
 - [MODULE_INDEX.md](./MODULE_INDEX.md)  
 
 If debt changed:
 
-- [TECH_DEBT.md](./TECH_DEBT.md)
+- [TECH_DEBT.md](../archive/TECH_DEBT.md)
 
 ---
 
