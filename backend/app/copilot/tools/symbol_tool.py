@@ -27,15 +27,36 @@ def symbol_tool_handler(repository_id: str, query: str, context: Dict[str, Any])
 
     logger.info("SYMBOL_TOOL: MemoryEngine instance ID: %s", id(memory_engine))
     logger.info("SYMBOL_TOOL: MemoryStore instance ID: %s", id(memory_engine._store))
+    logger.info("SYMBOL_TOOL: MemoryStore.contains(%s): %s", repository_id, memory_engine._store.contains(repository_id))
 
+    # Try to get memory directly from memory_engine
     memory = memory_engine.get_memory(repository_id)
+    
+    # If memory not available, check if we can build it
     if not memory:
-        logger.warning("SYMBOL_TOOL: No repository memory available")
-        return ToolResult(
-            tool="symbol_tool",
-            summary="No repository memory available. Build index first.",
-            confidence=0.0
-        )
+        logger.warning("SYMBOL_TOOL: Memory not available, checking if we can build...")
+        from app.indexing.index_manager import get_shared_index_manager
+        index_manager = get_shared_index_manager()
+        index = index_manager.get_index(repository_id)
+        if index and index.status.value == "READY":
+            try:
+                logger.info("SYMBOL_TOOL: Building memory...")
+                memory = memory_engine.build_memory(repository_id)
+                logger.info("SYMBOL_TOOL: Memory built successfully")
+            except Exception as e:
+                logger.error("SYMBOL_TOOL: Failed to build memory: %s", e)
+                return ToolResult(
+                    tool="symbol_tool",
+                    summary=f"Failed to build repository memory: {str(e)}",
+                    confidence=0.0
+                )
+        else:
+            logger.warning("SYMBOL_TOOL: Repository not indexed")
+            return ToolResult(
+                tool="symbol_tool",
+                summary="Repository not indexed. Please index the repository first.",
+                confidence=0.0
+            )
     
     logger.info("SYMBOL_TOOL: Memory available")
     logger.info("  Has symbol_summaries attribute: %s", hasattr(memory, "symbol_summaries"))
@@ -62,6 +83,10 @@ def symbol_tool_handler(repository_id: str, query: str, context: Dict[str, Any])
         name = entry.get("name", "")
         kind = entry.get("kind", "")
         file_path = entry.get("file_path", "")
+        
+        # Extract file path from symbol name if not directly available
+        if not file_path and "::" in name:
+            file_path = name.split("::")[0]
 
         # Match if any query token is part of the symbol name
         if any(tok in name.lower() for tok in q.split() if len(tok) > 2):

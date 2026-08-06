@@ -250,6 +250,7 @@ class ToolExecutor:
     def _register_defaults(self) -> None:
         self.register("repository_memory", self._tool_memory)
         self.register("rag", self._tool_rag)
+        self.register("symbol_tool", self._tool_symbol)
         self.register("architecture_reasoning", self._tool_reasoning)
         self.register("architecture", self._tool_architecture)
         self.register("dependency_graph", self._tool_dependency_graph)
@@ -291,6 +292,48 @@ class ToolExecutor:
             "citations": ["Repository Memory"],
         }
 
+    def _tool_symbol(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
+        from app.copilot.tool_registry import tool_registry
+
+        tool_def = tool_registry.get_tool("symbol_tool")
+        if not tool_def:
+            return {
+                "summary": "Symbol tool not registered",
+                "result": None,
+                "citations": [],
+                "related_files": [],
+                "related_components": [],
+            }
+        
+        handler = tool_registry.get_handler("symbol_tool")
+        if not handler:
+            return {
+                "summary": "Symbol tool handler not registered",
+                "result": None,
+                "citations": [],
+                "related_files": [],
+                "related_components": [],
+            }
+        
+        result = handler(repository_id, query, ctx)
+        
+        evidence = []
+        related_files = []
+        if hasattr(result, "evidence"):
+            for e in result.evidence:
+                if isinstance(e, dict):
+                    evidence.append(e)
+                    if "file_path" in e:
+                        related_files.append(e["file_path"])
+        
+        return {
+            "summary": result.summary if hasattr(result, "summary") else "",
+            "result": result.model_dump(mode="json") if hasattr(result, "model_dump") else result,
+            "citations": evidence or ["Symbol Table"],
+            "related_files": related_files,
+            "related_components": [],
+        }
+
     def _tool_rag(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
         from app.rag.rag_engine import rag_engine
 
@@ -301,7 +344,6 @@ class ToolExecutor:
             if hasattr(c, "model_dump"):
                 citation_dict = c.model_dump(mode="json")
                 citations.append(citation_dict)
-                # Extract file references from citations
                 if "reference" in citation_dict:
                     related_files.append(citation_dict["reference"])
             else:
@@ -563,10 +605,25 @@ class ToolExecutor:
         from app.rag.rag_engine import rag_engine
 
         rag = rag_engine.generate_context(repository_id, query, max_tokens=1500)
+        citations = []
+        related_files = []
+        for c in rag.citations or []:
+            if hasattr(c, "model_dump"):
+                citation_dict = c.model_dump(mode="json")
+                citations.append(citation_dict)
+                if "reference" in citation_dict:
+                    related_files.append(citation_dict["reference"])
+            else:
+                citations.append(c)
+                if hasattr(c, "reference"):
+                    related_files.append(c.reference)
+        
         return {
             "summary": (rag.llm_context or "")[:400] or "Semantic context via RAG",
             "result": {"intent": rag.intent, "citations": len(rag.citations or [])},
-            "citations": ["Semantic Engine", "Advanced RAG"],
+            "citations": citations or ["Semantic Engine", "Advanced RAG"],
+            "related_files": related_files,
+            "related_components": [],
         }
 
     @staticmethod
