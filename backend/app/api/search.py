@@ -45,6 +45,8 @@ def _project_path(repository_id: str) -> Path:
 async def search_repository(repository_id: str, request: SearchRequest) -> SearchResponse:
     """Search an indexed repository using semantic, keyword, or hybrid mode."""
     project_path = _project_path(repository_id)
+    
+    logger.info("SEARCH: repository_id=%s, query=%s, mode=%s, project_path=%s", repository_id, request.query, request.mode, project_path)
 
     try:
         result = search_service.search(
@@ -53,15 +55,22 @@ async def search_repository(repository_id: str, request: SearchRequest) -> Searc
             mode=request.mode,
             project_path=project_path,
         )
+        logger.info("SEARCH: success, results=%d", result.get("total", 0))
         return SearchResponse(**result)
     except EmptyQueryError as exc:
+        logger.error("SEARCH: EmptyQueryError: %s", exc)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RepositoryNotIndexedError as exc:
+        logger.error("SEARCH: RepositoryNotIndexedError: %s", exc)
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except EmptyRepositoryError as exc:
+        logger.error("SEARCH: EmptyRepositoryError: %s", exc)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except SearchServiceError as exc:
+        logger.error("SEARCH: SearchServiceError: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Unexpected repository search failure for repository_id: %s", repository_id)
+        logger.error("Exception type: %s", type(exc).__name__)
+        logger.error("Exception message: %s", str(exc))
         raise HTTPException(status_code=500, detail="Internal server error during repository search") from exc

@@ -205,7 +205,7 @@ class SearchService:
             for group_name in ("classes", "functions", "methods", "interfaces"):
                 values = getattr(parsed, group_name, [])
                 for value in values:
-                    lowered_value = value.lower()
+                    lowered_value = str(value).lower()
                     symbol_hits += sum(lowered_value.count(term) for term in query_terms)
 
         if filename_hits == 0 and path_hits == 0 and content_hits == 0 and symbol_hits == 0:

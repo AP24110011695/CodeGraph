@@ -408,9 +408,9 @@ Confirm that architecture analysis, quality analysis, security scanning, and das
 
 - [x] Task 11 — Copilot Query Verification
 - [x] Task 12 — Copilot Explain Verification (N/A - POST /copilot/explain does not exist, explain functionality uses POST /copilot/chat with code_explanation intent)
-- [ ] Task 13 — End-to-End Verification
+- [ ] Task 13 — End-to-End Verification (BLOCKED by BUG-007 - NOW FIXED, ready to retry)
 
-**Checkpoint E Status: IN PROGRESS**
+**Checkpoint E Status: BLOCKED (BUG-007 fixed, Task 13 retry pending)**
 
 **Git Commit After Completion**
 
@@ -890,6 +890,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### Session 017 — BUG-007 Semantic Search Fresh Repository Failure
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Investigate why POST /repositories/{id}/search returns HTTP 500 for newly indexed repositories |
+| **Repository Used**   | Test Calculator (fresh repository: f28cba09-2e30-4317-a0e4-7b5c069c2adc) |
+| **Commands Executed** | python bug007_investigation.py, python bug007_check_extracted.py, python bug007_compare.py, python bug007_direct_search.py, python bug007_resolve_path.py, python bug007_api_search.py, python bug007_local_search.py, python bug007_testclient.py, python bug007_verify_fix.py |
+| **Result**            | SUCCESS — Root cause identified and fixed |
+| **Evidence**          | The _score_keyword_match function in app/search/search_service.py line 208 was calling .lower() directly on symbol values, but these values are Pydantic Symbol objects instead of strings. Fixed by converting to string first: str(value).lower(). Verification with NEW repository (1cb60702-f656-46fb-aa7c-fc37b2b776a1) confirmed HTTP 200 with 6 search results. |
+| **Next Action**       | BUG-007 RESOLVED — Retry Task 13 End-to-End verification |
+
+---
+
 ## Decisions
 
 > Every significant engineering decision must be recorded here.
@@ -1051,12 +1065,12 @@ The project is complete only when every item below is marked **VERIFIED**.
 
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Current Checkpoint**  | Checkpoint E - IN PROGRESS                                                                                                                                                   |
-| **Current Objective**   | Task 13 - End-to-End Verification                                                                                                     |
-| **Last Completed Task** | Task 12 - Copilot Explain Verification (N/A - POST /copilot/explain does not exist, explain uses POST /copilot/chat with code_explanation intent)                                                                                              |
-| **Status**              | PROCEEDING to Task 13                                                                                                                                                 |
+| **Current Checkpoint**  | Checkpoint E - BLOCKED (BUG-007 fixed, Task 13 retry pending)                                                                                                                   |
+| **Current Objective**   | BUG-007 resolved — Retry Task 13 End-to-End Verification                                                                                                     |
+| **Last Completed Task** | BUG-007 (FIXED — Semantic search now works for newly indexed repositories)                                                                                              |
+| **Status**              | BUG-007 RESOLVED — Ready to retry Task 13                                                                                                                               |
 | **Next Checkpoint**     | Checkpoint E (Tasks 11-13)                                                                                                                                                   |
-| **Next Git Commit**     | Pending (after Task 13)                                                                                                                                                     |
+| **Next Git Commit**     | Pending (after Task 13 retry)                                                                                                                                                     |
 
 ---
 
