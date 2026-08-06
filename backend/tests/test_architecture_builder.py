@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from app.analyzers.architecture_builder import ArchitectureBuilder
-from app.parsers.ast_models import FileParsingResult, ProjectParsingResult
+from app.parsers.ast_models import FileParsingResult, ProjectParsingResult, Symbol
 from app.services.dependency_graph import GraphResult
 from app.services.framework_detector import DetectionResult, FrameworkMatch
 from app.services.scanner_service import (
@@ -108,22 +108,30 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="app/controllers/user_controller.py",
                     language="Python",
-                    classes=["UserController"],
+                    classes=[
+                        Symbol(name="UserController", line_number=1, file_path="app/controllers/user_controller.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="app/services/user_service.py",
                     language="Python",
-                    classes=["UserService"],
+                    classes=[
+                        Symbol(name="UserService", line_number=1, file_path="app/services/user_service.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="app/repositories/user_repository.py",
                     language="Python",
-                    classes=["UserRepository"],
+                    classes=[
+                        Symbol(name="UserRepository", line_number=1, file_path="app/repositories/user_repository.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="app/models/user.py",
                     language="Python",
-                    classes=["User"],
+                    classes=[
+                        Symbol(name="User", line_number=1, file_path="app/models/user.py")
+                    ],
                 ),
             ],
         )
@@ -173,12 +181,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="src/components/Button.tsx",
                     language="TypeScript",
-                    arrow_functions=["Button"],
+                    arrow_functions=[
+                        Symbol(name="Button", line_number=1, file_path="src/components/Button.tsx")
+                    ],
                 ),
                 FileParsingResult(
                     path="src/pages/Home.tsx",
                     language="TypeScript",
-                    arrow_functions=["Home"],
+                    arrow_functions=[
+                        Symbol(name="Home", line_number=1, file_path="src/pages/Home.tsx")
+                    ],
                 ),
             ],
         )
@@ -216,12 +228,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="app/page.tsx",
                     language="TypeScript",
-                    functions=["Page"],
+                    functions=[
+                        Symbol(name="Page", line_number=1, file_path="app/page.tsx")
+                    ],
                 ),
                 FileParsingResult(
                     path="app/components/Header.tsx",
                     language="TypeScript",
-                    functions=["Header"],
+                    functions=[
+                        Symbol(name="Header", line_number=1, file_path="app/components/Header.tsx")
+                    ],
                 ),
             ],
         )
@@ -263,12 +279,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="src/routes/user.js",
                     language="JavaScript",
-                    variables=["router"],
+                    variables=[
+                        Symbol(name="router", line_number=1, file_path="src/routes/user.js")
+                    ],
                 ),
                 FileParsingResult(
                     path="src/controllers/userController.js",
                     language="JavaScript",
-                    classes=["UserController"],
+                    classes=[
+                        Symbol(name="UserController", line_number=1, file_path="src/controllers/userController.js")
+                    ],
                 ),
             ],
         )
@@ -299,7 +319,9 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="src/modules/auth/controllers/auth_controller.py",
                     language="Python",
-                    classes=["AuthController"],
+                    classes=[
+                        Symbol(name="AuthController", line_number=1, file_path="src/modules/auth/controllers/auth_controller.py")
+                    ],
                 ),
             ],
         )
@@ -334,12 +356,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="shared/utils.py",
                     language="Python",
-                    functions=["helper"],
+                    functions=[
+                        Symbol(name="helper", line_number=1, file_path="shared/utils.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="common/constants.py",
                     language="Python",
-                    variables=["CONST"],
+                    variables=[
+                        Symbol(name="CONST", line_number=1, file_path="common/constants.py")
+                    ],
                 ),
             ],
         )
@@ -376,12 +402,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="utils/string_utils.py",
                     language="Python",
-                    functions=["format_string"],
+                    functions=[
+                        Symbol(name="format_string", line_number=1, file_path="utils/string_utils.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="helpers/date_helper.py",
                     language="Python",
-                    functions=["format_date"],
+                    functions=[
+                        Symbol(name="format_date", line_number=1, file_path="helpers/date_helper.py")
+                    ],
                 ),
             ],
         )
@@ -412,7 +442,9 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="middleware/auth_middleware.py",
                     language="Python",
-                    classes=["AuthMiddleware"],
+                    classes=[
+                        Symbol(name="AuthMiddleware", line_number=1, file_path="middleware/auth_middleware.py")
+                    ],
                 ),
             ],
         )
@@ -448,12 +480,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="frontend/App.tsx",
                     language="TypeScript",
-                    arrow_functions=["App"],
+                    arrow_functions=[
+                        Symbol(name="App", line_number=1, file_path="frontend/App.tsx")
+                    ],
                 ),
                 FileParsingResult(
                     path="backend/main.py",
                     language="Python",
-                    functions=["FastAPI"],
+                    functions=[
+                        Symbol(name="FastAPI", line_number=1, file_path="backend/main.py")
+                    ],
                 ),
             ],
         )
@@ -490,12 +526,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="packages/package-a/index.ts",
                     language="TypeScript",
-                    variables=["a"],
+                    variables=[
+                        Symbol(name="a", line_number=1, file_path="packages/package-a/index.ts")
+                    ],
                 ),
                 FileParsingResult(
                     path="packages/package-b/index.ts",
                     language="TypeScript",
-                    variables=["b"],
+                    variables=[
+                        Symbol(name="b", line_number=1, file_path="packages/package-b/index.ts")
+                    ],
                 ),
             ],
         )
@@ -536,12 +576,16 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="controllers/user.py",
                     language="Python",
-                    classes=["UserController"],
+                    classes=[
+                        Symbol(name="UserController", line_number=1, file_path="controllers/user.py")
+                    ],
                 ),
                 FileParsingResult(
                     path="services/user.py",
                     language="Python",
-                    classes=["UserService"],
+                    classes=[
+                        Symbol(name="UserService", line_number=1, file_path="services/user.py")
+                    ],
                 ),
             ],
         )
@@ -570,7 +614,9 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="valid.py",
                     language="Python",
-                    classes=["Valid"],
+                    classes=[
+                        Symbol(name="Valid", line_number=1, file_path="valid.py")
+                    ],
                 ),
             ],
         )
@@ -599,7 +645,9 @@ class TestArchitectureBuilder:
                 FileParsingResult(
                     path="parsed.py",
                     language="Python",
-                    classes=["Parsed"],
+                    classes=[
+                        Symbol(name="Parsed", line_number=1, file_path="parsed.py")
+                    ],
                 ),
             ],
         )

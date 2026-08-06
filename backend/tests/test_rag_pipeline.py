@@ -7,7 +7,7 @@ from app.rag.chunker import Chunker
 from app.rag.embedding_service import EmbeddingService
 from app.rag.vector_store import InMemoryVectorStore
 from app.services.scanner_service import ScanResult, FileInfo
-from app.parsers.ast_models import ProjectParsingResult, FileParsingResult
+from app.parsers.ast_models import ProjectParsingResult, FileParsingResult, Symbol
 from unittest.mock import Mock
 
 
@@ -87,12 +87,16 @@ def sample_parsing_result() -> ProjectParsingResult:
             FileParsingResult(
                 path="test.py",
                 language="Python",
-                functions=["hello"],
+                functions=[
+                    Symbol(name="hello", line_number=1, file_path="test.py")
+                ],
             ),
             FileParsingResult(
                 path="test.js",
                 language="JavaScript",
-                functions=["world"],
+                functions=[
+                    Symbol(name="world", line_number=1, file_path="test.js")
+                ],
             ),
         ],
     )

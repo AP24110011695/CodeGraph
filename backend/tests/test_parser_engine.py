@@ -39,10 +39,10 @@ async def my_async_func():
     
     result = ParserEngine.parse_file(test_file, "test.py", "Python")
     assert result is not None
-    assert "MyClass" in result.classes
-    assert "my_async_func" in result.functions
-    assert "my_var" in result.variables
-    assert "@my_decorator" in result.decorators
+    assert any(s.name == "MyClass" for s in result.classes)
+    assert any(s.name == "my_async_func" for s in result.functions)
+    assert any(s.name == "my_var" for s in result.variables)
+    assert any(s.name == "@my_decorator" for s in result.decorators)
 
 
 def test_javascript_parsing(tmp_path):
@@ -62,12 +62,12 @@ function regularFunc() {}
     
     result = ParserEngine.parse_file(test_file, "test.js", "JavaScript")
     assert result is not None
-    assert "JSClass" in result.classes
-    assert "myMethod" in result.methods
-    assert "regularFunc" in result.functions
-    assert "myArrow" in result.variables
+    assert any(s.name == "JSClass" for s in result.classes)
+    assert any(s.name == "myMethod" for s in result.methods)
+    assert any(s.name == "regularFunc" for s in result.functions)
+    assert any(s.name == "myArrow" for s in result.variables)
     # "myVar" should also be in variables
-    assert "myVar" in result.variables
+    assert any(s.name == "myVar" for s in result.variables)
 
 
 def test_typescript_parsing(tmp_path):
@@ -84,8 +84,8 @@ enum MyEnum {
     
     result = ParserEngine.parse_file(test_file, "test.ts", "TypeScript")
     assert result is not None
-    assert "MyInterface" in result.interfaces
-    assert "MyEnum" in result.enums
+    assert any(s.name == "MyInterface" for s in result.interfaces)
+    assert any(s.name == "MyEnum" for s in result.enums)
 
 
 def test_tsx_parsing(tmp_path):
@@ -99,7 +99,7 @@ const MyComponent = () => {
     
     result = ParserEngine.parse_file(test_file, "test.tsx", "TSX")
     assert result is not None
-    assert "MyComponent" in result.variables
+    assert any(s.name == "MyComponent" for s in result.variables)
 
 
 def test_malformed_code(tmp_path):

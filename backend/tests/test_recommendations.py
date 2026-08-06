@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from app.analyzers.architecture_models import ArchitectureResult, ArchitectureModule, Component
-from app.parsers.ast_models import ProjectParsingResult, FileParsingResult
+from app.parsers.ast_models import ProjectParsingResult, FileParsingResult, Symbol
 from app.quality.recommendations import RecommendationEngine, QualityRecommendations
 from app.quality.scoring_engine import QualityScores
 from app.security.security_analyzer import SecurityAnalysisResult
@@ -101,8 +101,13 @@ def sample_parsing_result() -> ProjectParsingResult:
             FileParsingResult(
                 path="main.py",
                 language="Python",
-                functions=["func1", "func2"],
-                classes=["Class1"],
+                functions=[
+                    Symbol(name="func1", line_number=1, file_path="main.py"),
+                    Symbol(name="func2", line_number=5, file_path="main.py")
+                ],
+                classes=[
+                    Symbol(name="Class1", line_number=10, file_path="main.py")
+                ],
                 imports=["os", "sys"],
             ),
         ],

@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from app.analyzers.architecture_models import ArchitectureResult, ArchitectureModule
-from app.parsers.ast_models import FileParsingResult, ProjectParsingResult
+from app.parsers.ast_models import FileParsingResult, ProjectParsingResult, Symbol
 from app.services.dependency_graph import Edge, GraphResult
 from app.services.scanner_service import ScanResult, FileInfo, RepositoryScanner
 from app.smells.smell_detector import smell_detector, CodeSmell, SmellDetectionResult
@@ -106,7 +106,7 @@ class TestSmellDetector:
                 FileParsingResult(
                     path="large.py",
                     language="Python",
-                    functions=[f"func{i}" for i in range(60)],
+                    functions=[Symbol(name=f"func{i}", line_number=i+1, file_path="large.py") for i in range(60)],
                     classes=[],
                     methods=[],
                     imports=[],
@@ -140,7 +140,7 @@ class TestSmellDetector:
                     path="large.py",
                     language="Python",
                     functions=[],
-                    classes=[f"Class{i}" for i in range(25)],
+                    classes=[Symbol(name=f"Class{i}", line_number=i+1, file_path="large.py") for i in range(25)],
                     methods=[],
                     imports=[],
                 )
@@ -173,7 +173,7 @@ class TestSmellDetector:
                     path="god.py",
                     language="Python",
                     functions=[],
-                    classes=[f"Class{i}" for i in range(55)],
+                    classes=[Symbol(name=f"Class{i}", line_number=i+1, file_path="god.py") for i in range(55)],
                     methods=[],
                     imports=[],
                 )

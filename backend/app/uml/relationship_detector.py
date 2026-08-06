@@ -111,14 +111,14 @@ class RelationshipDetector:
         """Detect Python classes and their members."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="Python",
                 type="class",
-                methods=[m for m in file_result.methods if m in file_result.functions],
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods if m.name in [f.name for f in file_result.functions]],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
@@ -129,33 +129,33 @@ class RelationshipDetector:
         """Detect Java classes, interfaces, and enums."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             # Determine type based on naming conventions
             class_type = "class"
-            if class_name.startswith("I") and class_name[1].isupper():
+            if class_symbol.name.startswith("I") and class_symbol.name[1].isupper():
                 class_type = "interface"
-            elif class_name.endswith("Enum"):
+            elif class_symbol.name.endswith("Enum"):
                 class_type = "enum"
 
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="Java",
                 type=class_type,
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
 
         # Add interfaces separately
-        for interface_name in file_result.interfaces:
+        for interface_symbol in file_result.interfaces:
             uml_class = UMLClass(
-                name=interface_name,
+                name=interface_symbol.name,
                 file_path=file_result.path,
                 language="Java",
                 type="interface",
-                methods=file_result.methods,
+                methods=[m.name for m in file_result.methods],
                 attributes=[],
                 package=self._extract_package(file_result.path),
             )
@@ -167,35 +167,35 @@ class RelationshipDetector:
         """Detect TypeScript/JavaScript classes and interfaces."""
         classes: list[UMLClass] = []
 
-        for class_NAME in file_result.classes:
+        for class_symbol in file_result.classes:
             uml_class = UMLClass(
-                name=class_NAME,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language=file_result.language,
                 type="class",
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
 
         # Add interfaces
-        for interface_name in file_result.interfaces:
+        for interface_symbol in file_result.interfaces:
             uml_class = UMLClass(
-                name=interface_name,
+                name=interface_symbol.name,
                 file_path=file_result.path,
                 language=file_result.language,
                 type="interface",
-                methods=file_result.methods,
+                methods=[m.name for m in file_result.methods],
                 attributes=[],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
 
         # Add enums
-        for enum_name in file_result.enums:
+        for enum_symbol in file_result.enums:
             uml_class = UMLClass(
-                name=enum_name,
+                name=enum_symbol.name,
                 file_path=file_result.path,
                 language=file_result.language,
                 type="enum",
@@ -211,14 +211,14 @@ class RelationshipDetector:
         """Detect Go structs as classes."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="Go",
                 type="struct",
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
@@ -229,14 +229,14 @@ class RelationshipDetector:
         """Detect Rust structs and enums."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="Rust",
                 type="struct",
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
@@ -259,18 +259,18 @@ class RelationshipDetector:
         """Detect C# classes and interfaces."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             class_type = "class"
-            if class_name.startswith("I") and class_name[1].isupper():
+            if class_symbol.name.startswith("I") and class_symbol.name[1].isupper():
                 class_type = "interface"
 
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="C#",
                 type=class_type,
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
@@ -281,18 +281,18 @@ class RelationshipDetector:
         """Detect PHP classes and interfaces."""
         classes: list[UMLClass] = []
 
-        for class_name in file_result.classes:
+        for class_symbol in file_result.classes:
             class_type = "class"
-            if class_name.startswith("I") and class_name[1].isupper():
+            if class_symbol.name.startswith("I") and class_symbol.name[1].isupper():
                 class_type = "interface"
 
             uml_class = UMLClass(
-                name=class_name,
+                name=class_symbol.name,
                 file_path=file_result.path,
                 language="PHP",
                 type=class_type,
-                methods=file_result.methods,
-                attributes=file_result.variables,
+                methods=[m.name for m in file_result.methods],
+                attributes=[v.name for v in file_result.variables],
                 package=self._extract_package(file_result.path),
             )
             classes.append(uml_class)
@@ -319,9 +319,11 @@ class RelationshipDetector:
         # Detect inheritance from imports
         for file_result in parsing_result.files:
             for imp in file_result.imports:
+                # Ensure imp is a string
+                imp_str = imp if isinstance(imp, str) else str(imp)
                 # Check if import matches a class name
                 for class_name in class_map:
-                    if class_name in imp or imp in class_name:
+                    if class_name in imp_str or imp_str in class_name:
                         source_classes = file_to_classes.get(file_result.path, [])
                         for source in source_classes:
                             if source != class_name:

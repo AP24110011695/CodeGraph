@@ -2,7 +2,7 @@
 
 import pytest
 from pathlib import Path
-from app.parsers.ast_models import ProjectParsingResult, FileParsingResult
+from app.parsers.ast_models import ProjectParsingResult, FileParsingResult, Symbol
 from app.repository_memory.memory_engine import memory_engine
 from app.copilot.copilot_engine import CopilotEngine
 
@@ -29,21 +29,36 @@ def test_memory_pipeline_parse_save_load():
             FileParsingResult(
                 path="src/auth.py",
                 language="Python",
-                classes=["Authenticator", "User"],
-                functions=["authenticate", "login", "logout"],
+                classes=[
+                    Symbol(name="Authenticator", line_number=1, file_path="src/auth.py"),
+                    Symbol(name="User", line_number=5, file_path="src/auth.py")
+                ],
+                functions=[
+                    Symbol(name="authenticate", line_number=10, file_path="src/auth.py"),
+                    Symbol(name="login", line_number=15, file_path="src/auth.py"),
+                    Symbol(name="logout", line_number=20, file_path="src/auth.py")
+                ],
                 imports=["os", "sys", "typing"]
             ),
             FileParsingResult(
                 path="src/main.py",
                 language="Python",
-                classes=["MainApp"],
-                functions=["main", "run"],
+                classes=[
+                    Symbol(name="MainApp", line_number=1, file_path="src/main.py")
+                ],
+                functions=[
+                    Symbol(name="main", line_number=10, file_path="src/main.py"),
+                    Symbol(name="run", line_number=15, file_path="src/main.py")
+                ],
                 imports=["auth"]
             ),
             FileParsingResult(
                 path="src/utils.py",
                 language="Python",
-                functions=["helper", "format_output"],
+                functions=[
+                    Symbol(name="helper", line_number=1, file_path="src/utils.py"),
+                    Symbol(name="format_output", line_number=5, file_path="src/utils.py")
+                ],
                 imports=["typing"]
             )
         ]
@@ -57,7 +72,7 @@ def test_memory_pipeline_parse_save_load():
     assert loaded_parsing is not None
     assert len(loaded_parsing.files) == 3
     assert loaded_parsing.files[0].path == "src/auth.py"
-    assert "authenticate" in loaded_parsing.files[0].functions
+    assert any(func.name == "authenticate" for func in loaded_parsing.files[0].functions)
     
     # Step 4: Build memory (simulating auto memory builder)
     # Note: This will use the saved parsing result
@@ -94,13 +109,19 @@ def test_memory_builder_reuses_saved_parsing():
             FileParsingResult(
                 path="src/auth.py",
                 language="Python",
-                classes=["Authenticator"],
-                functions=["authenticate"]
+                classes=[
+                    Symbol(name="Authenticator", line_number=1, file_path="src/auth.py")
+                ],
+                functions=[
+                    Symbol(name="authenticate", line_number=10, file_path="src/auth.py")
+                ]
             ),
             FileParsingResult(
                 path="src/main.py",
                 language="Python",
-                functions=["main"]
+                functions=[
+                    Symbol(name="main", line_number=1, file_path="src/main.py")
+                ]
             )
         ]
     )
@@ -178,13 +199,19 @@ def test_memory_builds_on_indexing_complete():
             FileParsingResult(
                 path="src/auth.py",
                 language="Python",
-                classes=["Authenticator"],
-                functions=["authenticate"]
+                classes=[
+                    Symbol(name="Authenticator", line_number=1, file_path="src/auth.py")
+                ],
+                functions=[
+                    Symbol(name="authenticate", line_number=10, file_path="src/auth.py")
+                ]
             ),
             FileParsingResult(
                 path="src/main.py",
                 language="Python",
-                functions=["main"]
+                functions=[
+                    Symbol(name="main", line_number=1, file_path="src/main.py")
+                ]
             )
         ]
     )
@@ -225,8 +252,17 @@ def test_symbol_extraction_with_saved_parsing():
             FileParsingResult(
                 path="src/auth.py",
                 language="Python",
-                classes=["Authenticator", "User", "TokenManager"],
-                functions=["authenticate", "login", "logout", "validate_token"],
+                classes=[
+                    Symbol(name="Authenticator", line_number=1, file_path="src/auth.py"),
+                    Symbol(name="User", line_number=10, file_path="src/auth.py"),
+                    Symbol(name="TokenManager", line_number=20, file_path="src/auth.py")
+                ],
+                functions=[
+                    Symbol(name="authenticate", line_number=30, file_path="src/auth.py"),
+                    Symbol(name="login", line_number=35, file_path="src/auth.py"),
+                    Symbol(name="logout", line_number=40, file_path="src/auth.py"),
+                    Symbol(name="validate_token", line_number=45, file_path="src/auth.py")
+                ],
                 imports=["os", "sys", "typing"]
             )
         ]
@@ -267,7 +303,7 @@ def test_complete_flow_authentication_query():
     from app.repository_memory.memory_engine import memory_engine
     from app.repository_memory.symbol_table_extractor import symbol_table_extractor
     from app.copilot.tool_executor import ToolExecutor
-    from app.parsers.ast_models import ProjectParsingResult, FileParsingResult
+    from app.parsers.ast_models import ProjectParsingResult, FileParsingResult, Symbol
     
     # Initialize database
     init_db()
@@ -285,15 +321,26 @@ def test_complete_flow_authentication_query():
             FileParsingResult(
                 path="src/auth/authenticate.py",
                 language="Python",
-                classes=["AuthenticationService"],
-                functions=["authenticate_user", "verify_credentials", "generate_token"],
+                classes=[
+                    Symbol(name="AuthenticationService", line_number=1, file_path="src/auth/authenticate.py")
+                ],
+                functions=[
+                    Symbol(name="authenticate_user", line_number=10, file_path="src/auth/authenticate.py"),
+                    Symbol(name="verify_credentials", line_number=15, file_path="src/auth/authenticate.py"),
+                    Symbol(name="generate_token", line_number=20, file_path="src/auth/authenticate.py")
+                ],
                 imports=["os", "jwt", "typing"]
             ),
             FileParsingResult(
                 path="src/auth/middleware.py",
                 language="Python",
-                classes=["AuthMiddleware"],
-                functions=["is_authenticated", "get_current_user"],
+                classes=[
+                    Symbol(name="AuthMiddleware", line_number=1, file_path="src/auth/middleware.py")
+                ],
+                functions=[
+                    Symbol(name="is_authenticated", line_number=10, file_path="src/auth/middleware.py"),
+                    Symbol(name="get_current_user", line_number=15, file_path="src/auth/middleware.py")
+                ],
                 imports=["authenticate", "typing"]
             )
         ]

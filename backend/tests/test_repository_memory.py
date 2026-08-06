@@ -25,7 +25,7 @@ from app.schemas.repository_memory import (
 from app.repository_memory.symbol_table_extractor import SymbolTableExtractor
 from app.repository_memory.module_memory_extractor import ModuleMemoryExtractor
 from app.repository_memory.workflow_memory_extractor import WorkflowMemoryExtractor
-from app.parsers.ast_models import FileParsingResult, ProjectParsingResult
+from app.parsers.ast_models import FileParsingResult, ProjectParsingResult, Symbol
 from app.analyzers.architecture_models import ArchitectureResult, ArchitectureModule, Component
 
 
@@ -45,21 +45,45 @@ def _make_parsing_result() -> ProjectParsingResult:
     file1 = FileParsingResult(
         path="backend/app/api/upload.py",
         language="Python",
-        functions=["upload_repository", "validate_zip"],
-        classes=["UploadHandler"],
-        methods=["handle", "validate"],
+        functions=[
+            Symbol(name="upload_repository", line_number=10, file_path="backend/app/api/upload.py"),
+            Symbol(name="validate_zip", line_number=20, file_path="backend/app/api/upload.py")
+        ],
+        classes=[
+            Symbol(name="UploadHandler", line_number=1, file_path="backend/app/api/upload.py")
+        ],
+        methods=[
+            Symbol(name="handle", line_number=5, file_path="backend/app/api/upload.py"),
+            Symbol(name="validate", line_number=10, file_path="backend/app/api/upload.py")
+        ],
         imports=["from fastapi import APIRouter", "from app.services.indexing import indexing_service"],
-        variables=["MAX_SIZE"],
-        async_functions=["process_upload"],
+        variables=[
+            Symbol(name="MAX_SIZE", line_number=1, file_path="backend/app/api/upload.py")
+        ],
+        async_functions=[
+            Symbol(name="process_upload", line_number=30, file_path="backend/app/api/upload.py")
+        ],
     )
     file2 = FileParsingResult(
         path="backend/app/auth/jwt.py",
         language="Python",
-        functions=["create_token", "verify_token", "decode_payload"],
-        classes=["JWTManager"],
-        methods=["encode", "decode"],
+        functions=[
+            Symbol(name="create_token", line_number=10, file_path="backend/app/auth/jwt.py"),
+            Symbol(name="verify_token", line_number=20, file_path="backend/app/auth/jwt.py"),
+            Symbol(name="decode_payload", line_number=30, file_path="backend/app/auth/jwt.py")
+        ],
+        classes=[
+            Symbol(name="JWTManager", line_number=1, file_path="backend/app/auth/jwt.py")
+        ],
+        methods=[
+            Symbol(name="encode", line_number=5, file_path="backend/app/auth/jwt.py"),
+            Symbol(name="decode", line_number=10, file_path="backend/app/auth/jwt.py")
+        ],
         imports=["import jwt", "from datetime import datetime"],
-        variables=["SECRET_KEY", "ALGORITHM"],
+        variables=[
+            Symbol(name="SECRET_KEY", line_number=1, file_path="backend/app/auth/jwt.py"),
+            Symbol(name="ALGORITHM", line_number=2, file_path="backend/app/auth/jwt.py")
+        ],
     )
     return ProjectParsingResult(
         project={"name": "TestRepo", "root_path": "/tmp/testrepo", "total_files": 2},

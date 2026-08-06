@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 from app.rag.chunker import Chunker, Chunk
-from app.parsers.ast_models import FileParsingResult
+from app.parsers.ast_models import FileParsingResult, Symbol
 
 
 @pytest.fixture
@@ -30,9 +30,12 @@ def sample_parsing_result() -> FileParsingResult:
     return FileParsingResult(
         path="test.py",
         language="Python",
-        functions=["hello_world"],
-        classes=["MyClass"],
-        methods=["method1", "method2"],
+        functions=[Symbol(name="hello_world", line_number=2, file_path="test.py")],
+        classes=[Symbol(name="MyClass", line_number=5, file_path="test.py")],
+        methods=[
+            Symbol(name="method1", line_number=6, file_path="test.py"),
+            Symbol(name="method2", line_number=9, file_path="test.py"),
+        ],
     )
 
 
