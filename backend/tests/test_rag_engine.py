@@ -42,7 +42,7 @@ def test_rag_api_query():
     repo_id = "test-repo-rag-1"
     
     req = RAGQueryRequest(query="explain the system")
-    response = client.post(f"/rag/query/{repo_id}", json=req.model_dump())
+    response = client.post(f"/repositories/{repo_id}/rag/query", json=req.model_dump())
     assert response.status_code == 200
     data = response.json()
     assert data["query"] == "explain the system"
@@ -51,7 +51,7 @@ def test_rag_api_query():
     
 def test_rag_api_context():
     repo_id = "test-repo-rag-2"
-    response = client.get(f"/rag/context/{repo_id}")
+    response = client.get(f"/repositories/{repo_id}/rag/context")
     assert response.status_code == 200
     data = response.json()
     assert "architecture" in data["query"].lower()

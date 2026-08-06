@@ -159,7 +159,7 @@ class TestQueryPlanner:
         )
 
         assert plan.intent == "general_query"
-        assert plan.required_tools == []  # No specialized tools
+        assert plan.required_tools == ["rag"]  # RAG tool for general queries
         assert plan.retrieval_required is True
         assert plan.retrieval_strategy == "hybrid_semantic"
         assert plan.expected_output_type == "general"
@@ -379,7 +379,7 @@ class TestPhase5SpecificationTests:
 
         assert plan.retrieval_required is True
         assert plan.retrieval_strategy == "hybrid_semantic"
-        # Should not block the user - general_query has no specialized tools
-        assert plan.required_tools == []
+        # Should not block the user - general_query uses RAG tool
+        assert plan.required_tools == ["rag"]
         # Should have memory and retrieval enabled
         assert len(plan.required_memory) > 0

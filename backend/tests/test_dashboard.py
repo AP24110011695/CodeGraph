@@ -346,7 +346,7 @@ class TestDashboardAPI:
             status="READY",
         )
 
-        response = client.post(f"/dashboard/{workspace_id}")
+        response = client.post(f"/repositories/{workspace_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -355,7 +355,7 @@ class TestDashboardAPI:
 
     def test_generate_dashboard_not_found_api(self, client) -> None:
         """Test dashboard API for non-existent workspace."""
-        response = client.post("/dashboard/nonexistent_workspace")
+        response = client.post("/repositories/nonexistent_workspace")
 
         assert response.status_code == 404
 
@@ -383,7 +383,7 @@ class TestDashboardAPI:
 
         try:
             response = client.post(
-                f"/dashboard/{workspace_id}",
+                f"/repositories/{workspace_id}",
                 params={"download": True}
             )
 
