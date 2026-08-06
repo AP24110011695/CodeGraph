@@ -104,38 +104,26 @@ class ProviderManager:
     ) -> Dict[str, Any]:
         """Generate text. Returns dict with text + provider name."""
         selected = self.get_provider(provider)
-        logger.info("PROVIDER_DEBUG: generate() called - selected provider: %s", selected.__class__.__name__)
         full_prompt = prompt
         if system:
             full_prompt = f"System:\n{system}\n\n{prompt}"
         
         try:
-            logger.info("PROVIDER_DEBUG: Calling %s.generate()...", selected.__class__.__name__)
             text = selected.generate(full_prompt, **kwargs)
-            logger.info("PROVIDER_DEBUG: %s.generate() succeeded - first 300 chars: %s", 
-                       selected.__class__.__name__, text[:300])
-            logger.info("PROVIDER_DEBUG: Returning from generate() - provider: %s, first 300 chars: %s",
-                       selected.__class__.__name__, text[:300])
             return {
                 "text": text,
                 "provider": selected.__class__.__name__,
                 "error": None,
             }
         except Exception as exc:  # noqa: BLE001
-            logger.info("PROVIDER_DEBUG: Generation failed with %s.generate() - error: %s", 
-                      selected.__class__.__name__, exc)
             if not isinstance(selected, LocalHeuristicProvider):
                 raise LLMError(
                     f"{selected.__class__.__name__} failed; refusing to return an unrelated local fallback: {exc}"
                 ) from exc
 
             logger.debug("ProviderManager: local generation failed: %s", exc)
-            logger.info("PROVIDER_DEBUG: Falling back to LocalHeuristicProvider")
             fallback = LocalHeuristicProvider()
-            logger.info("PROVIDER_DEBUG: Calling LocalHeuristicProvider.generate()...")
             fallback_text = fallback.generate(full_prompt, **kwargs)
-            logger.info("PROVIDER_DEBUG: LocalHeuristicProvider.generate() succeeded - first 300 chars: %s", 
-                       fallback_text[:300])
             return {
                 "text": fallback_text,
                 "provider": "LocalHeuristicProvider",
