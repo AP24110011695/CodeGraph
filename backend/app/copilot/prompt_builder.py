@@ -147,11 +147,34 @@ class PromptBuilder:
                 summary = tr.get("summary", "")
                 result = tr.get("result")
                 if result:
-                    tool_parts.append(
-                        f"[TOOL: {name}]\nSummary: {summary}\nData: {str(result)[:2000]}"
-                    )
-                elif summary:
-                    tool_parts.append(f"[TOOL: {name}]\n{summary}")
+                    # Handle dict results
+                    if isinstance(result, dict):
+                        block = f"[TOOL ANALYSIS: {name.upper().replace('_', ' ')}]\n"
+                        block += f"Summary: {summary}\n"
+                        # Try to extract relevant data from result
+                        if "llm_context" in result:
+                            block += f"Evidence:\n{result['llm_context'][:1500]}\n"
+                        if "citations" in result and result["citations"]:
+                            citations = result["citations"][:3]
+                            for citation in citations:
+                                if isinstance(citation, dict):
+                                    if "reference" in citation:
+                                        block += f"FILE: {citation['reference']}\n"
+                        related = ", ".join(tr.get("related_files", [])[:5])
+                        if related:
+                            block += f"Related Files: {related}\n"
+                        block += f"Confidence: {tr.get('confidence', 0.0):.0%}"
+                        tool_parts.append(block)
+                    else:
+                        # Handle string results
+                        block = f"[TOOL ANALYSIS: {name.upper().replace('_', ' ')}]\n"
+                        block += f"Summary: {summary}\n"
+                        block += f"Data: {str(result)[:1500]}\n"
+                        related = ", ".join(tr.get("related_files", [])[:5])
+                        if related:
+                            block += f"Related Files: {related}\n"
+                        block += f"Confidence: {tr.get('confidence', 0.0):.0%}"
+                        tool_parts.append(block)
             if tool_parts:
                 repo_context_parts.append("\n\n".join(tool_parts))
 

@@ -29,8 +29,8 @@ class PromptParser:
         for marker in markers:
             if marker in prompt:
                 section = prompt.split(marker, 1)[1]
-                # Stop at next major section
-                for next_marker in ["Agent Collaboration Summary:", "User Question:", "Conversation History:", "REPOSITORY CONTEXT:", "ANSWER RULES:"]:
+                # Stop at next major section (but not REPOSITORY CONTEXT which may come before)
+                for next_marker in ["Agent Collaboration Summary:", "User Question:", "Conversation History:", "ANSWER RULES:"]:
                     if next_marker in section:
                         section = section.split(next_marker, 1)[0]
                 tool_section = section.strip()
@@ -52,14 +52,18 @@ class PromptParser:
         Returns:
             The user question string
         """
-        marker = "User Question:"
-        if marker not in prompt:
-            logger.debug("User Question section not found in prompt")
-            return ""
-        section = prompt.split(marker, 1)[1]
-        # Get first line (the question)
-        question = section.strip().split("\n", 1)[0].strip()
-        return question
+        # Try multiple markers for compatibility
+        markers = ["USER QUESTION:", "User Question:"]
+        for marker in markers:
+            if marker in prompt:
+                section = prompt.split(marker, 1)[1]
+                # Get first line (the question)
+                question = section.strip().split("\n", 1)[0].strip()
+                logger.debug("Found question using marker: %s", marker)
+                return question
+        
+        logger.debug("User Question section not found in prompt, defaulting to empty")
+        return ""
     
     @staticmethod
     def extract_intent(prompt: str) -> str:
@@ -107,6 +111,10 @@ class PromptParser:
             elif line.startswith("[") and line.endswith("]"):
                 current_tool = line[1:-1]
                 tool_data[current_tool] = {"summary": "", "data": "", "evidence": "", "related_files": ""}
+            # Handle simple tool name on its own line (like "RAG")
+            elif line and not line.startswith(("Summary:", "Evidence:", "Related Files:", "Confidence:", "TOOL ANALYSIS:", "[", "FILE:")) and not current_tool:
+                current_tool = line.strip().lower()
+                tool_data[current_tool] = {"summary": "", "data": "", "evidence": "", "related_files": ""}
             elif current_tool:
                 if line.startswith("Summary:"):
                     tool_data[current_tool]["summary"] = line.replace("Summary:", "").strip()
@@ -115,7 +123,7 @@ class PromptParser:
                     evidence_start = lines.index(line)
                     evidence_lines = [line.replace("Evidence:", "").strip()]
                     for next_line in lines[evidence_start + 1:]:
-                        if next_line.strip() and not next_line.startswith(("Summary:", "Evidence:", "Related Files:", "Confidence:", "TOOL ANALYSIS:", "[")):
+                        if next_line.strip() and not next_line.startswith(("Summary:", "Evidence:", "Related Files:", "Confidence:", "TOOL ANALYSIS:", "[", "FILE:")):
                             evidence_lines.append(next_line.strip())
                         else:
                             break

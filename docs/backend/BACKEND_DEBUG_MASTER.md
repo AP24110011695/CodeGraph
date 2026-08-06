@@ -83,7 +83,7 @@ No checkpoint is complete until verified through Swagger with a real repository.
 | Quality           | VERIFIED    | ☑        | Real metrics (13 files, Flask), repo-specific recommendations |
 | Security          | VERIFIED    | ☑        | 3 security issues (medium), real file references          |
 | Dashboard         | VERIFIED    | ☑        | 5 dashboard endpoints (overview, architecture, dependencies, risks, health) provide aggregated repository data |
-| Copilot Query     | NOT STARTED | ☐        | Semantic search now working (BUG-005 resolved)             |
+| Copilot Query     | VERIFIED     | ☑        | Returns repository-specific answers with file references (auth/auth_service.py, api/user_routes.py)      |
 | Copilot Explain   | NOT STARTED | ☐        | Blocked on Task 11                                             |
 | End-to-End        | NOT STARTED | ☐        | Blocked on Task 11                                             |
 
@@ -406,11 +406,11 @@ Confirm that architecture analysis, quality analysis, security scanning, and das
 
 **Checkpoint E Progress**
 
-- [ ] Task 11 — Copilot Query Verification
+- [x] Task 11 — Copilot Query Verification
 - [ ] Task 12 — Copilot Explain Verification
 - [ ] Task 13 — End-to-End Verification
 
-**Checkpoint E Status: NOT STARTED**
+**Checkpoint E Status: IN PROGRESS**
 
 **Git Commit After Completion**
 
@@ -594,17 +594,17 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 | **Date**               | 2026-08-06                                           |
 | **Component**          | Copilot Context Assembly                              |
 | **Symptoms**           | Copilot returns "I could not find enough analyzed repository information" despite Semantic Search working |
-| **Root Cause**         | 1. context_selector.select_semantic_context() was importing from app.api.semantic which has complex dependencies. 2. Query Planner was not setting required_tools=["rag"] for general_query intent. 3. Tool Executor _tool_rag was not extracting related_files from RAG citations. 4. Local provider synthesis fails to generate answers from tool results. |
-| **Evidence**           | Direct test of RAG Engine shows it returns 1200 chars context with 5 citations after context_selector fix. Context Selector returns 5 semantic items after fix. Query Planner now sets required_tools=["rag"] for general_query. Tool Executor now extracts related_files from citations. API response now shows related_files populated: ['Repository Overview', 'Architecture Overview', 'auth/auth_service.py', 'api/user_routes.py']. |
-| **Status**             | `PARTIALLY RESOLVED`                                  |
+| **Root Cause**         | 1. context_selector.select_semantic_context() was importing from app.api.semantic which has complex dependencies. 2. Query Planner was not setting required_tools=["rag"] for general_query intent. 3. Tool Executor _tool_rag was not extracting related_files from RAG citations. 4. Prompt Parser was not extracting tool results from prompt due to marker mismatch ("TOOL ANALYSIS:" vs "Tool Execution Results:"). |
+| **Evidence**           | Direct test of RAG Engine shows it returns 1200 chars context with 5 citations after context_selector fix. Context Selector returns 5 semantic items after fix. Query Planner now sets required_tools=["rag"] for general_query. Tool Executor now extracts related_files from citations. Prompt Parser now extracts tool results from "TOOL ANALYSIS:" marker. API response now shows related_files populated and repository-specific answers. |
+| **Status**             | `RESOLVED`                                           |
 | **Priority**           | `HIGH`                                               |
-| **Impact**             | Copilot now extracts file references from RAG context (related_files populated), but local provider still returns fallback answer |
-| **Workaround**         | None - partial fix applied                            |
+| **Impact**             | Copilot now returns repository-specific answers with file references |
+| **Workaround**         | None - full fix applied                              |
 | **First Seen**         | 2026-08-06                                           |
 | **Last Verified**      | 2026-08-06                                           |
-| **Fix**                | 1. Modified app/rag/context_selector.py to use search_service directly. 2. Added "general_explanation" to _SYMBOL_INTENTS. 3. Modified app/copilot/query_planner.py to set required_tools=["rag"] for general_query. 4. Modified app/copilot/tool_executor.py _tool_rag to extract related_files from citations. 5. Modified app/copilot/response/prompt_parser.py to handle "TOOL ANALYSIS:" marker. |
-| **Resolved In Commit** | task-11: verify copilot query pipeline (partial)       |
-| **Verification**       | API response now shows related_files populated with real file paths, but answer is still fallback message (local provider synthesis issue) |
+| **Fix**                | 1. Modified app/rag/context_selector.py to use search_service directly. 2. Added "general_explanation" to _SYMBOL_INTENTS. 3. Modified app/copilot/query_planner.py to set required_tools=["rag"] for general_query. 4. Modified app/copilot/tool_executor.py _tool_rag to extract related_files from citations. 5. Modified app/copilot/response/prompt_parser.py to handle "TOOL ANALYSIS:" marker and case-insensitive question extraction. |
+| **Resolved In Commit** | task-11: verify copilot query pipeline (full resolution) |
+| **Verification**       | API response now shows repository-specific answers with related_files populated: ['Repository Overview', 'Architecture Overview', 'auth/auth_service.py', 'api/user_routes.py'] |
 
 ---
 
@@ -862,6 +862,20 @@ git commit -m "checkpoint-E: copilot verified — end-to-end flow complete"
 
 ---
 
+### Session 015 — BUG-006 Local Provider Investigation and Full Resolution
+
+| Field                 | Value                                                    |
+| --------------------- | -------------------------------------------------------- |
+| **Date**              | 2026-08-06                                               |
+| **Goal**              | Investigate why Local Provider returns fallback message despite receiving valid RAG context |
+| **Repository Used**   | E-Commerce Application (148a4b56-a032-444a-9fec-702a86c2e1e7) |
+| **Commands Executed** | python local_provider_simple_test.py, python debug_prompt_parser.py, python local_provider_simple_test.py, python quick_test.py |
+| **Result**            | SUCCESS — Prompt Parser was not extracting tool results from prompt, causing local provider to return fallback |
+| **Evidence**          | Prompt Parser was looking for "Tool Execution Results:" marker but prompt builder uses "TOOL ANALYSIS:" marker. Prompt Parser was case-sensitive on "User Question:" vs "USER QUESTION:". Prompt Parser was not parsing tool data when tool name was on its own line (like "RAG"). After fixing these issues, local provider now generates repository-specific answers. API response now returns analysis instead of fallback message. |
+| **Next Action**       | BUG-006 FULLY RESOLVED — Task 11 verification complete |
+
+---
+
 ## Decisions
 
 > Every significant engineering decision must be recorded here.
@@ -1023,12 +1037,12 @@ The project is complete only when every item below is marked **VERIFIED**.
 
 | Field                   | Value                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Current Checkpoint**  | Checkpoint E - BLOCKED                                                                                                                                                      |
-| **Current Objective**   | Task 11 - Copilot Query Verification (Partially Resolved - related_files populated, but local provider synthesis issue)                                                                                                  |
-| **Last Completed Task** | BUG-006 - Copilot Context Assembly (Partial fix - context extraction working, local provider synthesis needs investigation)                                                                                                |
-| **Status**              | BLOCKED - Local provider synthesis returns fallback answer despite having RAG context and file references                                                                                                                         |
+| **Current Checkpoint**  | Checkpoint E - IN PROGRESS                                                                                                                                                   |
+| **Current Objective**   | Task 12 - Copilot Explain Verification                                                                                                     |
+| **Last Completed Task** | Task 11 - Copilot Query Verification (VERIFIED - BUG-006 fully resolved)                                                                                              |
+| **Status**              | PROCEEDING to Task 12                                                                                                                                                 |
 | **Next Checkpoint**     | Checkpoint E (Tasks 11-13)                                                                                                                                                   |
-| **Next Git Commit**     | Pending (after full Task 11 resolution)                                                                                                                                                     |
+| **Next Git Commit**     | Pending (after Task 13)                                                                                                                                                     |
 
 ---
 
