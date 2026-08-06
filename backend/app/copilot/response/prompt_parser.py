@@ -22,16 +22,25 @@ class PromptParser:
         Returns:
             String containing tool execution results
         """
-        marker = "Tool Execution Results:"
-        if marker not in prompt:
+        # Try multiple markers for compatibility
+        markers = ["TOOL ANALYSIS:", "Tool Execution Results:"]
+        tool_section = ""
+        
+        for marker in markers:
+            if marker in prompt:
+                section = prompt.split(marker, 1)[1]
+                # Stop at next major section
+                for next_marker in ["Agent Collaboration Summary:", "User Question:", "Conversation History:", "REPOSITORY CONTEXT:", "ANSWER RULES:"]:
+                    if next_marker in section:
+                        section = section.split(next_marker, 1)[0]
+                tool_section = section.strip()
+                logger.debug("Found tool results using marker: %s", marker)
+                break
+        
+        if not tool_section:
             logger.debug("Tool Execution Results section not found in prompt")
-            return ""
-        section = prompt.split(marker, 1)[1]
-        # Stop at next major section
-        for next_marker in ["Agent Collaboration Summary:", "User Question:", "Conversation History:"]:
-            if next_marker in section:
-                section = section.split(next_marker, 1)[0]
-        return section.strip()
+        
+        return tool_section
     
     @staticmethod
     def extract_question(prompt: str) -> str:
@@ -90,12 +99,29 @@ class PromptParser:
         
         for line in lines:
             line = line.strip()
-            if line.startswith("[") and line.endswith("]"):
+            # Handle format: "TOOL ANALYSIS: TOOL NAME"
+            if line.startswith("TOOL ANALYSIS:"):
+                current_tool = line.replace("TOOL ANALYSIS:", "").strip().lower().replace(" ", "_")
+                tool_data[current_tool] = {"summary": "", "data": "", "evidence": "", "related_files": ""}
+            # Handle legacy format: "[TOOL NAME]"
+            elif line.startswith("[") and line.endswith("]"):
                 current_tool = line[1:-1]
-                tool_data[current_tool] = {"summary": "", "data": ""}
+                tool_data[current_tool] = {"summary": "", "data": "", "evidence": "", "related_files": ""}
             elif current_tool:
                 if line.startswith("Summary:"):
                     tool_data[current_tool]["summary"] = line.replace("Summary:", "").strip()
+                elif line.startswith("Evidence:"):
+                    # Extract multiple lines of evidence
+                    evidence_start = lines.index(line)
+                    evidence_lines = [line.replace("Evidence:", "").strip()]
+                    for next_line in lines[evidence_start + 1:]:
+                        if next_line.strip() and not next_line.startswith(("Summary:", "Evidence:", "Related Files:", "Confidence:", "TOOL ANALYSIS:", "[")):
+                            evidence_lines.append(next_line.strip())
+                        else:
+                            break
+                    tool_data[current_tool]["evidence"] = "\n".join(evidence_lines)
+                elif line.startswith("Related Files:"):
+                    tool_data[current_tool]["related_files"] = line.replace("Related Files:", "").strip()
                 elif line.startswith("Data:"):
                     tool_data[current_tool]["data"] = line.replace("Data:", "").strip()
         

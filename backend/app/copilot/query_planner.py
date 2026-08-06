@@ -25,7 +25,7 @@ _INTENT_TOOLS: Dict[str, List[str]] = {
     "quality_analysis": ["quality_tool"],
     "security_analysis": ["security_tool"],
     "bug_analysis": ["security_tool", "symbol_tool"],
-    "general_query": [],  # No tools, rely on RAG
+    "general_query": ["rag"],  # Use RAG tool for general queries
 }
 
 # Intent → Memory mappings (deterministic rules)

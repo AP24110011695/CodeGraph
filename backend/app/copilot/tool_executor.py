@@ -296,15 +296,25 @@ class ToolExecutor:
 
         rag = rag_engine.generate_context(repository_id, query)
         citations = []
+        related_files = []
         for c in rag.citations or []:
             if hasattr(c, "model_dump"):
-                citations.append(c.model_dump(mode="json"))
+                citation_dict = c.model_dump(mode="json")
+                citations.append(citation_dict)
+                # Extract file references from citations
+                if "reference" in citation_dict:
+                    related_files.append(citation_dict["reference"])
             else:
                 citations.append(c)
+                if hasattr(c, "reference"):
+                    related_files.append(c.reference)
+        
         return {
             "summary": (rag.llm_context or "")[:500],
             "result": rag.model_dump(mode="json") if hasattr(rag, "model_dump") else rag,
             "citations": citations or ["Advanced RAG"],
+            "related_files": related_files,
+            "related_components": [],
         }
 
     def _tool_metrics(self, repository_id: str, query: str, ctx: Dict[str, Any]) -> Dict[str, Any]:
