@@ -1,5 +1,7 @@
 """Tests for the complete memory pipeline: Indexing → Parsing → Memory Build → Copilot."""
 
+import uuid
+
 import pytest
 from pathlib import Path
 from app.parsers.ast_models import ProjectParsingResult, FileParsingResult, Symbol
@@ -12,12 +14,12 @@ def test_memory_pipeline_parse_save_load():
     from storage.parsing_store import parsing_store
     from storage.database import init_db
     from app.repository_memory.memory_builder import MemoryBuilder
-    
+
     # Initialize database
     init_db()
-    
-    repository_id = "test-memory-pipeline-1"
-    
+
+    repository_id = f"test-memory-pipeline-{uuid.uuid4()}"
+
     # Step 1: Create parsing result (simulating indexing pipeline)
     parsing_result = ProjectParsingResult(
         project={
@@ -63,25 +65,25 @@ def test_memory_pipeline_parse_save_load():
             )
         ]
     )
-    
+
     # Step 2: Save parsing result (simulating indexing pipeline)
     parsing_store.save(repository_id, parsing_result)
-    
+
     # Step 3: Verify parsing result was saved
     loaded_parsing = parsing_store.load(repository_id)
     assert loaded_parsing is not None
     assert len(loaded_parsing.files) == 3
     assert loaded_parsing.files[0].path == "src/auth.py"
     assert any(func.name == "authenticate" for func in loaded_parsing.files[0].functions)
-    
+
     # Step 4: Build memory (simulating auto memory builder)
     # Note: This will use the saved parsing result
     memory_builder = MemoryBuilder()
-    
+
     # We need to mock the project path resolution since we don't have actual files
     # For this test, we'll verify the logic of reusing saved parsing results
     # The actual memory build would need real files on disk
-    
+
     # Cleanup
     parsing_store.delete(repository_id)
 
@@ -92,12 +94,12 @@ def test_memory_builder_reuses_saved_parsing():
     from storage.database import init_db
     from app.repository_memory.memory_builder import MemoryBuilder
     from unittest.mock import Mock, patch
-    
+
     # Initialize database
     init_db()
-    
-    repository_id = "test-memory-reuse-1"
-    
+
+    repository_id = f"test-memory-reuse-{uuid.uuid4()}"
+
     # Create and save parsing result
     parsing_result = ProjectParsingResult(
         project={
@@ -125,43 +127,43 @@ def test_memory_builder_reuses_saved_parsing():
             )
         ]
     )
-    
+
     parsing_store.save(repository_id, parsing_result)
-    
+
     # Mock the path resolution and scanning
     with patch('app.repository_memory.memory_builder.resolve_indexed_project_path') as mock_path:
         mock_path.return_value = Path("/fake/path")
-        
+
         with patch('app.repository_memory.memory_builder.scanner_service') as mock_scanner:
             mock_scan_result = Mock()
             mock_scan_result.project_name = "test-repo"
             mock_scan_result.total_files = 2
             mock_scanner.scan.return_value = mock_scan_result
-            
+
             with patch('app.repository_memory.memory_builder.ParserEngine') as mock_parser:
                 # Parser should NOT be called if saved result exists
                 mock_parser.parse_project.return_value = parsing_result
-                
+
                 with patch('app.repository_memory.memory_builder.detector_service') as mock_detector:
                     mock_detection = Mock()
                     mock_detection.frameworks = []
                     mock_detection.backend = []
                     mock_detector.detect.return_value = mock_detection
-                    
+
                     with patch('app.repository_memory.memory_builder.graph_builder') as mock_graph:
                         mock_graph.build.return_value = Mock()
-                        
+
                         with patch('app.repository_memory.memory_builder.architecture_builder') as mock_arch:
                             mock_arch.build.return_value = Mock()
-                            
+
                             # Build memory
                             memory_builder = MemoryBuilder()
-                            # Note: This will fail on actual operations due to mocking, 
+                            # Note: This will fail on actual operations due to mocking,
                             # but we can verify parsing result was loaded
                             loaded_parsing = parsing_store.load(repository_id)
                             assert loaded_parsing is not None
                             assert len(loaded_parsing.files) == 2
-    
+
     # Cleanup
     parsing_store.delete(repository_id)
 
@@ -177,8 +179,8 @@ def test_memory_builds_on_indexing_complete():
     
     # Initialize database
     init_db()
-    
-    repository_id = "test-auto-memory-1"
+
+    repository_id = f"test-auto-memory-{uuid.uuid4()}"
     
     # Register repository (simulating upload)
     repository_store.register_upload(
@@ -238,8 +240,8 @@ def test_symbol_extraction_with_saved_parsing():
     
     # Initialize database
     init_db()
-    
-    repository_id = "test-symbol-extraction-1"
+
+    repository_id = f"test-symbol-extraction-{uuid.uuid4()}"
     
     # Create parsing result with authentication symbols
     parsing_result = ProjectParsingResult(

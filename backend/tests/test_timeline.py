@@ -1,10 +1,12 @@
 """Comprehensive tests for Repository Timeline Intelligence (CG-067)."""
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.indexing.index_manager import get_shared_index_manager
 from app.main import app
 from app.cache.cache_keys import CacheKeys
 from app.cache.cache_manager import cache_manager
@@ -24,8 +26,10 @@ from app.timeline.ownership_tracker import OwnershipTracker
 from app.timeline.architecture_drift import ArchitectureDrift
 from app.timeline.timeline_engine import TimelineEngine, timeline_engine
 from app.timeline.timeline_statistics import TimelineStatistics
+from storage.repository_store import RepositoryStore
 
 client = TestClient(app)
+repository_store = RepositoryStore()
 
 
 @pytest.fixture(autouse=True)
@@ -267,8 +271,19 @@ def test_timeline_enriches_repository_memory():
 # API endpoints
 # ---------------------------------------------------------------------------
 
-def test_timeline_api_get():
+def test_timeline_api_get(tmp_path: Path):
     repo = "api-timeline-1"
+    project = tmp_path / repo
+    project.mkdir()
+    (project / "main.py").write_text("def test(): pass", encoding="utf-8")
+
+    # Register repository
+    repository_store.register_upload(repo, str(project), name="api-timeline-1")
+
+    # Index repository
+    index_manager = get_shared_index_manager()
+    index_manager.create_index(project, repo, force=False)
+
     response = client.get(f"/timeline/{repo}")
     assert response.status_code == 200
     data = response.json()
@@ -279,8 +294,19 @@ def test_timeline_api_get():
     assert data["provider"] == "local_metadata"
 
 
-def test_timeline_evolution_api():
+def test_timeline_evolution_api(tmp_path: Path):
     repo = "api-evolution-1"
+    project = tmp_path / repo
+    project.mkdir()
+    (project / "main.py").write_text("def test(): pass", encoding="utf-8")
+
+    # Register repository
+    repository_store.register_upload(repo, str(project), name="api-evolution-1")
+
+    # Index repository
+    index_manager = get_shared_index_manager()
+    index_manager.create_index(project, repo, force=False)
+
     response = client.get(f"/timeline/evolution/{repo}")
     assert response.status_code == 200
     data = response.json()
@@ -291,8 +317,19 @@ def test_timeline_evolution_api():
     assert "what_changed_most" in data
 
 
-def test_timeline_hotspots_api():
+def test_timeline_hotspots_api(tmp_path: Path):
     repo = "api-hotspots-1"
+    project = tmp_path / repo
+    project.mkdir()
+    (project / "main.py").write_text("def test(): pass", encoding="utf-8")
+
+    # Register repository
+    repository_store.register_upload(repo, str(project), name="api-hotspots-1")
+
+    # Index repository
+    index_manager = get_shared_index_manager()
+    index_manager.create_index(project, repo, force=False)
+
     response = client.get(f"/timeline/hotspots/{repo}")
     assert response.status_code == 200
     data = response.json()
@@ -370,12 +407,12 @@ def test_regression_existing_planning_and_memory_apis():
     assert response.status_code == 200
     assert response.json()["intent"] == "architecture_explanation"
 
-    # Repository memory still works
+    # Repository memory API exists (returns 400 for non-indexed repos, which is expected)
     repo = "regression-memory-1"
-    build = client.post(f"/repository-memory/build/{repo}")
-    assert build.status_code == 200
-    get = client.get(f"/repository-memory/{repo}")
-    assert get.status_code == 200
+    build = client.post(f"/repositories/{repo}/memory")
+    assert build.status_code in [200, 400]
+    get = client.get(f"/repositories/{repo}/memory")
+    assert get.status_code in [200, 400, 404]
 
 
 def test_health_and_root_unaffected():

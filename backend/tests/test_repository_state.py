@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
@@ -21,66 +23,71 @@ def teardown_function():
     state_manager._states.clear()
 
 def test_initial_state():
-    sm = RepositoryStateMachine("repo-1")
+    repo_id = f"repo-{uuid.uuid4()}"
+    sm = RepositoryStateMachine(repo_id)
     assert sm.current_state.state == RepositoryStateEnum.UPLOADED
 
 def test_valid_transitions():
-    sm = RepositoryStateMachine("repo-2")
-    
+    repo_id = f"repo-{uuid.uuid4()}"
+    sm = RepositoryStateMachine(repo_id)
+
     # UPLOADED -> QUEUED
     state = sm.transition_to(RepositoryStateEnum.QUEUED)
     assert state.state == RepositoryStateEnum.QUEUED
-    
+
     # QUEUED -> SCANNING
     state = sm.transition_to(RepositoryStateEnum.SCANNING)
     assert state.state == RepositoryStateEnum.SCANNING
-    
+
     # SCANNING -> PARSING
     state = sm.transition_to(RepositoryStateEnum.PARSING)
     assert state.state == RepositoryStateEnum.PARSING
-    
+
     # PARSING -> INDEXING
     state = sm.transition_to(RepositoryStateEnum.INDEXING)
     assert state.state == RepositoryStateEnum.INDEXING
-    
+
     # INDEXING -> EMBEDDING
     state = sm.transition_to(RepositoryStateEnum.EMBEDDING)
     assert state.state == RepositoryStateEnum.EMBEDDING
-    
+
     # EMBEDDING -> ANALYZING
     state = sm.transition_to(RepositoryStateEnum.ANALYZING)
     assert state.state == RepositoryStateEnum.ANALYZING
-    
+
     # ANALYZING -> READY
     state = sm.transition_to(RepositoryStateEnum.READY)
     assert state.state == RepositoryStateEnum.READY
     assert sm.is_ready()
 
 def test_invalid_transition():
-    sm = RepositoryStateMachine("repo-3")
-    
+    repo_id = f"repo-{uuid.uuid4()}"
+    sm = RepositoryStateMachine(repo_id)
+
     with pytest.raises(ValueError, match="Invalid state transition"):
         # UPLOADED -> READY is invalid
         sm.transition_to(RepositoryStateEnum.READY)
 
 def test_failed_job_transition():
-    sm = RepositoryStateMachine("repo-4")
+    repo_id = f"repo-{uuid.uuid4()}"
+    sm = RepositoryStateMachine(repo_id)
     sm.transition_to(RepositoryStateEnum.QUEUED)
     sm.transition_to(RepositoryStateEnum.SCANNING)
-    
+
     state = sm.transition_to(RepositoryStateEnum.FAILED, failure_reason="Test failure")
     assert state.state == RepositoryStateEnum.FAILED
     assert state.failure_reason == "Test failure"
-    
+
     # FAILED -> QUEUED (retry)
     state = sm.transition_to(RepositoryStateEnum.QUEUED)
     assert state.state == RepositoryStateEnum.QUEUED
 
 def test_cancelled_job_transition():
-    sm = RepositoryStateMachine("repo-5")
+    repo_id = f"repo-{uuid.uuid4()}"
+    sm = RepositoryStateMachine(repo_id)
     sm.transition_to(RepositoryStateEnum.QUEUED)
     sm.transition_to(RepositoryStateEnum.SCANNING)
-    
+
     state = sm.transition_to(RepositoryStateEnum.CANCELLED)
     assert state.state == RepositoryStateEnum.CANCELLED
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 
 import pytest
@@ -34,25 +35,26 @@ def test_list_get_delete_repositories(isolated_client) -> None:
     extract.mkdir()
     (extract / "main.py").write_text("x = 1\n", encoding="utf-8")
 
-    store.register_upload("repo-a", extract, name="Alpha")
+    repo_id = f"repo-{uuid.uuid4()}"
+    store.register_upload(repo_id, extract, name="Alpha")
     manager = IndexManager(repository_store=store)
-    manager.create_index(extract, "repo-a", force=True)
+    manager.create_index(extract, repo_id, force=True)
 
     listed = client.get("/repositories")
     assert listed.status_code == 200
     body = listed.json()
     assert body["total"] >= 1
-    match = next((r for r in body["repositories"] if r["id"] == "repo-a"), None)
+    match = next((r for r in body["repositories"] if r["id"] == repo_id), None)
     assert match is not None, body
-    assert match["name"] in {"Alpha", "proj-a", "repo-a"}
+    assert match["name"] in {"Alpha", "proj-a", repo_id}
 
-    detail = client.get("/repositories/repo-a")
+    detail = client.get(f"/repositories/{repo_id}")
     assert detail.status_code == 200
-    assert detail.json()["id"] == "repo-a"
+    assert detail.json()["id"] == repo_id
     assert detail.json()["status"] in {"READY", "UPLOADED", "INDEXING"}
 
-    deleted = client.delete("/repositories/repo-a")
+    deleted = client.delete(f"/repositories/{repo_id}")
     assert deleted.status_code == 204
 
-    missing = client.get("/repositories/repo-a")
+    missing = client.get(f"/repositories/{repo_id}")
     assert missing.status_code == 404

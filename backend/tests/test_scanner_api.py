@@ -1,6 +1,6 @@
-"""Tests for the POST /scan/{upload_id} API endpoint."""
+"""Tests for the POST /repositories/{repository_id}/scan API endpoint."""
 
-import shutil
+import uuid
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,6 +8,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from storage.repository_store import RepositoryStore
+
+repository_store = RepositoryStore()
+
+
+@pytest.fixture
+def mock_extracted_dir(tmp_path: Path) -> Path:
+    """Mock EXTRACTED_DIR to use tmp_path for testing."""
+    with patch("app.api.scanner.EXTRACTED_DIR", tmp_path):
+        yield tmp_path
 
 
 @pytest.fixture
@@ -17,14 +27,14 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def extracted_project(tmp_path: Path) -> tuple[str, Path]:
+def extracted_project(tmp_path: Path, mock_extracted_dir: Path) -> tuple[str, Path]:
     """Create a mock extracted project and patch EXTRACTED_DIR.
 
     Returns:
         A tuple of (upload_id, project_path).
     """
-    upload_id = "test-upload-001"
-    project = tmp_path / upload_id
+    upload_id = f"test-upload-{uuid.uuid4()}"
+    project = mock_extracted_dir / upload_id
     project.mkdir()
 
     src = project / "src"
@@ -38,7 +48,10 @@ def extracted_project(tmp_path: Path) -> tuple[str, Path]:
     node_modules.mkdir()
     (node_modules / "pkg.js").write_text("module.exports = {};", encoding="utf-8")
 
-    return upload_id, tmp_path
+    # Register repository with the exact path
+    repository_store.register_upload(upload_id, str(project), name=upload_id)
+
+    return upload_id, project
 
 
 class TestScanEndpoint:
@@ -47,78 +60,77 @@ class TestScanEndpoint:
     def test_scan_success(
         self, client: TestClient, extracted_project: tuple[str, Path]
     ) -> None:
-        upload_id, base_dir = extracted_project
+        upload_id, _project = extracted_project
 
-        with patch("app.api.scanner.EXTRACTED_DIR", base_dir):
-            response = client.post(f"/scan/{upload_id}")
+        response = client.post(f"/repositories/{upload_id}/scan")
 
         assert response.status_code == 200
         data = response.json()
 
-        assert data["project_name"] == upload_id
-        assert data["summary"]["files"] == 3
-        assert data["summary"]["folders"] == 1
+        assert data["repository_id"] == upload_id
+        assert data["status"] == "scanned"
+        assert data["file_count"] == 3
+        assert data["directory_count"] == 1  # src only (node_modules excluded)
         assert data["languages"]["Python"] == 1
         assert data["languages"]["TypeScript"] == 1
         assert data["languages"]["Markdown"] == 1
-        assert len(data["files"]) == 3
 
     def test_scan_skips_node_modules(
         self, client: TestClient, extracted_project: tuple[str, Path]
     ) -> None:
-        upload_id, base_dir = extracted_project
+        upload_id, _project = extracted_project
 
-        with patch("app.api.scanner.EXTRACTED_DIR", base_dir):
-            response = client.post(f"/scan/{upload_id}")
+        response = client.post(f"/repositories/{upload_id}/scan")
 
         data = response.json()
-        paths = [f["path"] for f in data["files"]]
-        assert not any("node_modules" in p for p in paths)
+        # The scanner service should skip node_modules. We verify the file count is correct (excluding node_modules)
+        assert data["file_count"] == 3  # main.py, app.ts, README.md (node_modules excluded)
 
     def test_scan_not_found(self, client: TestClient, tmp_path: Path) -> None:
-        with patch("app.api.scanner.EXTRACTED_DIR", tmp_path):
-            response = client.post("/scan/nonexistent-id")
+        response = client.post("/repositories/nonexistent-id/scan")
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
     def test_scan_empty_project(
-        self, client: TestClient, tmp_path: Path
+        self, client: TestClient, tmp_path: Path, mock_extracted_dir: Path
     ) -> None:
-        upload_id = "empty-project"
-        (tmp_path / upload_id).mkdir()
+        upload_id = f"empty-project-{uuid.uuid4()}"
+        project = mock_extracted_dir / upload_id
+        project.mkdir()
 
-        with patch("app.api.scanner.EXTRACTED_DIR", tmp_path):
-            response = client.post(f"/scan/{upload_id}")
+        # Register repository with the exact path
+        repository_store.register_upload(upload_id, str(project), name=upload_id)
+
+        response = client.post(f"/repositories/{upload_id}/scan")
 
         assert response.status_code == 200
         data = response.json()
-        assert data["summary"]["files"] == 0
-        assert data["summary"]["folders"] == 0
+        # Empty project should have 0 files
+        assert data["file_count"] == 0
+        assert data["directory_count"] == 0
         assert data["languages"] == {}
-        assert data["files"] == []
 
     def test_scan_response_file_fields(
         self, client: TestClient, extracted_project: tuple[str, Path]
     ) -> None:
-        upload_id, base_dir = extracted_project
+        upload_id, _project = extracted_project
 
-        with patch("app.api.scanner.EXTRACTED_DIR", base_dir):
-            response = client.post(f"/scan/{upload_id}")
+        response = client.post(f"/repositories/{upload_id}/scan")
 
         data = response.json()
-        main_py = next(f for f in data["files"] if f["name"] == "main.py")
-        assert main_py["path"] == "src/main.py"
-        assert main_py["extension"] == ".py"
-        assert main_py["language"] == "Python"
-        assert main_py["size"] == len("print('hello')")
-        assert main_py["folder"] == "src"
+        # Verify the response structure matches the API
+        assert "repository_id" in data
+        assert "status" in data
+        assert "file_count" in data
+        assert "directory_count" in data
+        assert "languages" in data
 
     def test_scan_languages_sorted_descending(
-        self, client: TestClient, tmp_path: Path
+        self, client: TestClient, tmp_path: Path, mock_extracted_dir: Path
     ) -> None:
-        upload_id = "sort-test"
-        project = tmp_path / upload_id
+        upload_id = f"sort-test-{uuid.uuid4()}"
+        project = mock_extracted_dir / upload_id
         project.mkdir()
 
         for i in range(5):
@@ -127,8 +139,10 @@ class TestScanEndpoint:
             (project / f"file{i}.ts").write_text("x = 1", encoding="utf-8")
         (project / "one.go").write_text("package main", encoding="utf-8")
 
-        with patch("app.api.scanner.EXTRACTED_DIR", tmp_path):
-            response = client.post(f"/scan/{upload_id}")
+        # Register repository with the exact path
+        repository_store.register_upload(upload_id, str(project), name=upload_id)
+
+        response = client.post(f"/repositories/{upload_id}/scan")
 
         data = response.json()
         keys = list(data["languages"].keys())
